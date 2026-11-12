@@ -1,0 +1,591 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Brightyard Mobile</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="../assets/by.css">
+<style>
+.lab { display: grid; grid-template-columns: minmax(0, 420px) minmax(0, 1fr); gap: 48px; align-items: start; }
+.ctl { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; margin-bottom: 16px; }
+.ctl .grp { display: inline-flex; padding: 3px; background: var(--surface-2); border-radius: 10px; gap: 2px; }
+.ctl .grp button { border: 0; background: transparent; padding: 7px 14px; border-radius: 8px; font: 600 13px var(--text); color: var(--ink-2); }
+.ctl .grp button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+.ctl .reset { border: 1px solid var(--rule); background: var(--surface); border-radius: 10px; padding: 7px 14px; font: 600 13px var(--text); color: var(--ink-2); }
+.ctl .reset:hover { border-color: var(--accent); color: var(--ink); }
+.device { width: 100%; max-width: 396px; margin-inline: auto; padding: 12px; border-radius: 56px; background: linear-gradient(160deg, #2b2f3a, #12141b); box-shadow: 0 30px 60px rgba(8, 10, 20, .35), inset 0 0 0 1.5px rgba(255,255,255,.08); }
+.try-list { display: grid; gap: 14px; counter-reset: s; }
+.try-list li { list-style: none; display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 12px; }
+.try-list li::before { counter-increment: s; content: counter(s); display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); font: 700 13px var(--mono); }
+.try-list b { display: block; font-size: 16px; } .try-list span { color: var(--ink-2); font-size: 14.5px; }
+.try-list ol { margin: 0; padding: 0; }
+
+/* ---------- phone ---------- */
+.phone { position: relative; width: 100%; aspect-ratio: 368 / 780; border-radius: 44px; overflow: hidden; display: flex; flex-direction: column; background: var(--bg); color: var(--ink); isolation: isolate; font-size: 15px; }
+.phone[data-os="ios"] { --r: 14px; }
+.phone[data-os="android"] { --r: 12px; }
+.status { height: 46px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 6px 26px 0; font: 700 15px var(--font); position: relative; z-index: 3; }
+.status .sig { display: flex; gap: 6px; align-items: center; }
+.status .sig svg { width: 17px; height: 17px; }
+.status .bat { width: 26px; height: 12px; border: 1.5px solid currentColor; border-radius: 4px; position: relative; opacity: .9; }
+.status .bat::after { content: ""; position: absolute; inset: 1.5px; right: 6px; background: currentColor; border-radius: 1.5px; }
+.phone[data-os="ios"] .status::before { content: ""; position: absolute; left: 50%; top: 10px; width: 104px; height: 28px; background: #0a0b10; border-radius: 16px; transform: translateX(-50%); }
+.phone[data-os="android"] .status::before { content: ""; position: absolute; left: 50%; top: 12px; width: 15px; height: 15px; background: #0a0b10; border-radius: 50%; transform: translateX(-50%); }
+.phone[data-os="android"] .status { padding-inline: 22px; }
+.hdr { flex: none; display: flex; align-items: center; gap: 10px; padding: 0 20px; position: relative; z-index: 2; }
+.phone[data-os="ios"] .hdr { padding-top: 14px; padding-bottom: 6px; }
+.phone[data-os="ios"] .hdr h1 { font: 800 32px/1.1 var(--font); letter-spacing: -0.03em; flex: 1; }
+.phone[data-os="android"] .hdr { height: 60px; padding-inline: 16px 14px; }
+.phone[data-os="android"] .hdr h1 { font: 650 22px/1.2 var(--font); flex: 1; }
+.hdr .by-avatar { width: 34px; height: 34px; }
+.screen { flex: 1; overflow: auto; overflow-x: hidden; padding: 6px 20px 22px; display: flex; flex-direction: column; gap: 16px; min-height: 0; scrollbar-width: none; }
+.screen > * { flex: none; }
+.screen::-webkit-scrollbar { display: none; }
+.phone[data-os="android"] .screen { padding-inline: 16px; }
+.screen .sub { font: 600 14px var(--font); color: var(--ink-3); margin-top: -6px; }
+.screen h2.sec { font: 750 17px var(--font); letter-spacing: -0.01em; }
+.phone[data-os="android"] .by-card { background: var(--surface-2); border-color: transparent; box-shadow: none; border-radius: 20px; }
+.phone[data-os="ios"] .by-card { border-radius: 18px; }
+.phone[data-os="android"] .by-btn { border-radius: 999px; }
+.phone[data-os="android"] .by-chip { border-radius: 10px; }
+
+/* nav */
+.tabbar { flex: none; display: grid; grid-template-columns: repeat(3, 1fr); position: relative; z-index: 4; }
+.phone[data-os="ios"] .tabbar { height: 84px; padding: 8px 8px 26px; background: color-mix(in oklch, var(--surface) 86%, transparent); backdrop-filter: blur(14px); border-top: 1px solid var(--line); }
+.phone[data-os="android"] .tabbar { height: 82px; padding: 12px 8px 18px; background: var(--surface-2); }
+.tab { border: 0; background: transparent; display: grid; justify-items: center; align-content: start; gap: 3px; color: var(--ink-3); font: 600 10.5px var(--font); position: relative; }
+.tab .ic { width: 25px; height: 25px; }
+.tab[aria-current="page"] { color: var(--brand-ink); }
+.phone[data-os="ios"] .tab[aria-current="page"] .ic { stroke-width: 2.2; }
+.phone[data-os="android"] .tab { font-size: 12px; gap: 4px; color: var(--ink-2); }
+.phone[data-os="android"] .tab .pill { width: 62px; height: 32px; border-radius: 16px; display: grid; place-items: center; transition: background var(--d3) var(--ease); }
+.phone[data-os="android"] .tab[aria-current="page"] .pill { background: var(--brand-soft); color: var(--brand-ink); }
+.phone[data-os="android"] .tab[aria-current="page"] { color: var(--ink); font-weight: 750; }
+.phone[data-os="ios"] .tab .pill { display: grid; place-items: center; height: 28px; }
+.gesture { position: absolute; left: 50%; bottom: 7px; width: 118px; height: 5px; border-radius: 3px; background: var(--ink); opacity: .85; transform: translateX(-50%); z-index: 6; pointer-events: none; }
+.phone[data-os="android"] .gesture { width: 100px; bottom: 6px; opacity: .55; }
+
+/* pass */
+.pass { background: var(--navy); color: var(--on-navy); border-radius: 22px; padding: 18px; display: grid; gap: 16px; position: relative; overflow: hidden; }
+.pass::after { content: ""; position: absolute; right: -40px; top: -50px; width: 170px; height: 170px; border-radius: 50%; background: radial-gradient(circle, color-mix(in oklch, var(--brand) 55%, transparent), transparent 70%); pointer-events: none; }
+.pass .top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; position: relative; z-index: 1; }
+.pass b { font: 750 18px var(--font); display: block; } .pass small { font: 500 13px var(--font); color: var(--on-navy-2); }
+.pass .ok { display: inline-flex; gap: 6px; align-items: center; font: 700 11.5px var(--font); background: color-mix(in oklch, var(--ok) 22%, transparent); color: oklch(0.86 0.13 155); padding: 5px 9px; border-radius: 999px; white-space: nowrap; }
+.slide { position: relative; height: 56px; border-radius: 28px; background: color-mix(in oklch, var(--on-navy) 12%, transparent); overflow: hidden; touch-action: pan-y; user-select: none; z-index: 1; }
+.slide .fill { position: absolute; inset: 0 auto 0 0; width: 56px; background: var(--brand); border-radius: 28px; }
+.slide .lbl { position: absolute; inset: 0; display: grid; place-items: center; font: 650 15px var(--font); color: var(--on-navy-2); padding-left: 40px; pointer-events: none; }
+.slide .thumb { position: absolute; top: 4px; left: 4px; width: 48px; height: 48px; border-radius: 50%; background: var(--on-navy); color: var(--navy); display: grid; place-items: center; border: 0; touch-action: none; cursor: grab; box-shadow: 0 4px 12px rgba(0,0,0,.3); }
+.slide .thumb .ic { width: 22px; height: 22px; }
+.slide:not(.is-drag) .thumb, .slide:not(.is-drag) .fill { transition: transform .32s var(--ease-out), width .32s var(--ease-out); }
+.slide.is-open { background: color-mix(in oklch, var(--ok) 30%, transparent); }
+.slide.is-open .fill { background: var(--ok); }
+.slide.is-open .lbl { color: var(--on-navy); padding-left: 0; }
+.slide.is-open .thumb { background: var(--on-navy); }
+.slide.is-open { animation: by-pulse 1s ease-out 1; }
+.slide .hint { position: absolute; right: 18px; top: 50%; transform: translateY(-50%); opacity: .5; }
+.row-list { display: grid; }
+.li { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 12px 0; border-top: 1px solid var(--line); }
+.li:first-child { border-top: 0; }
+.phone[data-os="android"] .li { border-top: 0; padding: 10px 0; }
+.li .ico { width: 40px; height: 40px; border-radius: 12px; background: var(--brand-soft); color: var(--brand-ink); display: grid; place-items: center; }
+.phone[data-os="android"] .li .ico { border-radius: 50%; }
+.li b { font: 700 15px var(--font); display: block; } .li small { font: 500 13px var(--font); color: var(--ink-3); }
+.li.is-new { animation: by-flash 2s var(--ease) 1; border-radius: 12px; }
+
+/* book */
+.seg-ios { display: block; } .tabs-and { display: none; }
+.phone[data-os="android"] .seg-ios { display: none; } .phone[data-os="android"] .tabs-and { display: flex; }
+.phone[data-os="ios"] .seg-ios .by-seg { display: grid; width: 100%; }
+.tabs-and { border-bottom: 1px solid var(--line); margin: 0 -16px; padding: 0 16px; }
+.tabs-and button { flex: 1; background: none; border: 0; height: 46px; font: 650 14.5px var(--font); color: var(--ink-3); position: relative; }
+.tabs-and button[aria-selected="true"] { color: var(--ink); }
+.tabs-and button[aria-selected="true"]::after { content: ""; position: absolute; left: 20%; right: 20%; bottom: -1px; height: 3px; border-radius: 3px 3px 0 0; background: var(--brand-ink); }
+.strip { display: flex; gap: 8px; overflow-x: auto; padding: 2px 20px 4px; margin: 0 -20px; scrollbar-width: none; }
+.phone[data-os="android"] .strip { margin: 0 -16px; padding-inline: 16px; }
+.strip::-webkit-scrollbar { display: none; }
+.day { flex: none; width: 52px; padding: 8px 0; border-radius: 14px; border: 1px solid var(--line-2); background: var(--surface); display: grid; justify-items: center; gap: 2px; font: 600 11.5px var(--font); color: var(--ink-3); }
+.day b { font: 750 17px var(--font); color: var(--ink); }
+.day[aria-pressed="true"] { background: var(--navy); border-color: var(--navy); color: var(--on-navy-2); }
+.day[aria-pressed="true"] b { color: var(--on-navy); }
+.times { display: flex; gap: 8px; overflow-x: auto; padding: 2px 20px; margin: 0 -20px; scrollbar-width: none; }
+.phone[data-os="android"] .times { margin: 0 -16px; padding-inline: 16px; }
+.times::-webkit-scrollbar { display: none; }
+.times .by-chip { flex: none; height: 38px; font-variant-numeric: tabular-nums; }
+.room { display: grid; gap: 10px; padding: 14px; }
+.room .hd { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+.room b { font: 750 16.5px var(--font); } .room small { display: block; font: 500 13px var(--font); color: var(--ink-3); }
+.room .gear { display: flex; gap: 6px; flex-wrap: wrap; }
+.room .go { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.room.is-busy { opacity: .6; }
+.empty-note { text-align: center; padding: 26px 10px; color: var(--ink-3); }
+
+/* layers */
+.layer { position: absolute; inset: 0; z-index: 20; display: none; }
+.layer.on { display: block; }
+.layer .scrim { position: absolute; inset: 0; background: oklch(0.15 0.03 255 / .5); animation: fadein var(--d3) var(--ease) both; }
+@keyframes fadein { from { opacity: 0; } }
+@keyframes sheetup { from { transform: translateY(100%); } }
+@keyframes dlg { from { opacity: 0; transform: scale(.92); } }
+.sheet { position: absolute; left: 0; right: 0; bottom: 0; background: var(--surface); border-radius: 28px 28px 0 0; padding: 10px 20px 36px; display: grid; gap: 12px; animation: sheetup var(--d4) var(--ease-out) both; }
+.sheet .grab { width: 38px; height: 5px; border-radius: 3px; background: var(--line-2); margin: 0 auto 4px; }
+.sheet h3 { font: 800 22px var(--font); letter-spacing: -0.02em; }
+.dialog { position: absolute; left: 24px; right: 24px; top: 50%; transform: translateY(-50%); background: var(--surface-2); border-radius: 28px; padding: 24px 24px 18px; display: grid; gap: 14px; animation: dlg var(--d3) var(--ease-out) both; box-shadow: var(--shadow-3); }
+.dialog h3 { font: 600 24px/1.2 var(--font); }
+.dialog .act { display: flex; justify-content: flex-end; gap: 8px; }
+.dialog .act button { border: 0; background: none; padding: 10px 14px; border-radius: 999px; font: 650 14.5px var(--font); color: var(--brand-ink); }
+.dialog .act button:hover { background: var(--brand-soft); }
+.phone[data-os="ios"] .dialog { display: none; } .phone[data-os="android"] .sheet { display: none; }
+.banner { position: absolute; left: 12px; right: 12px; top: 52px; z-index: 30; background: color-mix(in oklch, var(--toast-bg) 94%, transparent); backdrop-filter: blur(12px); color: var(--toast-ink); border-radius: 20px; padding: 12px 16px; display: flex; gap: 12px; align-items: center; box-shadow: var(--shadow-3); animation: banner var(--d4) var(--ease-out) both; font: 650 14px/1.3 var(--font); }
+.banner .ic { color: var(--ok); width: 22px; height: 22px; }
+.banner button { margin-left: auto; border: 0; background: none; color: var(--brand); font: 750 14px var(--font); padding: 4px; }
+@keyframes banner { from { transform: translateY(-140%); } }
+.snack { position: absolute; left: 12px; right: 12px; bottom: 94px; z-index: 30; background: var(--toast-bg); color: var(--toast-ink); border-radius: 6px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; animation: pop var(--d3) var(--ease-out) both; font: 500 14px/1.3 var(--font); box-shadow: var(--shadow-2); }
+.snack button { margin-left: auto; border: 0; background: none; color: var(--brand); font: 750 14px var(--font); padding: 4px 6px; }
+@keyframes pop { from { opacity: 0; transform: translateY(12px); } }
+.phone[data-os="ios"] .snack { display: none; } .phone[data-os="android"] .banner { display: none; }
+
+/* assistant */
+.chat { display: grid; gap: 12px; align-content: start; }
+.chat .msg { display: flex; gap: 8px; animation: by-pop var(--d3) var(--ease-out); }
+.chat .msg--user { justify-content: flex-end; }
+.chat .msg .av { width: 26px; height: 26px; border-radius: 9px; background: var(--ai-soft); color: var(--ai); display: grid; place-items: center; flex: none; margin-top: 2px; }
+.chat .msg .av svg { width: 15px; height: 15px; }
+.by-bub { max-width: 86%; padding: 10px 14px; border-radius: 18px; font: 500 14.5px/1.45 var(--font); }
+.by-bub--user { background: var(--navy); color: var(--on-navy); border-bottom-right-radius: 6px; }
+.by-bub--ai { background: var(--surface-2); border-bottom-left-radius: 6px; }
+.phone[data-os="android"] .by-bub--ai { background: var(--surface-3); }
+.by-think { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 8px; }
+.by-think li { display: flex; align-items: center; gap: 10px; font: 500 13.5px var(--font); color: var(--ink-3); }
+.by-think li .st { width: 16px; height: 16px; display: grid; place-items: center; flex: none; }
+.by-think li .st .ic { width: 16px; height: 16px; }
+.by-think li.is-run { color: var(--ink); } .by-think li.is-done { color: var(--ink-2); } .by-think li.is-done .st { color: var(--ok); }
+.by-think li:not(.is-run):not(.is-done) .st::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--line-2); }
+.sumline { display: flex; align-items: center; gap: 8px; font: 500 13px var(--font); color: var(--ink-3); }
+.sumline .ic { width: 15px; height: 15px; color: var(--ok); }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.ask-bar { flex: none; display: grid; gap: 8px; padding: 10px 16px 12px; border-top: 1px solid var(--line); background: var(--surface); }
+.ask-bar form { display: flex; gap: 8px; }
+.ask-bar .by-input { height: 44px; border-radius: 22px; }
+.ask-empty { display: grid; gap: 8px; padding: 12px 2px; }
+.ask-empty .mark { width: 44px; height: 44px; border-radius: 14px; background: var(--ai-soft); color: var(--ai); display: grid; place-items: center; }
+.ask-empty .mark svg { width: 22px; height: 22px; }
+.undo-line { display: flex; align-items: center; gap: 10px; font: 500 13px var(--font); color: var(--ink-3); }
+.undo-line .by-btn { margin-left: auto; }
+.ring { width: 20px; height: 20px; border-radius: 50%; background: conic-gradient(var(--ai) calc(var(--t, 1) * 360deg), var(--surface-3) 0); display: grid; place-items: center; flex: none; }
+.ring::after { content: ""; width: 14px; height: 14px; border-radius: 50%; background: var(--surface); }
+.dl2 { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 14px; margin: 0; font: 500 14px/1.4 var(--font); }
+.dl2 dt { color: var(--ink-3); } .dl2 dd { margin: 0; font-weight: 650; }
+
+/* narrative */
+.table-wrap { overflow-x: auto; border: 1px solid var(--rule); border-radius: 12px; background: var(--surface); }
+table.pat { width: 100%; border-collapse: collapse; min-width: 720px; font-size: 14.5px; }
+table.pat th, table.pat td { padding: 14px 16px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--rule); }
+table.pat tr:last-child td { border-bottom: 0; }
+table.pat th { font: 500 11.5px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); background: var(--surface-2); }
+table.pat td:first-child { font-weight: 650; width: 18%; }
+table.pat td { color: var(--ink-2); } table.pat td:first-child { color: var(--ink); }
+.show { margin-top: 8px; display: inline-block; border: 1px solid var(--rule); background: transparent; border-radius: 999px; padding: 4px 11px; font: 600 12px var(--text); color: var(--accent); }
+.show:hover { border-color: var(--accent); }
+.minis { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 24px; }
+.mini-wrap { display: grid; gap: 12px; align-content: start; min-width: 0; }
+.mini { border-radius: 30px; border: 1px solid var(--rule); padding: 16px 14px 18px; min-height: 440px; display: grid; gap: 12px; align-content: start; box-shadow: var(--shadow); max-width: 290px; width: 100%; margin-inline: auto; }
+.mini.pick { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent), var(--shadow); }
+.mini h4 { font: 800 22px var(--font); letter-spacing: -0.02em; }
+.mini .by-chip { height: 30px; font-size: 12.5px; padding: 0 10px; }
+.mini .mday { display: flex; gap: 6px; }
+.mini .mday span { flex: 1; text-align: center; padding: 6px 0; border-radius: 10px; border: 1px solid var(--line-2); font: 700 13px var(--font); }
+.mini .mday span.on { background: var(--navy); color: var(--on-navy); border-color: var(--navy); }
+.mini .mroom { padding: 10px 12px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); display: grid; gap: 6px; }
+.mini .mroom b { font: 700 14px var(--font); } .mini .mroom small { font: 500 12px var(--font); color: var(--ink-3); }
+.mini .big-in { border: 1.5px dashed var(--ai-line); border-radius: 18px; padding: 16px; background: var(--ai-soft); display: grid; gap: 10px; }
+.mini .big-in b { font: 800 20px/1.15 var(--font); }
+.mini-wrap h3 { font-size: 19px; } .mini-wrap > p { font-size: 14.5px; color: var(--ink-2); }
+.gest { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 16px; }
+@media (max-width: 900px) { .lab { grid-template-columns: minmax(0, 1fr); gap: 34px; } }
+</style>
+</head>
+<body>
+<header class="bar">
+  <div class="wrap">
+    <a class="brand" href="../index.html"><i aria-hidden="true"></i><span id="brandName">Your Name</span></a>
+    <nav aria-label="Work">
+      <a href="../index.html#work">All work</a>
+      <a href="telegram-bots.html">Bots</a>
+      <a href="security.html">Security</a>
+      <a href="plectra.html">Plectra</a>
+      <a href="brightyard-portal.html">Portal</a>
+      <a href="brightyard-mobile.html" aria-current="page">Mobile</a>
+      <a href="brightyard-system.html">System</a>
+      <a href="voice-note.html">Voice note</a>
+      <a href="ai-states.html">AI states</a>
+      <a href="space-finder.html">Space finder</a>
+    </nav>
+    <button class="toggle" id="themeBtn" type="button" aria-label="Switch colour theme">Theme: auto</button>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="case-hero">
+    <div class="row"><span class="kind concept">Concept</span><span class="kind">iOS</span><span class="kind">Android</span><span class="kind">Mobile</span></div>
+    <h1>Brightyard Mobile</h1>
+    <p class="sub">The tenant portal in a pocket: a door pass, quick bookings and the same careful AI assistant, built to feel native on both platforms.</p>
+    <dl class="meta">
+      <div><dt class="label">Role</dt><dd>Mobile UX, UI, interaction design, prototype in code</dd></div>
+      <div><dt class="label">Platforms</dt><dd>iOS and Android patterns, light and dark</dd></div>
+      <div><dt class="label">Key moments</dt><dd>Slide to open, book in 3 taps, confirm with the assistant</dd></div>
+      <div><dt class="label">Status</dt><dd>Concept with sample data. Not tested with users.</dd></div>
+    </dl>
+    <p class="honest"><b>Note</b><span>Self-initiated concept for a fictional company. It reuses the design system documented on the System page.</span></p>
+  </div>
+
+  <section id="lab" style="padding-top:44px">
+    <div class="lab">
+      <div>
+        <div class="ctl" role="group" aria-label="Prototype controls">
+          <div class="grp" role="group" aria-label="Platform"><button type="button" data-os="ios" aria-pressed="true">iOS</button><button type="button" data-os="android" aria-pressed="false">Android</button></div>
+          <div class="grp" role="group" aria-label="Theme"><button type="button" data-mode="light" aria-pressed="true">Light</button><button type="button" data-mode="dark" aria-pressed="false">Dark</button></div>
+          <button class="reset" id="resetBtn" type="button">Reset</button>
+        </div>
+        <div class="device">
+          <div class="phone by" id="phone" data-os="ios" data-by="light">
+            <div class="status"><span>9:41</span><span class="sig"><svg class="ic"><use href="#i-wifi"/></svg><span class="bat"></span></span></div>
+            <div class="hdr" id="hdr"></div>
+            <div class="screen" id="screen"></div>
+            <div class="tabbar" id="tabbar" role="tablist" aria-label="Sections"></div>
+            <div class="gesture"></div>
+            <div class="layer" id="layer"></div>
+            <div id="fb"></div>
+          </div>
+        </div>
+      </div>
+      <div style="display:grid;gap:28px;align-content:start">
+        <div class="sec-head">
+          <span class="num">TRY IT</span>
+          <h2 style="font-size:clamp(26px,3.4vw,40px)">A phone you can actually use</h2>
+          <p>Everything on the phone responds. Switch platform or theme at any time and the interface changes with it.</p>
+        </div>
+        <ol class="try-list" style="padding:0;margin:0">
+          <li><div><b>Slide to open the door</b><span>On Home, drag the thumb across. Let go early and it springs back. Keyboard: focus the thumb and press Enter.</span></div></li>
+          <li><div><b>Book a room in a few taps</b><span>Open Book, pick a day and a time, then tap Book on a free room. Confirm in the sheet (iOS) or the dialog (Android).</span></div></li>
+          <li><div><b>Undo it</b><span>The confirmation stays visible for a few seconds as a banner (iOS) or a snackbar (Android) with an Undo action.</span></div></li>
+          <li><div><b>Ask the assistant</b><span>On Assist, tap an example. It shows a proposal first. Nothing is booked until you confirm.</span></div></li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <section id="patterns">
+    <div class="sec-head">
+      <span class="num">PLATFORM PATTERNS</span>
+      <h2>One product, two native languages</h2>
+      <p>Thumbs know their own platform. I kept the brand and the AI language identical and let the structure follow each platform's conventions.</p>
+    </div>
+    <div class="table-wrap">
+      <table class="pat">
+        <thead><tr><th>Pattern</th><th>iOS</th><th>Android</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr><td>Primary navigation</td><td>Tab bar with labels. The active icon gets a heavier stroke.</td><td>Navigation bar with a pill indicator behind the active icon.</td><td>Same three destinations, each in its platform's shape.<br><button class="show" type="button" data-show="nav">Show on phone</button></td></tr>
+          <tr><td>Screen title</td><td>Large title that sits in the content.</td><td>Compact top app bar.</td><td>Large titles suit iOS scanning. App bars give Android a fixed anchor.</td></tr>
+          <tr><td>Mode switch</td><td>Segmented control.</td><td>Underlined tabs.</td><td>Rooms and Parking are peer views, and each platform has its own control for that.<br><button class="show" type="button" data-show="book">Show on phone</button></td></tr>
+          <tr><td>Confirmation</td><td>Bottom sheet with two full-width buttons.</td><td>Centered dialog with text buttons.</td><td>A sheet is reachable by thumb on iOS. A dialog is the native pause on Android.<br><button class="show" type="button" data-show="confirm">Show on phone</button></td></tr>
+          <tr><td>Feedback and undo</td><td>Banner from the top.</td><td>Snackbar above the navigation bar.</td><td>Both stay for a few seconds and both carry Undo.</td></tr>
+          <tr><td>Shared on both</td><td colspan="2">Brand colour, the violet dashed AI card, status colours with icons and words, 48px touch targets, the slide-to-open gesture.</td><td>The identity travels. The structure adapts.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="variants">
+    <div class="sec-head">
+      <span class="num">THREE VARIANTS</span>
+      <h2>Where should booking start?</h2>
+      <p>I compared three starting points for the Book screen and picked by what a person does with one hand free and a coffee in the other.</p>
+    </div>
+    <div class="minis">
+      <div class="mini-wrap">
+        <div class="mini by" data-by="light"><h4>Book</h4><div class="by-card" style="padding:10px 12px;color:var(--ink-3)">Search rooms…</div>
+          <div class="mroom"><b>Room B2 · 10 seats</b><small>Free today</small><div class="chips" style="gap:6px"><span class="by-chip">13:00</span><span class="by-chip">14:00</span><span class="by-chip">15:00</span></div></div>
+          <div class="mroom"><b>Room C4 · 6 seats</b><small>Free today</small><div class="chips" style="gap:6px"><span class="by-chip">11:00</span><span class="by-chip">15:00</span></div></div></div>
+        <div><span class="label">A · Rooms first</span><h3 style="margin-top:6px">Browse, then pick a time</h3></div>
+        <p>Good for people who care about a specific room. Slow for the common case, because every room repeats its times.</p>
+      </div>
+      <div class="mini-wrap">
+        <div class="mini by pick" data-by="light"><h4>Book</h4>
+          <div class="mday"><span class="on">Wed<br>11</span><span>Thu<br>12</span><span>Fri<br>13</span></div>
+          <div class="chips" style="gap:6px"><span class="by-chip is-on">14:00</span><span class="by-chip">15:00</span><span class="by-chip">16:00</span></div>
+          <div class="mroom"><b>Room B2 · 10 seats</b><small>Free at 14:00</small><span class="by-btn by-btn--primary by-btn--sm">Book</span></div>
+          <div class="mroom"><b>Room C4 · 6 seats</b><small>Free at 14:00</small><span class="by-btn by-btn--primary by-btn--sm">Book</span></div></div>
+        <div><span class="label" style="color:var(--accent)">B · Time first · chosen</span><h3 style="margin-top:6px">Pick a time, see what is free</h3></div>
+        <p>Matches how people think: "I need a room at 14:00." One filter, then a short list of options that all work.</p>
+      </div>
+      <div class="mini-wrap">
+        <div class="mini by" data-by="light"><h4>Book</h4>
+          <div class="big-in"><span class="by-ai-tag"><svg class="ic"><use href="#i-spark"/></svg> Ask</span><b>What do you need?</b><div class="chips" style="gap:6px"><span class="by-chip">Room for 8 at 14:00</span><span class="by-chip">Parking Friday</span></div></div>
+          <p class="t-small">Recent</p>
+          <div class="mroom"><b>Room B2 · yesterday</b><small>Book again</small></div></div>
+        <div><span class="label">C · Assistant first</span><h3 style="margin-top:6px">Say it, then confirm</h3></div>
+        <p>Fastest when the request is clear, but it hides the options and forces a new habit. I kept it as the Assist tab.</p>
+      </div>
+    </div>
+    <p style="font-size:15.5px;max-width:70ch;color:var(--ink-2)"><b style="color:var(--ink)">Decision:</b> B as the main flow, C as its own tab. The tenant chooses between browsing and asking, and both end in the same confirmation.</p>
+  </section>
+
+  <section id="micro">
+    <div class="sec-head">
+      <span class="num">MICRO-INTERACTIONS</span>
+      <h2>Small motion, clear meaning</h2>
+    </div>
+    <div class="gest">
+      <div class="box"><h3>Slide to open</h3><p style="color:var(--ink-2);font-size:15px">Opening a door is a physical act, so it should take a deliberate gesture. The thumb must pass 85% of the track. Release early and it springs back in 320 ms. On success the track turns green, pulses once and says what happened and when.</p></div>
+      <div class="box"><h3>Confirm layers</h3><p style="color:var(--ink-2);font-size:15px">The sheet rises in 440 ms with a decelerating curve, so it arrives fast and settles gently. The Android dialog scales in from 92%. Both dim the screen behind, so the decision has the full focus.</p></div>
+      <div class="box"><h3>New item flash</h3><p style="color:var(--ink-2);font-size:15px">When a booking lands on Home, the new row flashes in the brand tint for two seconds. The tenant sees where the result went without a notification.</p></div>
+      <div class="box"><h3>Reduced motion</h3><p style="color:var(--ink-2);font-size:15px">With the system setting on, transitions drop to zero and the pulse, flash and shimmer stop. The meaning stays in the text and in the icons.</p></div>
+    </div>
+    <div class="next-work">
+      <a href="brightyard-portal.html"><span class="label">Companion</span><b>Brightyard Portal</b><span>The web version, with the full AI assistant and four flows.</span></a>
+      <a href="brightyard-system.html"><span class="label">Next</span><b>Brightyard Design System</b><span>The tokens and components behind both products.</span></a>
+      <a href="voice-note.html"><span class="label">New work</span><b>Voice Note to Flows</b><span>A product owner's voice note turned into three working flows.</span></a>
+    </div>
+  </section>
+
+  <footer><span>Concept work. Fictional company, sample data.</span><span>Designed and built with Claude Code, November 2026</span></footer>
+</main>
+
+<script src="../assets/profile.js"></script>
+<script src="../assets/icons.js"></script>
+<script src="../assets/site.js"></script>
+<script>
+(function () {
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+  var IC = window.ic;
+  var sleep = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
+  var esc = function (s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); };
+  var el = function (h) { var t = document.createElement("template"); t.innerHTML = h.trim(); return t.content.firstElementChild; };
+  var phone = $("#phone"), scr = $("#screen"), hdr = $("#hdr"), tabbar = $("#tabbar"), layer = $("#layer"), fb = $("#fb");
+
+  var DAYS = [], base = new Date();
+  for (var i = 0; i < 7; i++) { var d = new Date(base.getTime() + i * 864e5); DAYS.push({ wd: d.toLocaleDateString("en-GB", { weekday: "short" }), n: d.getDate(), full: d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" }) }); }
+  var TIMES = ["09:00", "10:00", "11:00", "13:00", "14:00", "15:00", "16:00"];
+  var ROOMS = [
+    { id: "b2", name: "Room B2", seats: 10, gear: ["Projector", "Whiteboard"], busy: ["10:00", "11:00", "16:00"], where: "Building B · floor 2" },
+    { id: "c4", name: "Room C4", seats: 6, gear: ["Whiteboard"], busy: ["11:00"], where: "Building C · floor 4" },
+    { id: "a3", name: "Room A3", seats: 6, gear: ["Screen"], busy: ["09:00", "10:00", "13:00", "14:00"], where: "Building A · floor 3" },
+    { id: "p2", name: "Phone booth 2", seats: 1, gear: ["Quiet"], busy: ["13:00"], where: "Building B · floor 1" }
+  ];
+  var ZONES = [
+    { id: "p1", name: "P1 · Open air", free: 4, note: "Entrance side" },
+    { id: "p2", name: "P2 · Covered", free: 6, note: "Next to lift B" },
+    { id: "p3", name: "P3 · EV charging", free: 2, note: "Chargers on site" }
+  ];
+  var S, token = 0;
+  function fresh() {
+    return { os: S ? S.os : "ios", mode: S ? S.mode : "light", tab: "home", seg: "rooms", day: 0, time: "14:00", dismissedSug: false,
+      today: [{ t: "10:00", title: "Design sync", place: "Room A3", ic: "users" }, { t: "11:30", title: "Marta Ozola", place: "Visitor · Reception", ic: "userplus" }, { t: "13:00", title: "Investor call", place: "Phone booth 2", ic: "users" }],
+      chat: null };
+  }
+  S = fresh();
+
+  /* ---------- chrome ---------- */
+  function renderChrome() {
+    var titles = { home: "Home", book: "Book", assist: "Assist" };
+    var title = S.os === "android" && S.tab === "home" ? "Brightyard" : titles[S.tab];
+    hdr.innerHTML = "<h1>" + title + '</h1><span class="by-avatar" aria-hidden="true">EB</span>';
+    var tabs = [["home", "home", "Home"], ["book", "calendar", "Book"], ["assist", "spark", "Assist"]];
+    tabbar.innerHTML = tabs.map(function (t) { return '<button class="tab" role="tab" type="button" data-tab="' + t[0] + '" aria-current="' + (S.tab === t[0] ? "page" : "false") + '" aria-selected="' + (S.tab === t[0]) + '"><span class="pill">' + IC(t[1]) + "</span>" + t[2] + "</button>"; }).join("");
+  }
+  tabbar.addEventListener("click", function (e) { var b = e.target.closest("[data-tab]"); if (b) go(b.dataset.tab); });
+  function go(tab) { S.tab = tab; render(); }
+  function render() {
+    phone.dataset.os = S.os; phone.dataset.by = S.mode;
+    renderChrome();
+    $$("[data-os]").forEach(function (b) { if (b.closest(".ctl")) b.setAttribute("aria-pressed", String(b.dataset.os === S.os)); });
+    $$("[data-mode]").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.mode === S.mode)); });
+    var staleBar = $(".ask-bar", phone); if (staleBar) staleBar.remove();
+    var host = scr; host.scrollTop = 0;
+    if (S.tab === "assist") { scr.style.padding = "6px 20px 12px"; } else { scr.style.padding = ""; }
+    if (S.tab === "home") renderHome(); else if (S.tab === "book") renderBook(); else renderAssist();
+  }
+
+  /* ---------- home ---------- */
+  function renderHome() {
+    var items = S.today.slice().sort(function (a, b) { return a.t < b.t ? -1 : 1; });
+    scr.innerHTML =
+      '<p class="sub">Good morning, Elena · Unit 4.12</p>' +
+      '<div class="pass"><div class="top"><div><b>Main entrance</b><small>Building B · pass for Unit 4.12</small></div><span class="ok">' + IC("check") + "Pass ready</span></div>" +
+      '<div class="slide" id="slide"><div class="fill" id="fill"></div><div class="lbl" id="slbl">Slide to open</div><button class="thumb" id="thumb" type="button" aria-label="Open the main entrance. Drag right, or press Enter">' + IC("lock") + "</button></div></div>" +
+      '<div><h2 class="sec" style="margin-bottom:2px">Today</h2><div class="row-list" id="todayList">' + items.map(liHtml).join("") + "</div></div>" +
+      (S.dismissedSug ? "" : '<div class="by-ai" id="sugCard"><span class="by-ai-tag">' + IC("spark") + ' Suggestion</span><b class="by-ai__title">Room B2 is free 14:00–15:00</b><p class="t-small">Your calendar has “Product sync” with 8 people and no room yet.</p><div class="row" style="display:flex;gap:8px"><button class="by-btn by-btn--ai by-btn--sm" type="button" id="sugGo">Review booking</button><button class="by-btn by-btn--ghost by-btn--sm" type="button" id="sugNo">Dismiss</button></div></div>');
+    bindSlider();
+    var go2 = $("#sugGo"); if (go2) go2.addEventListener("click", function () { confirmBooking(ROOMS[0], 0, "14:00"); });
+    var no = $("#sugNo"); if (no) no.addEventListener("click", function () { S.dismissedSug = true; $("#sugCard").remove(); feedback("Suggestion dismissed", function () { S.dismissedSug = false; if (S.tab === "home") renderHome(); }); });
+  }
+  function liHtml(it) { return '<div class="li' + (it.isNew ? " is-new" : "") + '"><span class="ico">' + IC(it.ic) + '</span><div><b>' + esc(it.title) + "</b><small>" + esc(it.place) + '</small></div><span class="t-small t-num" style="font-weight:700">' + it.t + "</span></div>"; }
+  function bindSlider() {
+    var track = $("#slide"), thumb = $("#thumb"), fill = $("#fill"), lbl = $("#slbl");
+    var drag = false, x0 = 0, max = 0, pos = 0, opened = false;
+    function set(p) { thumb.style.transform = "translateX(" + p * max + "px)"; fill.style.width = (56 + p * max) + "px"; lbl.style.opacity = Math.max(0, 1 - p * 1.5); }
+    function open() {
+      if (opened) return; opened = true; max = track.clientWidth - 56; set(1);
+      track.classList.add("is-open"); lbl.style.opacity = 1; lbl.textContent = "Opened · 09:41"; thumb.innerHTML = IC("check");
+      setTimeout(function () { if (!document.body.contains(track)) return; opened = false; track.classList.remove("is-open"); lbl.textContent = "Slide to open"; thumb.innerHTML = IC("lock"); set(0); }, 2800);
+    }
+    thumb.addEventListener("pointerdown", function (e) { if (opened) return; drag = true; x0 = e.clientX; max = track.clientWidth - 56; thumb.setPointerCapture(e.pointerId); track.classList.add("is-drag"); });
+    thumb.addEventListener("pointermove", function (e) { if (!drag) return; pos = Math.min(max, Math.max(0, e.clientX - x0)); set(pos / max); });
+    function end() { if (!drag) return; drag = false; track.classList.remove("is-drag"); if (pos / max > 0.85) open(); else set(0); pos = 0; }
+    thumb.addEventListener("pointerup", end); thumb.addEventListener("pointercancel", end);
+    thumb.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); } });
+  }
+
+  /* ---------- book ---------- */
+  function renderBook() {
+    var seg = S.seg;
+    var ctrl = '<div class="seg-ios"><div class="by-seg" role="tablist"><button type="button" role="tab" aria-selected="' + (seg === "rooms") + '" data-seg="rooms">Rooms</button><button type="button" role="tab" aria-selected="' + (seg === "park") + '" data-seg="park">Parking</button></div></div>' +
+      '<div class="tabs-and" role="tablist"><button type="button" role="tab" aria-selected="' + (seg === "rooms") + '" data-seg="rooms">Rooms</button><button type="button" role="tab" aria-selected="' + (seg === "park") + '" data-seg="park">Parking</button></div>';
+    var day = '<div class="strip" role="group" aria-label="Day">' + DAYS.map(function (d, i) { return '<button class="day" type="button" data-day="' + i + '" aria-pressed="' + (S.day === i) + '"><span>' + d.wd + "</span><b>" + d.n + "</b></button>"; }).join("") + "</div>";
+    var body = "";
+    if (seg === "rooms") {
+      var times = '<div class="times" role="group" aria-label="Time">' + TIMES.map(function (t) { return '<button class="by-chip" type="button" data-time="' + t + '" aria-pressed="' + (S.time === t) + '">' + t + "</button>"; }).join("") + "</div>";
+      var rooms = ROOMS.slice().sort(function (a, b) { return (a.busy.indexOf(S.time) > -1) - (b.busy.indexOf(S.time) > -1); });
+      body = times + rooms.map(function (r) {
+        var busy = r.busy.indexOf(S.time) > -1;
+        return '<div class="by-card room' + (busy ? " is-busy" : "") + '"><div class="hd"><div><b>' + r.name + "</b><small>" + r.where + "</small></div>" + (busy ? '<span class="by-badge by-badge--bad">' + IC("x") + "Busy</span>" : '<span class="by-badge by-badge--ok">' + IC("check") + "Free " + S.time + "</span>") + '</div><div class="go"><div class="gear"><span class="by-badge">' + IC("users") + r.seats + "</span>" + r.gear.map(function (g) { return '<span class="by-badge">' + g + "</span>"; }).join("") + '</div><button class="by-btn by-btn--primary by-btn--sm" type="button" data-book="' + r.id + '"' + (busy ? " disabled" : "") + ">Book</button></div></div>";
+      }).join("");
+    } else {
+      body = ZONES.map(function (z) { return '<div class="by-card room"><div class="hd"><div><b>' + z.name + "</b><small>" + z.note + '</small></div><span class="by-badge ' + (z.free > 2 ? "by-badge--ok" : "by-badge--warn") + '">' + z.free + " free</span></div><div class=\"go\"><span class=\"t-small\">" + DAYS[S.day].full + '</span><button class="by-btn by-btn--primary by-btn--sm" type="button" data-park="' + z.id + '">Reserve</button></div></div>'; }).join("");
+    }
+    scr.innerHTML = ctrl + day + body;
+    $$("[data-seg]", scr).forEach(function (b) { b.addEventListener("click", function () { S.seg = b.dataset.seg; renderBook(); }); });
+    $$("[data-day]", scr).forEach(function (b) { b.addEventListener("click", function () { S.day = +b.dataset.day; renderBook(); }); });
+    $$("[data-time]", scr).forEach(function (b) { b.addEventListener("click", function () { S.time = b.dataset.time; var st = scr.scrollTop; renderBook(); scr.scrollTop = st; }); });
+    $$("[data-book]", scr).forEach(function (b) { b.addEventListener("click", function () { var r = ROOMS.filter(function (x) { return x.id === b.dataset.book; })[0]; confirmBooking(r, S.day, S.time); }); });
+    $$("[data-park]", scr).forEach(function (b) { b.addEventListener("click", function () { var z = ZONES.filter(function (x) { return x.id === b.dataset.park; })[0]; confirmLayer({ title: "Reserve a spot in " + z.name.split(" · ")[0] + "?", rows: [["Day", DAYS[S.day].full], ["Zone", z.name], ["Cost", "Included in lease"]], confirm: "Reserve", android: "Reserve", onConfirm: function () { feedback("Spot reserved in " + z.name.split(" · ")[0], null); } }); }); });
+    var act = $(".tabs-and", scr); if (act) act.style.display = S.os === "android" ? "flex" : "none";
+  }
+  function confirmBooking(room, dayIdx, time) {
+    confirmLayer({
+      title: "Book " + room.name + "?",
+      rows: [["When", DAYS[dayIdx].full + " · " + time + "–" + (+time.slice(0, 2) + 1) + ":00"], ["Where", room.where], ["Seats", room.seats + " · " + room.gear.join(", ")]],
+      confirm: "Confirm booking", android: "Book",
+      onConfirm: function () {
+        var item = { t: time, title: dayIdx === 0 ? "Product sync" : "Product sync", place: room.name + (dayIdx ? " · " + DAYS[dayIdx].wd : ""), ic: "users", isNew: true };
+        if (dayIdx === 0) S.today.push(item);
+        S.dismissedSug = dayIdx === 0 && time === "14:00" && room.id === "b2" ? true : S.dismissedSug;
+        if (S.tab === "home") renderHome();
+        feedback(room.name + " booked for " + (dayIdx === 0 ? "today " : DAYS[dayIdx].wd + " ") + time, function () { S.today = S.today.filter(function (x) { return x !== item; }); S.dismissedSug = false; if (S.tab === "home") renderHome(); });
+      }
+    });
+  }
+
+  /* ---------- layers ---------- */
+  function confirmLayer(o) {
+    var dl = '<dl class="dl2">' + o.rows.map(function (r) { return "<dt>" + r[0] + "</dt><dd>" + esc(r[1]) + "</dd>"; }).join("") + "</dl>";
+    layer.innerHTML = '<div class="scrim" data-x></div>' +
+      '<div class="sheet" role="dialog" aria-modal="true" aria-label="' + esc(o.title) + '"><i class="grab"></i><h3>' + esc(o.title) + "</h3>" + dl + '<button class="by-btn by-btn--primary by-btn--lg by-btn--block" type="button" data-ok>' + o.confirm + '</button><button class="by-btn by-btn--ghost by-btn--lg by-btn--block" type="button" data-x>Cancel</button></div>' +
+      '<div class="dialog" role="dialog" aria-modal="true" aria-label="' + esc(o.title) + '"><h3>' + esc(o.title) + "</h3>" + dl + '<div class="act"><button type="button" data-x>Cancel</button><button type="button" data-ok>' + (o.android || "OK") + "</button></div></div>";
+    layer.classList.add("on");
+    function close() { layer.classList.remove("on"); layer.innerHTML = ""; }
+    layer.onclick = function (e) {
+      if (e.target.closest("[data-ok]")) { close(); o.onConfirm(); }
+      else if (e.target.closest("[data-x]")) close();
+    };
+    var first = $(phone.dataset.os === "ios" ? ".sheet [data-ok]" : ".dialog [data-ok]", layer); if (first) first.focus({ preventScroll: true });
+  }
+  var fbTimer;
+  function feedback(msg, undo) {
+    clearTimeout(fbTimer);
+    fb.innerHTML = '<div class="banner" role="status">' + IC("check") + "<span>" + esc(msg) + "</span>" + (undo ? '<button type="button">Undo</button>' : "") + '</div><div class="snack" role="status"><span>' + esc(msg) + "</span>" + (undo ? '<button type="button">Undo</button>' : "") + "</div>";
+    if (undo) $$("button", fb).forEach(function (b) { b.addEventListener("click", function () { undo(); fb.innerHTML = ""; }); });
+    fbTimer = setTimeout(function () { fb.innerHTML = ""; }, 5600);
+  }
+
+  /* ---------- assistant ---------- */
+  var chatEl = null, chatBody = null, askForm = null;
+  function renderAssist() {
+    if (!chatEl) {
+      chatEl = el('<div class="chat" id="chat"></div>');
+      empty();
+    }
+    scr.innerHTML = ""; scr.appendChild(chatEl);
+    var oldBar = $(".ask-bar", phone); if (oldBar) oldBar.remove();
+    var bar = el('<div class="ask-bar"><div class="chips" id="pchips"></div><form id="pform" autocomplete="off"><input class="by-input" id="pin" placeholder="Ask for something…" aria-label="Ask the assistant" maxlength="100"><button class="by-btn by-btn--primary by-iconbtn" type="submit" aria-label="Send">' + IC("send") + "</button></form></div>");
+    phone.insertBefore(bar, tabbar);
+    $("#pchips").innerHTML = '<button class="by-chip" type="button" data-f="room">Room for 8 at 14:00</button><button class="by-chip" type="button" data-f="park">Parking on Friday</button>';
+    $("#pchips").addEventListener("click", function (e) { var b = e.target.closest("[data-f]"); if (b) startFlow(b.dataset.f); });
+    $("#pform").addEventListener("submit", function (e) { e.preventDefault(); var v = $("#pin").value.trim(); if (!v) return; $("#pin").value = ""; var l = v.toLowerCase(); startFlow(/room|meeting/.test(l) ? "room" : /park|car/.test(l) ? "park" : "none", v); });
+    setTimeout(function () { scr.scrollTop = scr.scrollHeight; }, 0);
+  }
+  function empty() { chatEl.innerHTML = '<div class="ask-empty" id="aempty"><span class="mark">' + IC("spark") + '</span><h2 class="t-h2" style="font:800 24px/1.15 var(--font)">What do you need?</h2><p class="t-small">I can book rooms and parking. I show you the change first, and nothing happens until you confirm.</p></div>'; }
+  function push(d) { var e = $("#aempty", chatEl); if (e) e.remove(); chatEl.appendChild(d); scr.scrollTo({ top: scr.scrollHeight, behavior: "smooth" }); return d; }
+  function say(t) { return push(el('<div class="msg msg--ai"><span class="av">' + IC("spark") + '</span><div class="by-bub by-bub--ai">' + esc(t) + "</div></div>")); }
+  function usr(t) { return push(el('<div class="msg msg--user"><div class="by-bub by-bub--user">' + esc(t) + "</div></div>")); }
+  function card(h, c) { return push(el('<div class="msg" style="display:block"><div class="by-ai ' + (c || "") + '">' + h + "</div></div>")); }
+  async function think(t, steps, summary) {
+    var d = card('<span class="by-ai-tag">' + IC("spark") + ' Working</span><ul class="by-think">' + steps.map(function (s) { return '<li><span class="st"></span>' + esc(s) + "</li>"; }).join("") + "</ul>");
+    var lis = $$("li", d);
+    for (var i = 0; i < lis.length; i++) { lis[i].className = "is-run"; lis[i].firstChild.innerHTML = '<span class="by-spin"></span>'; await sleep(560); if (t !== token) return false; lis[i].className = "is-done"; lis[i].firstChild.innerHTML = IC("check"); }
+    await sleep(220); if (t !== token) return false;
+    d.firstChild.replaceWith(el('<div class="sumline">' + IC("check") + "<span>" + esc(summary) + "</span></div>")); return true;
+  }
+  function propose(spec) {
+    var d = card('<span class="by-ai-tag">' + IC("spark") + " " + esc(spec.tag) + '</span><b class="by-ai__title">' + esc(spec.title) + '</b><dl class="dl2">' + spec.rows.map(function (r) { return "<dt>" + r[0] + "</dt><dd>" + esc(r[1]) + "</dd>"; }).join("") + '</dl><div class="by-why">' + spec.why.map(function (w) { return "<span>" + IC("check") + esc(w) + "</span>"; }).join("") + '</div><div class="row" style="display:flex;gap:8px;flex-wrap:wrap"><button class="by-btn by-btn--primary" type="button" data-c="ok">' + esc(spec.confirm) + '</button><button class="by-btn by-btn--ghost" type="button" data-c="no">Not now</button></div>');
+    var box = d.firstChild;
+    return new Promise(function (res) {
+      box.addEventListener("click", function (e) {
+        var b = e.target.closest("[data-c]"); if (!b) return;
+        $$("button", box).forEach(function (x) { x.disabled = true; });
+        if (b.dataset.c === "no") { box.style.opacity = ".6"; res({ ok: false }); } else res({ ok: true, box: box });
+      });
+    });
+  }
+  function done(box, o) {
+    box.classList.add("is-committed");
+    box.innerHTML = '<span class="by-badge by-badge--ok">' + IC("check") + " Done</span><b class=\"by-ai__title\">" + esc(o.title) + '</b><p class="t-small">' + esc(o.detail) + '</p><div class="undo-line"><span class="ring" style="--t:1"></span><span>You can undo this for a few seconds.</span><button class="by-btn by-btn--secondary by-btn--sm" type="button">' + IC("undo") + " Undo</button></div>";
+    var ring = $(".ring", box), line = $(".undo-line", box), t0 = Date.now(), used = false;
+    var iv = setInterval(function () { var f = 1 - (Date.now() - t0) / 8000; if (f <= 0 || used) { clearInterval(iv); if (!used) line.innerHTML = '<span>Saved. Need to change it? Ask me again.</span>'; return; } ring.style.setProperty("--t", f.toFixed(3)); }, 120);
+    $("button", box).addEventListener("click", function () { used = true; line.innerHTML = '<span class="by-badge">' + IC("undo") + " Undone</span>"; o.undo(); });
+  }
+  async function startFlow(kind, text) {
+    var t = ++token;
+    if (kind === "none") { usr(text); await sleep(450); say("I can book rooms and parking for now. Try one of the examples."); return; }
+    if (kind === "room") {
+      usr("Book a room for 8 at 14:00");
+      if (!(await think(t, ["Reading your calendar", "Finding rooms for 8 people", "Checking distance"], "Checked your calendar and 3 rooms"))) return;
+      say("I found a room that fits. Check it, then confirm.");
+      var r = await propose({ tag: "Proposal · not booked yet", title: "Book Room B2", rows: [["When", "Today · 14:00–15:00"], ["Where", "Building B · floor 2"], ["Seats", "10 · projector"]], why: ["Fits 8 people", "Same building", "Free all hour"], confirm: "Confirm booking" });
+      if (!r.ok) { say("Okay. Nothing was booked."); return; }
+      var item = { t: "14:00", title: "Product sync", place: "Room B2", ic: "users", isNew: true };
+      S.today.push(item); S.dismissedSug = true;
+      done(r.box, { title: "Room B2 booked", detail: "Today 14:00–15:00. It is on your Home screen.", undo: function () { S.today = S.today.filter(function (x) { return x !== item; }); say("Booking removed."); } });
+    } else {
+      usr("Reserve parking for Friday");
+      if (!(await think(t, ["Reading the request", "Finding your usual spot"], "Matched your usual vehicle and spot"))) return;
+      say("You usually park in P2. Check it, then confirm.");
+      var r2 = await propose({ tag: "Proposal · not reserved yet", title: "Reserve a parking spot", rows: [["Day", DAYS[Math.min(4, 6)].full], ["Vehicle", "LV-4821 · Skoda Octavia"], ["Spot", "P2-14 · next to lift B"]], why: ["Your usual zone", "Covered"], confirm: "Reserve spot" });
+      if (!r2.ok) { say("Okay. No spot was reserved."); return; }
+      done(r2.box, { title: "Spot P2-14 reserved", detail: DAYS[4].full + ". The pass is in this app.", undo: function () { say("Reservation cancelled."); } });
+    }
+  }
+
+  /* ---------- controls ---------- */
+  $$(".ctl [data-os]").forEach(function (b) { b.addEventListener("click", function () { S.os = b.dataset.os; var bar = $(".ask-bar", phone); if (bar) bar.remove(); layer.classList.remove("on"); layer.innerHTML = ""; fb.innerHTML = ""; render(); }); });
+  $$(".ctl [data-mode]").forEach(function (b) { b.addEventListener("click", function () { S.mode = b.dataset.mode; render(); }); });
+  $("#resetBtn").addEventListener("click", function () { token++; var bar = $(".ask-bar", phone); if (bar) bar.remove(); chatEl = null; var o = S.os, m = S.mode; S = fresh(); S.os = o; S.mode = m; layer.classList.remove("on"); layer.innerHTML = ""; fb.innerHTML = ""; render(); });
+  $$("[data-show]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var k = b.dataset.show;
+      $("#lab").scrollIntoView({ behavior: "smooth", block: "start" });
+      if (k === "nav") { S.tab = "home"; render(); }
+      else if (k === "book") { S.tab = "book"; render(); }
+      else if (k === "confirm") { S.tab = "book"; render(); confirmBooking(ROOMS[0], 0, "14:00"); }
+    });
+  });
+  render();
+})();
+</script>
+</body>
+</html>

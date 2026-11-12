@@ -1,0 +1,1090 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AI Status Kit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="../assets/by.css">
+<style>
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.case-hero { padding-block: 36px 0; gap: 16px; }
+.case-hero h1 { font-size: clamp(38px, 6vw, 68px); }
+.meta { margin: 0; padding-top: 14px; gap: 12px 24px; }
+section.labwrap { padding-block: 24px 0; gap: 16px; }
+
+/* dock */
+.dock { background: color-mix(in srgb, var(--bg) 92%, transparent); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid var(--rule); border-radius: 14px; padding: 12px 16px; display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: flex-end; box-shadow: var(--shadow); z-index: 50; }
+@media (min-width: 900px) and (min-height: 760px) { .dock { position: sticky; top: 58px; } }
+.dock .lbl { display: grid; gap: 4px; font: 500 11px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); min-width: 0; }
+.dock .lbl b { color: var(--ink); font-weight: 600; }
+.dock input[type=range] { width: 170px; max-width: 100%; accent-color: var(--accent); margin: 6px 0; }
+.grp { display: inline-flex; flex-wrap: wrap; padding: 3px; background: var(--surface-2); border-radius: 10px; gap: 2px; }
+.grp button { border: 0; background: transparent; padding: 7px 12px; border-radius: 8px; font: 600 12.5px var(--text); color: var(--ink-2); }
+.grp button:hover { color: var(--ink); }
+.grp button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+.dock .cta { padding: 9px 16px; font-size: 13px; }
+.dock .cta.ghost { background: var(--surface); }
+.dock .acts { display: flex; gap: 8px; align-items: center; margin-left: auto; }
+@media (max-width: 700px) { .dock .acts { margin-left: 0; } .dock .lbl { width: 100%; } }
+
+/* stage */
+.stage { border-radius: 20px; border: 1px solid var(--rule); padding: 24px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 460px); gap: 24px; min-width: 0; --k: 1; }
+@media (max-width: 899px) { .stage { grid-template-columns: minmax(0, 1fr); padding: 12px; } .stage .app { display: none; } }
+.app { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 20px; display: grid; gap: 12px; align-content: start; box-shadow: var(--shadow-1); }
+.app .ah { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.app .ah b { font: 750 20px var(--font); letter-spacing: -.015em; }
+.ev { display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: 12px; padding: 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface-2); align-items: center; font: 600 14px/1.35 var(--font); }
+.ev time { font: 600 12px var(--mono); color: var(--ink-3); }
+.ev small { display: block; font: 500 12.5px var(--font); color: var(--ink-3); }
+.ev.slot { min-height: 64px; transition: background var(--d3) var(--ease), border-color var(--d3) var(--ease), color var(--d3) var(--ease); background: var(--surface); border: 1.5px dashed var(--line-2); color: var(--ink-3); }
+.ev.slot.hold, .ev.slot.prop { border-color: var(--ai-line); background: color-mix(in oklch, var(--ai-soft) 70%, var(--surface)); color: var(--ink); }
+.ev.slot.solid { border: 1px solid var(--ok); background: var(--ok-soft); color: var(--ink); border-style: solid; }
+.ev.slot.bad { border: 1px solid var(--bad); background: var(--bad-soft); color: var(--bad); border-style: solid; }
+.ev.slot.bad b { text-decoration: line-through; }
+.fake { display: grid; gap: 8px; margin-top: 6px; }
+.fake i { display: block; height: 10px; border-radius: 5px; background: var(--surface-3); }
+
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--shadow-2); display: flex; flex-direction: column; height: 660px; min-width: 0; overflow: hidden; }
+.phd { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+.phd b { font: 700 15px var(--font); } .phd .by-badge { margin-left: auto; }
+.pbody { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 18px 16px 14px; display: grid; gap: 14px; align-content: start; min-height: 0; }
+.ptoast { padding: 0 12px; } .ptoast:not(:empty) { padding-bottom: 10px; }
+.pcomp { padding: 12px; border-top: 1px solid var(--line); display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; }
+.pcomp .hint { grid-column: 1 / -1; font: 500 12.5px var(--font); color: var(--ink-3); display: flex; gap: 6px; align-items: center; }
+.msg { display: flex; gap: 10px; min-width: 0; position: relative; }
+.msg.me { justify-content: flex-end; }
+.msg.me .bub { background: var(--navy); color: var(--on-navy); padding: 10px 14px; border-radius: 16px 16px 4px 16px; max-width: 88%; font: 550 14.5px/1.45 var(--font); }
+.msg .sp, .by-avatar.sp { background: var(--ai-soft); color: var(--ai); }
+.msg .ac, .gmini .ac { min-width: 0; flex: 1; display: grid; gap: 10px; position: relative; }
+.msg .ac p, .gmini .ac p { font: 500 14.5px/1.45 var(--font); }
+.ghost { color: var(--ink-3); border: 1.5px dashed var(--line-2); border-radius: var(--r); padding: 10px 12px; }
+.empty { display: grid; gap: 10px; justify-items: start; padding: 6px 0; }
+.empty h3 { font: 750 20px var(--font); } .empty p { color: var(--ink-2); font: 500 14.5px/1.5 var(--font); }
+.sugg { display: flex; flex-wrap: wrap; gap: 8px; }
+.by-ai .eh { display: flex; gap: 8px; align-items: flex-start; font: 700 15px/1.35 var(--font); color: var(--bad); }
+.by-ai.is-error p { color: var(--ink); }
+.by-ai > .by-badge, .by-ai > .by-ai-tag { justify-self: start; }
+.by-ai .btns { display: flex; flex-wrap: wrap; gap: 8px; }
+.invs { display: flex; flex-wrap: wrap; gap: 6px; }
+.invs span { display: inline-flex; gap: 5px; align-items: center; font: 600 12.5px var(--font); padding: 4px 9px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); }
+.invs .ic { width: 13px; height: 13px; }
+.invs .ok .ic { color: var(--ok); } .invs .no { border-color: var(--bad); color: var(--bad); background: var(--bad-soft); }
+.mailf { display: grid; gap: 10px; }
+.sum { display: inline-flex; gap: 6px; align-items: center; font: 600 12.5px var(--font); color: var(--ink-3); }
+.sum .ic { color: var(--ok); width: 14px; height: 14px; }
+.cap { font: 600 11px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); }
+.hintp { font: 500 12.5px/1.4 var(--font); color: var(--ink-3); }
+.stage .by-toast { position: relative; animation: none; }
+.stage .by-toast .ic { color: var(--ok); }
+.stage .by-toast.enter { animation: toastin var(--d4) var(--ease-out) both; }
+
+/* animation hooks */
+.stage [data-mo] { position: relative; }
+.stage .enter { animation: by-pop var(--d3) var(--ease-out) both; }
+.stage .flip { animation: by-pulse var(--d4) var(--ease-out); }
+.stage .tick, .gmini .tick { animation: tickpop var(--d2) var(--ease-out); }
+@keyframes tickpop { 0% { transform: scale(.4); } 70% { transform: scale(1.18); } 100% { transform: scale(1); } }
+@keyframes toastin { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+@keyframes molbl { 0% { opacity: 0; } 8%, 72% { opacity: 1; } 100% { opacity: 0; } }
+.molbl { position: absolute; top: 0; right: 4px; transform: translateY(-50%); z-index: 6; font: 600 10.5px/1 var(--mono); background: var(--navy); color: var(--on-navy); padding: 4px 6px; border-radius: 5px; pointer-events: none; white-space: nowrap; animation: molbl calc(1.7s * var(--k, 1)) ease both; font-style: normal; }
+.by .by-spin { animation-duration: calc(.7s * var(--k, 1)); }
+.by .by-skel { animation-duration: calc(1.3s * var(--k, 1)); }
+
+/* new components */
+.by-loader { border: 1px solid var(--line); border-radius: calc(var(--r) + 2px); background: var(--surface); padding: 12px 14px; display: grid; gap: 8px; }
+.by-loader.inline { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-style: dashed; color: var(--ink-2); font: 600 14px var(--font); }
+.by-loader.inline .by-spin { color: var(--ai); }
+.by-loader.inline .by-btn { margin-left: auto; }
+.by-loader .lh { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.by-loader .lh b { font: 700 14px var(--font); }
+.by-loader .lh .mono { font-size: 12px; color: var(--ink-3); }
+.by-loader .lh .by-btn { margin-left: auto; }
+.by-loader .longwait { display: flex; gap: 8px; font: 600 13px/1.4 var(--font); color: var(--warn); background: var(--warn-soft); border-radius: var(--r); padding: 8px 10px; }
+.by-loader .longwait[hidden] { display: none; }
+.by-loader .part { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font: 500 13px/1.4 var(--font); color: var(--ink-2); }
+.by-loader .part li { display: flex; gap: 6px; } .by-loader .part li[hidden] { display: none; } .by-loader .part .ic { color: var(--ok); width: 14px; height: 14px; margin-top: 2px; }
+.by-steps { list-style: none; margin: 0; padding: 0; display: grid; }
+.by-steps li { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 10px; align-items: start; padding: 6px 0; position: relative; font: 600 14px/1.3 var(--font); color: var(--ink); }
+.by-steps li:not(:last-child)::before { content: ""; position: absolute; left: 10px; top: 28px; bottom: -6px; width: 2px; background: var(--line); }
+.by-steps .mk { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; border: 2px solid var(--line-2); color: var(--ink-3); background: var(--surface); position: relative; z-index: 1; transition: background var(--d2) var(--ease), border-color var(--d2) var(--ease); }
+.by-steps .mk .ic { width: 13px; height: 13px; stroke-width: 3; }
+.by-steps .mk .by-spin { width: 12px; height: 12px; border-width: 2px; }
+.by-steps small { display: block; font: 500 12.5px/1.35 var(--font); color: var(--ink-3); min-height: 1.35em; }
+.by-steps .is-pending { color: var(--ink-3); }
+.by-steps .is-active .mk { border-color: var(--ai); color: var(--ai); }
+.by-steps .is-done .mk { background: var(--ok); border-color: var(--ok); color: var(--surface); }
+.by-steps .is-failed .mk { background: var(--bad); border-color: var(--bad); color: var(--surface); }
+.by-steps .is-failed { color: var(--bad); } .by-steps .is-failed small { color: var(--bad); }
+.by-steps .is-skipped .mk { border-style: dashed; } .by-steps .is-skipped { color: var(--ink-3); text-decoration: line-through; text-decoration-color: var(--line-2); } .by-steps .is-skipped small { text-decoration: none; }
+.by-intent { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.ic-chip { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--ai-line); background: var(--ai-soft); color: var(--ink); font: 600 13px var(--font); transition: border-color var(--d2) var(--ease), background var(--d2) var(--ease), transform var(--d1) var(--ease); }
+button.ic-chip:hover { border-color: var(--ai); } button.ic-chip:active { transform: scale(.97); }
+.ic-chip .ic { width: 14px; height: 14px; color: var(--ai); }
+.ic-chip small { font: 500 11.5px var(--mono); color: var(--ink-3); }
+.ic-chip.is-warn { border-style: dashed; border-color: var(--warn); background: var(--warn-soft); } .ic-chip.is-warn .ic { color: var(--warn); }
+.ic-chip input { width: 11ch; border: 0; background: transparent; font: 600 13px var(--font); color: var(--ink); outline: none; padding: 0; }
+.ic-chip.is-edit { border-color: var(--focus); box-shadow: 0 0 0 3px var(--brand-soft); background: var(--surface); }
+.by-undo { display: inline-flex; align-items: center; gap: 8px; }
+.ring { position: relative; width: 28px; height: 28px; flex: none; }
+.ring svg { width: 28px; height: 28px; transform: rotate(-90deg); display: block; }
+.ring circle { fill: none; stroke-width: 3; }
+.ring .bg { stroke: color-mix(in oklch, var(--toast-ink) 25%, transparent); }
+.ring .fg { stroke: var(--toast-ink); stroke-linecap: round; stroke-dasharray: 69.12; }
+.ring b { position: absolute; inset: 0; display: grid; place-items: center; font: 600 11px var(--mono); }
+.by-toast .undo-b { margin-left: auto; }
+.ring.demo .fg { animation: ringrun calc(10s * var(--k, 1)) linear forwards; }
+@keyframes ringrun { from { stroke-dashoffset: 0; } to { stroke-dashoffset: 69.12; } }
+
+/* scrubber */
+.under { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 20px; align-items: start; }
+@media (max-width: 980px) { .under { grid-template-columns: minmax(0, 1fr); } }
+.tlwrap { overflow-x: auto; border: 1px solid var(--rule); border-radius: 14px; background: var(--surface); padding: 18px 8px 14px; }
+.tl { position: relative; display: grid; grid-template-columns: repeat(8, minmax(92px, 1fr)); row-gap: 12px; min-width: 760px; }
+.tl .line { position: absolute; top: 20px; left: 6.25%; right: 6.25%; height: 3px; background: var(--rule); border-radius: 2px; }
+.tl .fill { position: absolute; top: 20px; left: 6.25%; height: 3px; background: var(--accent); border-radius: 2px; width: 0; transition: width var(--d3) var(--ease); }
+.tl .ph { position: absolute; top: 21.5px; width: 16px; height: 16px; margin: -8px 0 0 -8px; background: var(--accent); border: 3px solid var(--surface); border-radius: 50%; box-shadow: 0 0 0 1.5px var(--accent); z-index: 3; transition: left var(--d3) var(--ease); pointer-events: none; }
+.nd { position: relative; z-index: 2; background: transparent; border: 0; padding: 4px 4px 6px; display: grid; justify-items: center; gap: 6px; text-align: center; border-radius: 8px; color: var(--ink-2); font: 500 11.5px/1.25 var(--mono); }
+.nd:hover { color: var(--ink); background: var(--surface-2); }
+.nd .dot { width: 22px; height: 22px; border-radius: 50%; background: var(--surface); border: 2px solid var(--rule); display: block; transition: background var(--d2) var(--ease), border-color var(--d2) var(--ease); }
+.nd.is-past .dot { background: var(--accent-soft); border-color: var(--accent); }
+.nd[aria-current="step"] .dot { background: var(--accent); border-color: var(--accent); }
+.nd[aria-current="step"] { color: var(--ink); font-weight: 600; }
+.nd small { font: 500 10.5px var(--mono); color: var(--ink-2); display: block; }
+.nd.br .dot { width: 16px; height: 16px; border-style: dashed; margin: 3px 0; }
+.nd.br[aria-current="step"] .dot { border-style: solid; }
+.nd.chain::before { content: ""; position: absolute; top: 15px; left: -50%; width: 100%; border-top: 2px dashed var(--rule); z-index: -1; }
+.nd.br.first::before { content: ""; position: absolute; top: -14px; left: 50%; height: 16px; border-left: 2px dashed var(--rule); z-index: -1; }
+.nd.uni .dot { border-color: var(--ink-2); opacity: .7; }
+.note { background: var(--surface); border: 1px solid var(--rule); border-radius: 14px; padding: 18px; display: grid; gap: 12px; }
+.note h3 { font-size: 22px; } .note dl { margin: 0; display: grid; gap: 10px; }
+.note dt { font: 500 11px var(--mono); letter-spacing: .07em; text-transform: uppercase; color: var(--accent); }
+.note dd { margin: 2px 0 0; font-size: 14.5px; line-height: 1.5; }
+.note .band { font: 500 12px var(--mono); color: var(--ink-2); }
+
+/* latency chart */
+.lat { padding: 40px 4px 34px; }
+.lat-strip { position: relative; height: 44px; border-radius: 10px; display: flex; }
+.lat-strip i { display: grid; place-items: center; font: 600 11px var(--mono); letter-spacing: .04em; font-style: normal; color: var(--ink); border-right: 2px solid var(--bg); overflow: hidden; white-space: nowrap; }
+.lat-strip i:first-child { border-radius: 10px 0 0 10px; } .lat-strip i:nth-child(4) { border-radius: 0 10px 10px 0; border-right: 0; }
+.s1 { background: var(--surface-2); } .s2 { background: var(--accent-soft); } .s3 { background: color-mix(in srgb, var(--accent) 30%, var(--surface)); } .s4 { background: color-mix(in srgb, var(--warn) 28%, var(--surface)); }
+.lat-strip .mk { position: absolute; top: -10px; bottom: -10px; width: 3px; margin-left: -1.5px; background: var(--ink); border-radius: 2px; transition: left var(--d3) var(--ease); z-index: 2; }
+.lat-strip .mk em { position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); font: 600 12px var(--mono); background: var(--ink); color: var(--bg); padding: 3px 7px; border-radius: 5px; white-space: nowrap; font-style: normal; margin-bottom: 4px; }
+.lat-ticks { position: relative; height: 22px; margin-top: 10px; }
+.lat-ticks span { position: absolute; transform: translateX(-50%); font: 500 11.5px var(--mono); color: var(--ink-2); white-space: nowrap; }
+.lat-ticks span:first-child { transform: none; } .lat-ticks span:last-child { transform: translateX(-100%); }
+.lat-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); gap: 14px; }
+.lc { background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 16px; display: grid; gap: 8px; align-content: start; min-width: 0; transition: border-color var(--d3) var(--ease), box-shadow var(--d3) var(--ease); }
+.lc.is-now { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.lc h3 { font-size: 18px; } .lc p { font-size: 14px; color: var(--ink-2); }
+.lc .rg { font: 600 12px var(--mono); color: var(--accent); }
+
+/* glance */
+.glance { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 330px), 1fr)); gap: 16px; align-items: start; }
+.gc { border: 1px solid var(--rule); border-radius: 14px; background: var(--surface); overflow: hidden; min-width: 0; }
+.gc header { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--rule); }
+.gc header b { font: 700 14px var(--display); letter-spacing: -.01em; } .gc header span { font: 500 11px var(--mono); color: var(--ink-2); text-transform: uppercase; letter-spacing: .05em; text-align: right; }
+.gmini { padding: 14px; display: grid; gap: 10px; min-width: 0; pointer-events: none; }
+.gmini .by-toast { margin-top: 2px; }
+
+/* words */
+.words { border: 1px solid var(--rule); border-radius: 12px; overflow: hidden; background: var(--surface); }
+.words .wr { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr); border-top: 1px solid var(--rule); }
+.words .wr:first-child { border-top: 0; background: var(--surface-2); font: 500 11.5px var(--mono); letter-spacing: .07em; text-transform: uppercase; color: var(--ink-2); }
+.words .wr > div { padding: 14px 18px; min-width: 0; }
+.words .wr > div:first-child { color: var(--crit); text-decoration: line-through; text-decoration-color: color-mix(in srgb, var(--crit) 45%, transparent); }
+.words .wr:first-child > div:first-child { color: var(--ink-2); text-decoration: none; }
+.words .wr > div:last-child { font-weight: 500; }
+@media (max-width: 600px) { .words .wr { grid-template-columns: minmax(0, 1fr); } .words .wr > div:first-child { padding-bottom: 0; } }
+
+/* motion */
+.mgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 16px; }
+.ecard { background: var(--surface); border: 1px solid var(--rule); border-radius: 14px; padding: 16px; display: grid; gap: 10px; text-align: left; min-width: 0; width: 100%; }
+.ecard:hover { border-color: var(--accent); }
+.ecard svg { width: 100%; max-width: 220px; height: auto; display: block; }
+.ecard code { font: 500 12px var(--mono); color: var(--ink-2); }
+.ecard .nm { font: 700 18px var(--display); letter-spacing: -.02em; }
+.ecard .axis { stroke: var(--rule); stroke-width: 1; } .ecard .crv { stroke: var(--accent); stroke-width: 3; fill: none; stroke-linecap: round; }
+.ecard .hd { stroke: var(--ink-2); stroke-width: 1; stroke-dasharray: 3 3; } .ecard .dt { fill: var(--accent); stroke: var(--surface); stroke-width: 2; }
+.mtrack { position: relative; height: 26px; border-radius: 13px; background: var(--surface-2); }
+.mtrack i { position: absolute; left: 3px; top: 3px; width: 20px; height: 20px; border-radius: 50%; background: var(--ink); }
+.mbar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.tokens { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); gap: 12px; }
+.tokens > div { background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 14px; display: grid; gap: 4px; }
+.tokens b { font: 600 15px var(--mono); } .tokens span { font-size: 14px; color: var(--ink-2); }
+.uses { display: flex; flex-wrap: wrap; gap: 8px; }
+.uses .chip code { font: 500 11.5px var(--mono); color: var(--accent); }
+.mnote { font-size: 14px; color: var(--ink-2); max-width: 70ch; }
+
+/* components doc */
+.cdoc { border: 1px solid var(--rule); border-radius: 14px; background: var(--surface); padding: 20px; display: grid; gap: 14px; min-width: 0; }
+.cdoc h3 { font-size: 20px; } .cdoc p.d { color: var(--ink-2); font-size: 15px; }
+.cdoc .st { font: 500 12px var(--mono); color: var(--ink-2); }
+.cdoc .by { border-radius: 12px; padding: 16px; display: grid; gap: 12px; min-width: 0; }
+.lgrid { align-items: start; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 12px; }
+.lgrid .by { padding: 12px; }
+.cap2 { font: 500 11px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); }
+</style>
+</head>
+<body>
+<header class="bar">
+  <div class="wrap">
+    <a class="brand" href="../index.html"><i aria-hidden="true"></i><span id="brandName">Your Name</span></a>
+    <nav aria-label="Work">
+      <a href="../index.html#work">All work</a>
+      <a href="telegram-bots.html">Bots</a>
+      <a href="security.html">Security</a>
+      <a href="plectra.html">Plectra</a>
+      <a href="brightyard-portal.html">Portal</a>
+      <a href="brightyard-mobile.html">Mobile</a>
+      <a href="brightyard-system.html">System</a>
+      <a href="voice-note.html">Voice note</a>
+      <a href="ai-states.html" aria-current="page">AI states</a>
+      <a href="space-finder.html">Space finder</a>
+    </nav>
+    <button class="toggle" id="themeBtn" type="button" aria-label="Switch colour theme">Theme: auto</button>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="case-hero">
+    <div class="row"><span class="kind concept">Concept</span><span class="kind">AI patterns</span><span class="kind">Motion</span></div>
+    <h1>AI Status Kit</h1>
+    <p class="sub">An AI action is not a spinner and a result. It has a lifecycle, and the right loading state depends on how long it takes. One request, every state, any latency. Slow it down to see the motion.</p>
+    <dl class="meta">
+      <div><dt class="label">Role</dt><dd>Interaction design, motion, prototype in code</dd></div>
+      <div><dt class="label">Built with</dt><dd>Brightyard tokens, a small state machine, plain JS</dd></div>
+      <div><dt class="label">Goes further than the Portal</dt><dd>Time, failure branches and motion</dd></div>
+      <div><dt class="label">Status</dt><dd>Concept, sample data</dd></div>
+    </dl>
+    <p class="honest"><b>Concept.</b> A self-initiated study with a fictional company and simulated timings. No users were involved and nothing here is measured.</p>
+  </div>
+
+  <section class="labwrap" id="lab" aria-label="Lifecycle lab">
+    <div class="dock" role="group" aria-label="Lab controls">
+      <div class="lbl"><span>Scenario</span>
+        <div class="grp" id="scnGrp" role="group" aria-label="Scenario">
+          <button type="button" data-scn="happy" aria-pressed="true">Happy path</button>
+          <button type="button" data-scn="taken" aria-pressed="false">Room taken</button>
+          <button type="button" data-scn="unclear" aria-pressed="false">Unclear request</button>
+          <button type="button" data-scn="offline" aria-pressed="false">Network drops</button>
+          <button type="button" data-scn="partial" aria-pressed="false">Partial failure</button>
+        </div></div>
+      <div class="lbl"><label for="latR">Latency <b id="latV">3.0 s</b> <b id="latB" style="font-weight:500;color:var(--ink-2)">· step list</b></label>
+        <input type="range" id="latR" min="0" max="100" step="1" value="66" aria-valuetext="3.0 seconds"></div>
+      <div class="lbl"><span>Presets</span>
+        <div class="grp" id="preGrp" role="group" aria-label="Latency presets">
+          <button type="button" data-ms="300" aria-pressed="false">Fast 0.3 s</button>
+          <button type="button" data-ms="3000" aria-pressed="true">Typical 3 s</button>
+          <button type="button" data-ms="10000" aria-pressed="false">Slow 10 s</button>
+        </div></div>
+      <div class="lbl"><span>Speed</span>
+        <div class="grp" id="spdGrp" role="group" aria-label="Speed">
+          <button type="button" data-slow="1" aria-pressed="true">1×</button>
+          <button type="button" data-slow="4" aria-pressed="false">0.25×</button>
+        </div></div>
+      <div class="lbl"><span>Overlay</span>
+        <div class="grp"><button type="button" id="specsBtn" aria-pressed="false">Motion specs</button></div></div>
+      <div class="lbl"><span>Stage</span>
+        <div class="grp" id="thGrp" role="group" aria-label="Stage theme">
+          <button type="button" data-th="light" aria-pressed="true">Light</button>
+          <button type="button" data-th="dark" aria-pressed="false">Dark</button>
+        </div></div>
+      <div class="acts">
+        <button class="cta ghost" type="button" id="pauseBtn">Pause</button>
+        <button class="cta" type="button" id="replayBtn">Replay</button>
+      </div>
+    </div>
+
+    <div class="by stage" id="stage" data-by="light" data-sync>
+      <div class="app" aria-hidden="true">
+        <div class="ah"><b>Tomorrow</b><span class="t-cap">Fri 13 Nov · Building B</span></div>
+        <div class="ev"><time>09:00</time><div>Facilities walkthrough<small>Room B1</small></div></div>
+        <div class="ev slot" id="slot"><time>10:00</time><div id="slotT"></div></div>
+        <div class="ev"><time>11:30</time><div>Supplier call<small>Room B3</small></div></div>
+        <div class="ev"><time>14:00</time><div>Quarterly planning<small>Room B1</small></div></div>
+        <div class="fake"><i style="width:70%"></i><i style="width:90%"></i><i style="width:55%"></i></div>
+      </div>
+      <div class="panel" role="region" aria-label="Assistant panel">
+        <div class="phd"><span class="by-avatar sp" aria-hidden="true"><svg class="ic"><use href="#i-spark"/></svg></span><b>Brightyard Assistant</b><span id="phbadge"></span></div>
+        <div class="pbody" id="pbody"></div>
+        <div class="ptoast" id="ptoast"></div>
+        <form class="pcomp" id="pcomp" novalidate></form>
+      </div>
+    </div>
+    <p class="sr" id="liveSay" aria-live="polite"></p>
+
+    <div class="under">
+      <div class="tlwrap" id="tlwrap" role="group" aria-label="Timeline of states. Select a state to jump to it."><div class="tl" id="tl"></div></div>
+      <div class="note" id="note" aria-live="off"></div>
+    </div>
+  </section>
+
+  <section id="bands">
+    <div class="sec-head"><span class="num">01 · LATENCY BANDS</span><h2>The wait decides the pattern</h2>
+      <p>A request that takes a quarter of a second needs no loader at all. One that takes ten seconds needs progress and a way out. The marker follows the latency slider above.</p></div>
+    <div class="lat" id="latChart">
+      <div class="lat-strip"><i class="s1" style="width:12%">none</i><i class="s2" style="width:24%">spinner</i><i class="s3" style="width:44%">step list</i><i class="s4" style="width:20%">+ exit</i>
+        <b class="mk" id="latMk" style="left:66%"><em id="latMkT">3.0 s</em></b></div>
+      <div class="lat-ticks" aria-hidden="true"><span style="left:0">0</span><span style="left:12%">0.4 s</span><span style="left:36%">2 s</span><span style="left:80%">8 s</span><span style="left:100%">12 s</span></div>
+    </div>
+    <div class="lat-cards">
+      <div class="lc" data-band="1"><span class="rg">UNDER 0.4 S</span><h3>Show nothing</h3><p>A spinner that appears and vanishes inside half a second reads as a glitch. The result just arrives.</p></div>
+      <div class="lc" data-band="2"><span class="rg">0.4 TO 2 S</span><h3>Spinner and a verb</h3><p>One line, present tense: “Checking calendars”. The person learns what is happening without having to read a list.</p></div>
+      <div class="lc" data-band="3"><span class="rg">2 TO 8 S</span><h3>Step list</h3><p>Each step has its own state, so a long wait is divided into short, visible progress. Cancel stays in reach.</p></div>
+      <div class="lc" data-band="4"><span class="rg">OVER 8 S</span><h3>Steps and an exit</h3><p>Admit the delay, say they can leave, and show partial results as they arrive. Silence is the thing that feels slow.</p></div>
+    </div>
+  </section>
+
+  <section id="glance">
+    <div class="sec-head"><span class="num">02 · ALL STATES AT A GLANCE</span><h2>Every state, at rest</h2>
+      <p>The same render function as the lab, frozen. Twenty-three states across five scenarios, readable without pressing anything. The stage theme control above switches these too.</p></div>
+    <div class="glance" id="glanceGrid"></div>
+  </section>
+
+  <section id="words">
+    <div class="sec-head"><span class="num">03 · WORDS</span><h2>Words for AI statuses</h2>
+      <p>Status text is interface, not decoration. Each line below says what the system is doing to which thing, and what the person can do next.</p></div>
+    <div class="words" role="table" aria-label="Instead of and write">
+      <div class="wr" role="row"><div role="columnheader">Instead of</div><div role="columnheader">Write</div></div>
+      <div class="wr" role="row"><div role="cell">AI is thinking...</div><div role="cell">Checking 6 rooms in Building B</div></div>
+      <div class="wr" role="row"><div role="cell">Processing your request</div><div role="cell">Reading: 8 people, tomorrow 10:00, design team</div></div>
+      <div class="wr" role="row"><div role="cell">Are you sure?</div><div role="cell">Book Room B2 for 8 people? Nothing is booked until you confirm.</div></div>
+      <div class="wr" role="row"><div role="cell">Done!</div><div role="cell">Room B2 booked for tomorrow, 10:00–11:00</div></div>
+      <div class="wr" role="row"><div role="cell">Something went wrong</div><div role="cell">Couldn't reach the calendar service. Retry, or book without invites.</div></div>
+      <div class="wr" role="row"><div role="cell">Error: conflict</div><div role="cell">Room B2 was booked by someone else a moment ago. Room B4 is free, 2 min walk away.</div></div>
+      <div class="wr" role="row"><div role="cell">Please wait</div><div role="cell">This is taking longer than usual. You can close this; we'll notify you when the room is held.</div></div>
+      <div class="wr" role="row"><div role="cell">Operation failed for some recipients</div><div role="cell">2 of 8 invites failed: guests outside your company need an email.</div></div>
+    </div>
+    <div class="three">
+      <div><span class="label">Rule 1</span><h3>Present tense while working</h3><p>“Checking calendars.” The system is doing it now, so the verb says so.</p></div>
+      <div><span class="label">Rule 2</span><h3>Past tense when done</h3><p>“Room B2 booked.” The result is a fact, and the sentence reports it as one.</p></div>
+      <div><span class="label">Rule 3</span><h3>Name the object and the next step</h3><p>“Room B2” beats “it”. “Retry, or book without invites” beats “try again later”.</p></div>
+    </div>
+  </section>
+
+  <section id="motion">
+    <div class="sec-head"><span class="num">04 · MOTION</span><h2>Four durations, three curves</h2>
+      <p>Motion explains what changed. Press or hover a curve to run it. The ball underneath runs at real speed with the actual token; the dot on the curve runs five times slower so you can follow it. The 0.25× switch in the lab dock also slows these.</p></div>
+    <div class="tokens">
+      <div><b>--d1 · 100 ms</b><span>Press feedback. Buttons, chips.</span></div>
+      <div><b>--d2 · 180 ms</b><span>Hover and small changes. Step ticks.</span></div>
+      <div><b>--d3 · 280 ms</b><span>Enter. New blocks, progress width.</span></div>
+      <div><b>--d4 · 440 ms</b><span>Layout and commit. Toast, card morph.</span></div>
+    </div>
+    <div class="mbar"><span class="label">Duration for the demo</span>
+      <div class="grp" id="durGrp" role="group" aria-label="Demo duration">
+        <button type="button" data-d="1" aria-pressed="false">--d1</button><button type="button" data-d="2" aria-pressed="false">--d2</button><button type="button" data-d="3" aria-pressed="true">--d3</button><button type="button" data-d="4" aria-pressed="false">--d4</button>
+      </div></div>
+    <div class="mgrid" id="mgrid">
+      <button type="button" class="ecard" data-e="ease" data-c=".2,0,0,1"><span class="nm">--ease</span><svg viewBox="0 0 120 120" aria-hidden="true"></svg><div class="mtrack"><i></i></div><code>cubic-bezier(.2, 0, 0, 1)</code><span class="mnote">Default. Quick start, soft landing.</span></button>
+      <button type="button" class="ecard" data-e="out" data-c=".05,.7,.1,1"><span class="nm">--ease-out</span><svg viewBox="0 0 120 120" aria-hidden="true"></svg><div class="mtrack"><i></i></div><code>cubic-bezier(.05, .7, .1, 1)</code><span class="mnote">Things arriving. Fast in, long settle.</span></button>
+      <button type="button" class="ecard" data-e="in" data-c=".3,0,.8,.15"><span class="nm">--ease-in</span><svg viewBox="0 0 120 120" aria-hidden="true"></svg><div class="mtrack"><i></i></div><code>cubic-bezier(.3, 0, .8, .15)</code><span class="mnote">Things leaving. Slow start, quick exit.</span></button>
+    </div>
+    <div>
+      <p class="label" style="margin-bottom:10px">Where it is used in the lab</p>
+      <div class="uses">
+        <span class="chip">Button press <code>--d1 · --ease</code></span>
+        <span class="chip">Chip hover <code>--d2 · --ease</code></span>
+        <span class="chip">Step tick <code>--d2 · --ease-out</code></span>
+        <span class="chip">Block enter <code>--d3 · --ease-out</code></span>
+        <span class="chip">Progress width <code>--d3 · --ease</code></span>
+        <span class="chip">Playhead move <code>--d3 · --ease</code></span>
+        <span class="chip">Card morph <code>--d4 · --ease-out</code></span>
+        <span class="chip">Toast enter <code>--d4 · --ease-out</code></span>
+      </div>
+    </div>
+    <p class="mnote" id="rmNote">With reduced motion on, durations drop to zero and every curve shows its end state. The lab still runs on time; only the movement is removed.</p>
+  </section>
+
+  <section id="components">
+    <div class="sec-head"><span class="num">05 · NEW COMPONENTS</span><h2>Four proposals for the system</h2>
+      <p>Everything below is built from Brightyard tokens and sits beside the existing AI language. All four are live.</p></div>
+    <div class="two">
+      <div class="cdoc"><h3>Step list</h3><p class="d">Agent progress for waits over two seconds. Each step carries its own state and a line of detail.</p>
+        <div class="by" data-by="light" data-sync id="cmpSteps"></div>
+        <p class="st">States: pending, active, done, failed, skipped</p></div>
+      <div class="cdoc"><h3>Intent chips</h3><p class="d">The parsed request, shown before work starts. Press a chip to fix a misread. Assumptions say so.</p>
+        <div class="by" data-by="light" data-sync><div data-ictx="demo" id="cmpChips"></div><p class="hintp" id="cmpChipOut" aria-live="polite"></p></div>
+        <p class="st">States: default, hover, editing, ambiguous, assumed</p></div>
+      <div class="cdoc"><h3>Undo countdown</h3><p class="d">A toast action with a ring that shows how long the undo lasts. When it ends, the toast leaves and the result stays.</p>
+        <div class="by" data-by="light" data-sync><div id="cmpUndo"></div></div>
+        <p class="st">States: counting, undone, expired</p></div>
+      <div class="cdoc"><h3>Latency-aware loader</h3><p class="d">One component, four faces. It picks the face from the expected wait, so product teams do not choose a spinner by habit.</p>
+        <div class="by" data-by="light" data-sync id="cmpLoad"></div>
+        <p class="st">States: none, inline, steps, steps with exit</p></div>
+    </div>
+  </section>
+
+  <section id="test">
+    <div class="sec-head"><span class="num">06 · WHAT I WOULD TEST</span><h2>Three hypotheses</h2>
+      <p>None of these has been tested. They are the questions I would put to real people first.</p></div>
+    <div class="three">
+      <div><span class="label">H1 · The 0.4 s rule</span><h3>Silence feels faster</h3><p>I expect that showing no loader under 0.4 s makes quick answers feel faster and prompts no extra “did it work?” taps. Compare it with a spinner that always shows, measuring perceived speed and repeat taps.</p></div>
+      <div><span class="label">H2 · Intent chips</span><h3>Misreads get fixed early</h3><p>I expect that people who see the parsed request as chips fix a wrong time or head count before the proposal appears, so fewer proposals need Change. Count edits per run and Change taps per proposal.</p></div>
+      <div><span class="label">H3 · Undo ring</span><h3>A visible clock helps, or pressures</h3><p>I expect people to trust a ring more than a bare Undo link. It could also rush them into undoing just to stop the timer. Watch for Undo taps in the last two seconds.</p></div>
+    </div>
+  </section>
+
+  <section style="padding-bottom: 8px">
+    <div class="sec-head"><span class="num">NEXT</span><h2>More work</h2></div>
+    <div class="next-work">
+      <a href="brightyard-portal.html"><span class="label">Same system</span><b>Brightyard Portal</b><span>The web app with eight assistant states.</span></a>
+      <a href="voice-note.html"><span class="label">New work</span><b>Voice note</b><span>From a product owner's voice message to draft flows.</span></a>
+      <a href="space-finder.html"><span class="label">New work</span><b>Space Finder</b><span>Leasing space in a business park, with an AI match.</span></a>
+    </div>
+  </section>
+  <footer><span>Concept work. Fictional company, sample data.</span><span>Designed and built with Claude Code, November 2026</span></footer>
+</main>
+<script src="../assets/profile.js"></script>
+<script src="../assets/icons.js"></script>
+<script src="../assets/site.js"></script>
+<script>
+(function () {
+  "use strict";
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+  var REDUCE = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var REQ = "Book a room for 8 people tomorrow at 10:00 and invite the design team.";
+  var CUT = 0.38, B = [0, 0.22, 0.52, 0.8, 1];
+  var MO = {
+    enter: "enter · --d3 280 ms · --ease-out", flip: "morph · --d4 440 ms · --ease-out",
+    tick: "tick · --d2 180 ms · --ease-out", toast: "enter · --d4 440 ms · --ease-out"
+  };
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+  function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+  var ROOM = {
+    B2: { seats: 10, where: "Room B2, Building B Linden, floor 2" },
+    B4: { seats: 12, where: "Room B4, Building B Linden, floor 2 · 2 min walk" }
+  };
+  var NAMES = ["Alma", "Daniel", "Jonas", "Priya", "Tomas", "Mira"];
+
+  /* ---------- state ---------- */
+  function newCtx() {
+    return { people: 8, when: "tomorrow 10:00", who: "design team", dur: "1 h", req: REQ, team: "Product Design", room: "B2",
+      answered: false, retried: false, resent: false, addEmails: false, skipped: false, holdUnd: false, edit: null, cancel: null, emErr: false };
+  }
+  var S = { scn: "happy", L: 3000, slow: 1, specs: false, theme: "light", paused: false, phase: "idle", t: 0, auto: true, pin: false, ctx: newCtx() };
+  var demoSt = { scn: "happy", phase: "x", L: 3000, t: 0, ctx: newCtx() };
+
+  function band(L) { return L < 400 ? 1 : L < 2000 ? 2 : L <= 8000 ? 3 : 4; }
+  function T(L) {
+    var b = band(L), U = 0, W = 0;
+    if (b === 2) { U = Math.max(120, L * 0.25); W = L - U; }
+    if (b >= 3) { U = clamp(L * 0.3, 600, 1800); W = L - U; }
+    return { b: b, U: U, W: W, C: clamp(L * 0.4, 200, 2500) };
+  }
+  function endAt(st) {
+    var d = T(st.L), s = st.scn, c = st.ctx;
+    switch (st.phase) {
+      case "idle": return st.auto ? 700 : Infinity;
+      case "understanding": return c.holdUnd ? Infinity : d.U;
+      case "working": return (s === "offline" && !c.retried) ? d.W * CUT : d.W;
+      case "confirming": return 300;
+      case "committing": return (s === "taken" && c.room === "B2") ? d.C * 0.9 : d.C;
+      case "done": return 10000;
+      case "conflict": return 1500;
+      case "answer": return 700;
+      case "offline": return 1400;
+      case "retry": return 1300;
+      case "partial": return 1600;
+      case "resend": return 1400;
+      default: return Infinity;
+    }
+  }
+  function nextOf(st) {
+    var s = st.scn, c = st.ctx;
+    switch (st.phase) {
+      case "idle": return "understanding";
+      case "understanding": return (s === "unclear" && !c.answered) ? "clarify" : "working";
+      case "working": return (s === "offline" && !c.retried) ? "offline" : "proposal";
+      case "confirming": return "committing";
+      case "committing": if (s === "taken" && c.room === "B2") return "conflict"; if (s === "partial" && !c.resent) return "partial"; return "done";
+      case "done": return "settled";
+      case "conflict": return "alt";
+      case "answer": return "working";
+      case "offline": return "draftkept";
+      case "retry": return "working";
+      case "partial": return "partial6";
+      case "resend": return "done";
+      default: return null;
+    }
+  }
+  var PM = { idle: 0, understanding: 1, working: 2, proposal: 3, confirming: 4, committing: 5, done: 6, settled: 7, conflict: 5, alt: 5, clarify: 1, answer: 1, offline: 2, draftkept: 2, retry: 2, partial: 5, partial6: 5, resend: 5, cancelled: 2, undone: 6 };
+  var NAME = { idle: "Idle", understanding: "Understanding", working: "Working", proposal: "Proposal", confirming: "Confirming", committing: "Committing", done: "Done", settled: "Settled", conflict: "Conflict", alt: "Alternative proposed", clarify: "Clarify", answer: "Answer", offline: "Offline", draftkept: "Draft kept", retry: "Retry", partial: "Partial", partial6: "6 of 8 invites sent", resend: "Resend 2", cancelled: "Cancelled", undone: "Undone" };
+
+  /* ---------- steps model ---------- */
+  var STEPS = ["Understand the request", "Check 6 rooms in Building B", "Check 8 calendars", "Hold Room B2", "Draft invites"];
+  var VERB = ["Reading your request", "Checking rooms", "Checking calendars", "Holding Room B2", "Drafting invites"];
+  var PART = [[1, "Room B2 fits 8 people and is free 10:00–11:00"], [1, "Room B4 also fits, 2 min walk away"], [2, "All 8 calendars are free at 10:00"], [3, "Room B2 held until 10:10"]];
+  function wtOf(st) {
+    var d = T(st.L), p = st.phase;
+    if (p === "understanding" || p === "clarify") return -1;
+    if (p === "working") return d.W > 0 ? st.t / d.W : 2;
+    if (p === "offline") return CUT;
+    if (p === "cancelled") return st.ctx.cancel ? st.ctx.cancel.wt : 2;
+    return 2;
+  }
+  function stepModel(st) {
+    var wt = wtOf(st), p = st.phase, N = st.ctx.people, out = [], i, lo, hi, s, sub, fr;
+    for (i = 0; i < 5; i++) {
+      if (i === 0) { s = wt === -1 ? "active" : "done"; sub = s === "active" ? "Reading 8 details" : "Found 4 details"; }
+      else {
+        lo = B[i - 1]; hi = B[i];
+        s = wt >= hi ? "done" : wt >= lo ? "active" : "pending";
+        fr = s === "active" ? (wt - lo) / (hi - lo) : 0;
+        if (i === 1) sub = s === "active" ? "Checked " + Math.floor(fr * 6) + " of 6" : s === "done" ? "Rooms B2 and B4 fit " + N : "";
+        if (i === 2) sub = s === "active" ? "Checked " + Math.floor(fr * N) + " of " + N + " calendars" : s === "done" ? "All " + N + " free at 10:00" : "";
+        if (i === 3) sub = s === "active" ? "Holding for 10 minutes" : s === "done" ? "Room B2 held until 10:10" : "";
+        if (i === 4) sub = s === "active" ? "Drafting " + N + " invites" : s === "done" ? N + " drafts ready" : "";
+      }
+      if (p === "offline" && s === "active") { s = "failed"; sub = "Connection lost. Request saved."; }
+      if (p === "cancelled" && (s === "active" || s === "pending")) { s = "skipped"; sub = "Skipped"; }
+      out.push({ s: s, sub: sub });
+    }
+    return out;
+  }
+  function markHTML(s) {
+    return s === "active" ? '<i class="by-spin"></i>' : s === "done" ? ic("check") : s === "failed" ? ic("x") : s === "skipped" ? "" : "";
+  }
+  function stepsList(model) {
+    return '<ol class="by-steps">' + model.map(function (m, i) {
+      return '<li class="is-' + m.s + '" data-step="' + i + '" data-st="' + m.s + '"><span class="mk">' + markHTML(m.s) + '</span><span><b>' + STEPS[i] + '</b><small data-sub>' + esc(m.sub) + '</small></span></li>';
+    }).join("") + "</ol>";
+  }
+  function elapsed(st) { var d = T(st.L); return st.phase === "understanding" ? st.t : st.phase === "working" ? d.U + st.t : (st.phase === "offline" ? d.U + d.W * CUT : d.U + d.W); }
+  function fmtS(ms) { return (ms / 1000).toFixed(1) + " s"; }
+
+  /* ---------- pieces ---------- */
+  function row(k, inner, o, ai) {
+    if (o && o.compact) return '<div class="ac" data-k="' + k + '">' + inner + "</div>";
+    return '<div class="msg ai" data-k="' + k + '" data-mo="' + MO.enter + '"><span class="by-avatar sp" aria-hidden="true">' + ic("spark") + '</span><div class="ac">' + inner + "</div></div>";
+  }
+  function me(txt, k) { return '<div class="msg me" data-k="' + (k || "me") + '" data-mo="' + MO.enter + '"><div class="bub">' + esc(txt) + "</div></div>"; }
+  function whenTxt(c) { return (c.when === "tomorrow 10:00" && c.dur === "1 h") ? "Fri 13 Nov, 10:00–11:00" : cap(c.when) + " · " + c.dur; }
+  function chipsHTML(st, o) {
+    var c = st.ctx, live = !(o && (o.compact || o.inert));
+    var amb = st.scn === "unclear" && !c.answered && (st.phase === "understanding" || st.phase === "clarify");
+    var defs = [["people", "users", c.people, " people"], ["when", "calendar", c.when, ""], ["who", "users", c.who, amb ? " which one?" : ""], ["dur", "clock", c.dur, " assumed"]];
+    return '<div class="by-intent" data-ictx="' + (o && o.owner || "lab") + '" role="group" aria-label="Understood request">' + defs.map(function (d) {
+      if (c.edit === d[0] && live) return '<label class="ic-chip is-edit">' + ic(d[1]) + '<input id="chipEdit" data-chipedit="' + d[0] + '" value="' + esc(d[2]) + '" aria-label="Edit ' + d[0] + '" autocomplete="off"></label>';
+      return '<button type="button" class="ic-chip' + (d[0] === "who" && amb ? " is-warn" : "") + '" data-chip="' + d[0] + '" aria-label="Edit ' + d[0] + ": " + esc(d[2]) + '">' + ic(d[1]) + "<b>" + esc(d[2]) + "</b>" + (d[3] ? "<small>" + d[3].trim() + "</small>" : "") + "</button>";
+    }).join("") + "</div>";
+  }
+  function skelChips() { return '<span class="cap">Reading your request</span><div class="by-intent"><i class="by-skel" style="width:96px;height:32px;border-radius:999px"></i><i class="by-skel" style="width:128px;height:32px;border-radius:999px"></i><i class="by-skel" style="width:110px;height:32px;border-radius:999px"></i></div>'; }
+  function loaderHTML(st, o, nocancel) {
+    var d = T(st.L), p = st.phase, model = stepModel(st), act = -1, i, cancel = nocancel ? "" : '<button type="button" class="by-btn by-btn--ghost by-btn--sm" data-act="cancel">Cancel</button>';
+    for (i = 0; i < 5; i++) if (model[i].s === "active") act = i;
+    if (d.b === 2) return '<div class="by-loader inline" role="status" data-mo="loop · 700 ms · linear"><i class="by-spin"></i><span data-live="verb">' + VERB[act < 0 ? 4 : act] + "</span>" + cancel + "</div>";
+    var h = '<div class="by-loader"><div class="lh"><b>Working on it</b><span class="mono" data-live="elapsed">' + fmtS(elapsed(st)) + "</span>" + cancel + "</div>" + stepsList(model);
+    if (d.b === 4 && p !== "cancelled") {
+      var long = elapsed(st) >= 4000 && p !== "offline";
+      h += '<p class="longwait" data-live="long"' + (long ? "" : " hidden") + ">" + ic("info") + "<span>This is taking longer than usual. You can close this; we'll notify you when the room is held.</span></p>";
+      h += '<ul class="part" aria-label="Results so far">' + PART.map(function (x) { return '<li data-need="' + x[0] + '"' + (model[x[0]].s === "done" ? "" : " hidden") + ">" + ic("check") + "<span>" + x[1] + "</span></li>"; }).join("") + "</ul>";
+    }
+    return h + "</div>";
+  }
+  function workHTML(st, o) {
+    var c = st.ctx, p = st.phase, d = T(st.L), hold = c.holdUnd && p === "understanding", out = "";
+    if (d.b === 1 && !hold) return (st.pin || o.compact) ? row("gn", '<p class="ghost">Nothing is shown here. The answer arrives before a loader would.</p>', o) : "";
+    var ready = p !== "understanding" || hold || st.t >= d.U * 0.35;
+    out += ready ? row("chips", '<span class="cap">I read this as</span>' + chipsHTML(st, o) + '<p class="hintp">Press a chip to fix it. Nothing is booked yet.</p>', o) : row("chipsk", skelChips(), o);
+    if (hold) out += row("hold", '<div class="btns"><button type="button" class="by-btn by-btn--primary" data-act="resume">Update proposal</button></div>', o);
+    else out += row("loader", loaderHTML(st, o), o);
+    return out;
+  }
+  function dlHTML(c) {
+    return '<dl class="by-dl"><dt>When</dt><dd>' + esc(whenTxt(c)) + "</dd><dt>Where</dt><dd>" + ROOM[c.room].where + "</dd><dt>Who</dt><dd>" + c.people + " invites · " + esc(cap(c.who)) + "</dd></dl>";
+  }
+  function cardHTML(st, kind, o) {
+    var c = st.ctx, r = ROOM[c.room], N = c.people, h, btns = "", solid = !(kind === "proposal" || kind === "confirming");
+    var why = "";
+    if (!solid) why = '<div class="by-why"><span>' + ic("check") + "Seats " + r.seats + ", you need " + N + "</span><span>" + ic("check") + "Free tomorrow 10:00–11:00</span><span>" + ic("check") + "Same building as your team</span><span>" + ic("check") + "Projector and whiteboard</span></div>";
+    var tag = kind === "proposal" || kind === "confirming" ? '<span class="by-ai-tag">' + ic("spark") + "Proposal · nothing booked yet</span>"
+      : kind === "committing" ? '<span class="by-badge by-badge--brand"><i class="by-spin" style="width:11px;height:11px;border-width:2px"></i>Booking</span>'
+      : '<span class="by-badge by-badge--ok">' + ic("check") + "Booked</span>";
+    var title = kind === "proposal" || kind === "confirming" ? "Book Room " + c.room : kind === "committing" ? "Booking Room " + c.room : "Room " + c.room + ", tomorrow 10:00";
+    if (kind === "proposal") btns = '<div class="btns"><button type="button" class="by-btn by-btn--primary" data-act="confirm">Confirm booking</button><button type="button" class="by-btn by-btn--secondary" data-act="change">Change</button></div>';
+    if (kind === "confirming") btns = '<div class="btns"><button type="button" class="by-btn by-btn--primary is-active" disabled aria-busy="true">Confirm booking</button><button type="button" class="by-btn by-btn--secondary" disabled>Change</button></div>';
+    if (kind === "committing") {
+      var d = T(st.L), pr = clamp(st.t / d.C, 0, 1) * 100;
+      btns = '<div class="btns"><button type="button" class="by-btn by-btn--primary is-loading" disabled aria-busy="true">Confirm booking</button><button type="button" class="by-btn by-btn--secondary" disabled>Change</button></div>' +
+        '<div class="by-progress" role="progressbar" aria-label="Booking" aria-valuemin="0" aria-valuemax="100"><i data-live="commit" style="--p:' + pr.toFixed(1) + '%"></i></div><p class="hintp">Booking Room ' + c.room + " and sending " + N + " invites</p>";
+    }
+    return '<div class="by-ai' + (solid ? " is-committed" : "") + '" data-k="card" data-v="' + (solid ? "solid" : "dashed") + '" data-mo="' + MO.flip + '">' + tag + '<div class="by-ai__title">' + title + "</div>" + dlHTML(c) + why + btns + "</div>";
+  }
+  function toastHTML(st) {
+    var c = st.ctx, N = c.people, left = clamp(10 - st.t / 1000, 0, 10), txt = c.skipped ? "Room " + c.room + " booked. " + (N - 2) + " invites sent, 2 skipped." : "Room " + c.room + " booked. " + N + " invites sent.";
+    return '<div class="by-toast" data-k="toast" data-mo="' + MO.toast + '" role="status">' + ic("check") + "<span>" + txt + '</span><span class="by-undo" style="margin-left:auto"><button type="button" class="undo-b" data-act="undo" style="margin-left:0" aria-label="Undo booking">Undo</button><span class="ring" aria-hidden="true"><svg viewBox="0 0 28 28"><circle class="bg" cx="14" cy="14" r="11"/><circle class="fg" data-live="ring" cx="14" cy="14" r="11" style="stroke-dashoffset:' + (69.12 * (1 - left / 10)).toFixed(2) + '"/></svg><b data-live="sec">' + Math.ceil(left) + "</b></span></span></div>";
+  }
+  function sumLine(st, o) { var d = T(st.L); return d.b >= 3 ? row("sum", '<span class="sum">' + ic("check") + "Checked 6 rooms and " + st.ctx.people + " calendars in " + fmtS(d.U + d.W) + "</span>", o) : ""; }
+  function errCard(title, text, o) { return '<div class="by-ai is-error" data-k="err" data-mo="' + MO.enter + '"><div class="eh">' + ic("alert") + "<span>" + title + "</span></div>" + (text ? "<p>" + text + "</p>" : "") + (o || "") + "</div>"; }
+  function altCard(st) {
+    var c = st.ctx;
+    return '<div class="by-ai" data-k="alt" data-v="dashed" data-mo="' + MO.enter + '"><span class="by-ai-tag">' + ic("spark") + 'New proposal · nothing booked yet</span><div class="by-ai__title">Book Room B4 instead</div>' +
+      '<div class="by-diff"><div class="old"><span>Where</span><span>Room B2 · taken</span></div><div class="new"><span>Where</span><span>Room B4 · 2 min walk</span></div><div class="keep"><span>When</span><span>' + esc(whenTxt(c)) + '</span></div><div class="keep"><span>Who</span><span>' + c.people + " invites</span></div></div>" +
+      '<div class="btns"><button type="button" class="by-btn by-btn--primary" data-act="confirm">Book Room B4</button><button type="button" class="by-btn by-btn--secondary" data-act="other">Choose another time</button></div></div>';
+  }
+  function invList(c) {
+    var N = c.people, ok = N - 2, h = '<div class="invs" aria-label="Invite results">', i;
+    for (i = 0; i < Math.min(ok, 6); i++) h += '<span class="ok">' + ic("check") + NAMES[i] + "</span>";
+    if (ok > 6) h += '<span class="ok">' + ic("check") + "+" + (ok - 6) + " more</span>";
+    return h + '<span class="no">' + ic("x") + "Ben Okoye (guest)</span><span class=\"no\">" + ic("x") + "Ines Duarte (guest)</span></div>";
+  }
+  function emptyHTML(o) {
+    return '<div class="empty" data-k="empty" data-mo="' + MO.enter + '"><span class="by-avatar sp" aria-hidden="true">' + ic("spark") + "</span><h3>Hi Elena</h3><p>Ask for a room, a desk or a guest pass. I show a plan first. Nothing is booked until you confirm.</p>" + '<div class="sugg"><span class="by-chip">' + ic("calendar") + "Book a room</span><span class=\"by-chip\">" + ic("users") + "Invite guests</span></div></div>";
+  }
+
+  function bodyHTML(st, o) {
+    o = o || {};
+    var p = st.phase, c = st.ctx, d = T(st.L), m = o.compact ? "" : me(REQ), N = c.people;
+    switch (p) {
+      case "idle": return emptyHTML(o);
+      case "understanding": case "working": return m + workHTML(st, o);
+      case "proposal": return m + sumLine(st, o) + cardHTML(st, "proposal", o);
+      case "confirming": return m + sumLine(st, o) + cardHTML(st, "confirming", o);
+      case "committing": return m + cardHTML(st, "committing", o);
+      case "done": case "settled":
+        return m + cardHTML(st, "done", o) + (p === "settled" ? row("sett", '<span class="sum">' + ic("check") + "Undo window closed. The booking is in everyone's calendar.</span>", o) : "");
+      case "conflict":
+        return m + row("err1", errCard("Room B2 was booked by someone else a moment ago.", "Your " + N + " invites were not sent. Nothing is lost.") + '<div class="by-loader inline" role="status"><i class="by-spin"></i><span>Looking for another room that fits ' + N + "</span></div>", o);
+      case "alt":
+        return m + row("err1", errCard("Room B2 was booked by someone else a moment ago.", "Your " + N + " invites were not sent. Nothing is lost."), o) + row("alt", altCard(st), o);
+      case "clarify":
+        return m + (d.b === 1 ? "" : row("chips", '<span class="cap">I read this as</span>' + chipsHTML(st, o), o)) + row("q", "<p><b>Which design team?</b> Saltmarsh Studio has two.</p>" +
+          '<div class="sugg"><button type="button" class="by-chip" data-act="answer" data-v="Product Design">' + ic("users") + 'Product Design</button><button type="button" class="by-chip" data-act="answer" data-v="Brand Design">' + ic("users") + 'Brand Design</button></div><p class="hintp">Or type the team name below.</p>', o);
+      case "answer":
+        return m + me(c.team, "me2") + row("ans", '<div class="by-loader inline" role="status"><i class="by-spin"></i><span>Continuing with ' + esc(c.team) + "</span></div>", o);
+      case "offline":
+        return m + (d.b >= 3 ? row("loader", loaderHTML(st, o, true), o) : "") + row("err", errCard("Connection lost.", "Saving your request on this device."), o);
+      case "draftkept":
+        return m + row("err", errCard("Connection lost. Your request is saved.", "I keep it here until you are back online. Nothing was booked.", '<div class="btns"><button type="button" class="by-btn by-btn--primary" data-act="retry">' + ic("refresh") + 'Retry now</button></div>'), o);
+      case "retry":
+        return m + row("ret", '<div class="by-loader inline" role="status"><i class="by-spin"></i><span>Back online. Picking up at ' + STEPS[2] + "</span></div>", o);
+      case "partial":
+        var sent = Math.min(N - 2, Math.floor(clamp(st.t / 1000, 0, 1) * (N - 2)) + (st.t > 100 ? 0 : 0));
+        return m + cardHTML(st, "done", o) + row("inv", '<p>Sending invites</p><div class="by-progress"><i data-live="inv" style="--p:' + clamp(st.t / 1000, 0, 1) * 100 + '%"></i></div><p class="hintp" data-live="invt">' + sent + " of " + N + " sent</p>", o);
+      case "partial6":
+        return m + cardHTML(st, "done", o) + row("err", errCard("Room B2 booked. 2 of " + N + " invites failed: guests outside your company need an email.", "", invList(c) +
+          (c.addEmails ? '<div class="mailf"><div class="by-field"><label class="by-label" for="em1">Email for Ben Okoye</label><input class="by-input" id="em1" type="email" placeholder="name@company.com"' + (c.emErr ? ' aria-invalid="true"' : "") + '></div><div class="by-field"><label class="by-label" for="em2">Email for Ines Duarte</label><input class="by-input" id="em2" type="email" placeholder="name@company.com"' + (c.emErr ? ' aria-invalid="true"' : "") + "></div>" + (c.emErr ? '<p class="by-help is-error" role="alert">' + ic("alert") + "Enter both emails, like name@company.com.</p>" : "") + '<div class="btns"><button type="button" class="by-btn by-btn--primary" data-act="sendEmails">Send 2 invites</button><button type="button" class="by-btn by-btn--ghost" data-act="backEmails">Back</button></div></div>'
+            : '<div class="btns"><button type="button" class="by-btn by-btn--primary" data-act="addEmails">Add emails</button><button type="button" class="by-btn by-btn--secondary" data-act="sendAnyway">Send anyway</button></div><p class="hintp">Send anyway keeps the ' + (N - 2) + " sent invites and leaves 2 guests uninvited.</p>")), o);
+      case "resend":
+        return m + cardHTML(st, "done", o) + row("rs", '<div class="by-loader inline" role="status"><i class="by-spin"></i><span>' + (c.skipped ? "Closing the list with " + (N - 2) + " invites" : "Resending 2 invites") + "</span></div>", o);
+      case "cancelled":
+        return m + row("cx", '<p class="by-help" style="font-weight:700;color:var(--ink)">' + ic("x") + "Cancelled. Nothing was booked.</p>" + (d.b >= 3 ? '<div class="by-loader">' + stepsList(stepModel(st)) + "</div>" : ""), o);
+      case "undone":
+        return m + row("und", '<div class="by-ai is-committed" style="gap:10px"><span class="by-badge">' + ic("undo") + "Undone</span><p><b>Booking undone.</b> Room " + c.room + " is free again and " + N + ' invites are withdrawn.</p><div class="btns"><button type="button" class="by-btn by-btn--secondary" data-act="again">Book Room ' + c.room + " again</button></div></div>", o);
+    }
+    return "";
+  }
+  function compHTML(st) {
+    var p = st.phase, c = st.ctx, ed = p === "idle" || p === "cancelled" || p === "clarify", draft = p === "draftkept";
+    var val = ed || draft ? (p === "clarify" ? "" : c.req) : "";
+    var ph = p === "clarify" ? "Or type the team name" : ed || draft ? "Message" : "Assistant is working";
+    var dis = !ed;
+    var label = p === "cancelled" ? "Send again" : "Send";
+    return '<label class="sr" for="req">Message to the assistant</label><input class="by-input" id="req" value="' + esc(val) + '" placeholder="' + ph + '"' + (dis ? " disabled" : "") + ' autocomplete="off"><button type="button" class="by-btn by-btn--primary' + (p === "cancelled" ? "" : " by-iconbtn") + '" data-act="send" aria-label="' + label + '"' + (dis ? " disabled" : "") + ">" + (p === "cancelled" ? label : ic("send")) + "</button>" +
+      (draft ? '<p class="hint">' + ic("info") + "Draft saved on this device.</p>" : p === "cancelled" ? '<p class="hint">' + ic("info") + "Your request is back here, ready to edit.</p>" : "");
+  }
+  function badgeHTML(st) {
+    var p = st.phase;
+    if (p === "offline" || p === "draftkept") return '<span class="by-badge by-badge--warn">' + ic("wifi") + "Offline</span>";
+    if (p === "retry") return '<span class="by-badge by-badge--brand"><i class="by-spin" style="width:11px;height:11px;border-width:2px"></i>Reconnecting</span>';
+    return "";
+  }
+  function slotState(st) {
+    var p = st.phase, c = st.ctx, wt = wtOf(st), room = c.room;
+    if (p === "committing") return ["solid", "<b>Room " + room + "</b><small>Booking…</small>"];
+    if (p === "done" || p === "settled" || p === "partial" || p === "partial6" || p === "resend") return ["solid", "<b>Design sync · Room " + room + "</b><small>" + c.people + " invited</small>"];
+    if (p === "proposal" || p === "confirming") return ["prop", "<b>Proposed: Room " + room + "</b><small>Nothing booked yet</small>"];
+    if (p === "conflict") return ["bad", "<b>Room B2</b><small>Taken by Finance</small>"];
+    if (p === "alt") return ["prop", "<b>Proposed: Room B4</b><small>Nothing booked yet</small>"];
+    if (p === "working" && wt >= B[3]) return ["hold", "<b>Room B2 held for you</b><small>Until 10:10</small>"];
+    return ["", "Free · 10:00–11:00"];
+  }
+  var SAY = { idle: "Ready for a request.", understanding: "Reading your request.", working: "Working on the request.", proposal: "Proposal ready: Book Room B2. Nothing is booked yet.", confirming: "Confirming.", committing: "Booking the room.", done: "Room B2 booked. 8 invites sent. Undo is available for 10 seconds.", settled: "Undo window closed.", conflict: "Room B2 was booked by someone else.", alt: "Alternative proposed: Room B4.", clarify: "Which design team? Saltmarsh Studio has two.", answer: "Continuing with your answer.", offline: "Connection lost.", draftkept: "Connection lost. Your request is saved.", retry: "Back online. Resuming.", partial: "Sending invites.", partial6: "Room B2 booked. 2 invites failed: guests outside your company need an email.", resend: "Resending invites.", cancelled: "Cancelled. Nothing was booked.", undone: "Booking undone." };
+  var NOTES = {
+    idle: ["A clear place to ask, and a promise about what happens next.", "Say up front that nothing is booked until I confirm."],
+    understanding: ["To see how I read the request while a fix is still free.", "Show the parsed request as editable chips before any work starts. Mark assumptions."],
+    working1: ["The answer, without a loader that flashes and vanishes.", "Under 0.4 s I show nothing. No spinner, no skeleton."],
+    working2: ["A sign that something is happening, in plain words.", "A spinner and a present-tense verb. No percentage I cannot measure."],
+    working3: ["To know what is being checked and how far along it is.", "Show steps with their own state. Keep Cancel within reach."],
+    working4: ["Permission to leave, and anything useful so far.", "Admit the delay, offer a notification, show partial results as they arrive."],
+    proposal: ["To see exactly what will change, and why, before it does.", "A dashed violet card means not real yet. Confirm and Change sit side by side."],
+    confirming: ["Instant proof that the tap landed.", "Respond within --d1. Lock the button so a second tap cannot slip through."],
+    committing: ["To trust it is happening without watching it.", "Be optimistic: the card turns solid at once, a progress line tells the truth, Confirm shows a spinner."],
+    done: ["Proof it worked, and a way back.", "Past tense, name the object, offer Undo with a visible countdown."],
+    settled: ["A quiet, final record.", "When the undo window closes the toast leaves and the card stays solid."],
+    conflict: ["To know what happened, and that nothing was lost.", "Say what failed in the first sentence. Never blame the person. Start looking for another option."],
+    alt: ["A next step that takes one tap.", "Offer the closest alternative as a diff against the original, not a blank form."],
+    clarify: ["A question small enough to answer in one tap.", "Ask only when a guess could send a wrong invite. Offer quick replies and keep the rest of the request."],
+    answer: ["Confirmation that the answer was used.", "Echo the answer in the chat, then continue from where I stopped."],
+    offline: ["Reassurance that the request is not lost.", "Show the failure on the step that failed. Save the request before anything else."],
+    draftkept: ["A way back, and proof the draft survived.", "Name what is saved. Make Retry the main action and mark the panel offline."],
+    retry: ["To see I am picking up, not starting over.", "Resume from the failed step, keep the finished ones, say which step."],
+    partial: ["To watch the invites go out.", "Report counts as they arrive, “n of 8”, not a vague “sending”."],
+    partial6: ["To know exactly who is missing and how to fix it.", "Lead with what worked, then what failed and why. The 6 that worked stay listed as done."],
+    resend: ["Proof that only the failed invites are retried.", "Retry the failed part only. Never repeat what already succeeded."],
+    cancelled: ["Certainty that nothing happened, and the request back to edit.", "Say “Nothing was booked.” Put the text back in the field. Cancel works at every working step."],
+    undone: ["To know the room is free again.", "Confirm what was reversed and offer to book again."]
+  };
+  function noteFor(st) { var p = st.phase; return NOTES[p === "working" ? "working" + T(st.L).b : p]; }
+
+  /* ---------- lab ---------- */
+  var pbody = $("#pbody"), ptoast = $("#ptoast"), pcomp = $("#pcomp"), stage = $("#stage");
+  var lastKeys = {};
+  function setZone(el, html) {
+    var old = {}, oldV = {};
+    $$("[data-k]", el).forEach(function (n) { old[n.getAttribute("data-k")] = 1; oldV[n.getAttribute("data-k")] = n.getAttribute("data-v"); });
+    el.innerHTML = html;
+    $$("[data-k]", el).forEach(function (n) {
+      var k = n.getAttribute("data-k");
+      if (!old[k]) { n.classList.add("enter"); label(n, n.getAttribute("data-mo")); }
+      else if (n.getAttribute("data-v") && oldV[k] !== n.getAttribute("data-v")) { n.classList.add("flip"); label(n, MO.flip); }
+    });
+  }
+  function label(n, txt) {
+    if (!S.specs || !txt) return;
+    var l = document.createElement("i"); l.className = "molbl"; l.textContent = txt;
+    l.addEventListener("animationend", function () { if (l.parentNode) l.parentNode.removeChild(l); });
+    n.appendChild(l);
+  }
+  function commitEdit(ctx, input) {
+    var key = ctx.edit; if (!key) return; ctx.edit = null;
+    var v = input ? input.value.trim() : "";
+    if (!v) return;
+    if (key === "people") { var n = parseInt(v, 10); if (n >= 3 && n <= 20) ctx.people = n; } else ctx[key] = v;
+  }
+  var lastScn = null;
+  function render() {
+    var ei = $("#chipEdit", pbody); if (ei && S.ctx.edit) commitEdit(S.ctx, ei);
+    var ae = document.activeElement, keepReq = ae && ae.id === "req";
+    setZone(pbody, bodyHTML(S, {}));
+    setZone(ptoast, S.phase === "done" ? toastHTML(S) : "");
+    pcomp.innerHTML = compHTML(S);
+    $("#phbadge").innerHTML = badgeHTML(S);
+    var sl = slotState(S); $("#slot").className = "ev slot " + sl[0]; $("#slotT").innerHTML = sl[1];
+    pbody.scrollTop = pbody.scrollHeight;
+    $("#liveSay").textContent = SAY[S.phase] || "";
+    if (lastScn !== S.scn) buildScrub();
+    updScrub(); updNote(); live(true);
+    if (keepReq) { var r = $("#req"); if (r && !r.disabled) r.focus(); }
+  }
+  function live() {
+    var st = S, d = T(st.L), p = st.phase;
+    var steps = $$("#pbody [data-step]");
+    if (steps.length && (p === "understanding" || p === "working")) {
+      var model = stepModel(st);
+      steps.forEach(function (li) {
+        var i = +li.getAttribute("data-step"), m = model[i], was = li.getAttribute("data-st");
+        if (was !== m.s) {
+          li.className = "is-" + m.s; li.setAttribute("data-st", m.s);
+          var mk = $(".mk", li); mk.innerHTML = markHTML(m.s);
+          if (m.s === "done") { mk.classList.add("tick"); label(mk, MO.tick); setTimeout(function () { mk.classList.remove("tick"); }, 600); }
+        }
+        var sub = $("[data-sub]", li); if (sub.textContent !== m.sub) sub.textContent = m.sub;
+      });
+      var act = -1; model.forEach(function (m, i) { if (m.s === "active") act = i; });
+      var v = $("[data-live=verb]", pbody); if (v) v.textContent = VERB[act < 0 ? 4 : act];
+      var el = $("[data-live=elapsed]", pbody); if (el) el.textContent = fmtS(elapsed(st));
+      var lg = $("[data-live=long]", pbody); if (lg) lg.hidden = !(elapsed(st) >= 4000);
+      $$("#pbody [data-need]").forEach(function (li) { li.hidden = model[+li.getAttribute("data-need")].s !== "done"; });
+    }
+    if (p === "committing") { var c = $("[data-live=commit]", pbody); if (c) c.style.setProperty("--p", (clamp(st.t / d.C, 0, 1) * 100).toFixed(1) + "%"); }
+    if (p === "partial") {
+      var N = st.ctx.people, f = clamp(st.t / 1000, 0, 1), iv = $("[data-live=inv]", pbody);
+      if (iv) iv.style.setProperty("--p", (f * 100).toFixed(1) + "%");
+      var it = $("[data-live=invt]", pbody); if (it) it.textContent = Math.floor(f * (N - 2)) + " of " + N + " sent";
+    }
+    if (p === "done") {
+      var left = clamp(10 - st.t / 1000, 0, 10); if (REDUCE) left = Math.ceil(left);
+      var rg = $("[data-live=ring]", ptoast); if (rg) rg.style.strokeDashoffset = (69.12 * (1 - left / 10)).toFixed(2);
+      var sc = $("[data-live=sec]", ptoast); if (sc) sc.textContent = Math.ceil(left);
+    }
+    var e = endAt(st), fr = (isFinite(e) && e > 0 && PM[p] === indexOfMain(p)) ? clamp(st.t / e, 0, 1) : 0;
+    var pos = ((PM[p] + 0.5 + fr) / 8) * 100;
+    var ph = $("#tl .ph"), fl = $("#tl .fill");
+    if (ph) ph.style.left = pos + "%";
+    if (fl) fl.style.width = Math.max(0, pos - 6.25) + "%";
+  }
+  function indexOfMain(p) { return MAINIDS.indexOf(p) > -1 ? PM[p] : -1; }
+
+  /* ---------- scrubber ---------- */
+  var MAINIDS = ["idle", "understanding", "working", "proposal", "confirming", "committing", "done", "settled"];
+  var BR = {
+    happy: [],
+    taken: [["conflict", 6, "Committing"], ["alt", 7]],
+    unclear: [["clarify", 2, "Understanding"], ["answer", 3]],
+    offline: [["offline", 3, "Working"], ["draftkept", 4], ["retry", 5]],
+    partial: [["partial", 6, "Committing"], ["partial6", 7], ["resend", 8]]
+  };
+  var UNI = [["cancelled", 3, "Working"], ["undone", 7, "Done"]];
+  function buildScrub() {
+    lastScn = S.scn;
+    var h = '<div class="line"></div><div class="fill"></div><div class="ph"></div>';
+    MAINIDS.forEach(function (id, i) { h += '<button type="button" class="nd" data-jump="' + id + '" style="grid-column:' + (i + 1) + ";grid-row:1" + '"><span class="dot"></span><span>' + NAME[id] + "</span>" + (id === "done" ? "<small>undo window</small>" : "") + "</button>"; });
+    BR[S.scn].forEach(function (b, i) { h += '<button type="button" class="nd br' + (i === 0 ? " first" : " chain") + '" data-jump="' + b[0] + '" style="grid-column:' + b[1] + ';grid-row:2"><span class="dot"></span><span>' + NAME[b[0]] + "</span>" + (b[2] ? "<small>from " + b[2] + "</small>" : "") + "</button>"; });
+    UNI.forEach(function (b) { h += '<button type="button" class="nd br uni first" data-jump="' + b[0] + '" style="grid-column:' + b[1] + ';grid-row:3"><span class="dot"></span><span>' + NAME[b[0]] + "</span><small>from " + b[2] + "</small></button>"; });
+    $("#tl").innerHTML = h;
+  }
+  function updScrub() {
+    var p = S.phase, cur = PM[p];
+    $$("#tl .nd").forEach(function (n) {
+      var id = n.getAttribute("data-jump"), isMain = MAINIDS.indexOf(id) > -1;
+      if (id === p) n.setAttribute("aria-current", "step"); else n.removeAttribute("aria-current");
+      n.classList.toggle("is-past", isMain && PM[id] < cur);
+      n.setAttribute("aria-label", "Jump to " + NAME[id]);
+    });
+    var c = $("#tl .nd[aria-current]"), w = $("#tlwrap");
+    if (c && w.scrollWidth > w.clientWidth) w.scrollLeft = c.offsetLeft - w.clientWidth / 2 + c.offsetWidth / 2;
+  }
+  function updNote() {
+    var n = noteFor(S), b = T(S.L).b;
+    $("#note").innerHTML = '<div><span class="label">State</span><h3>' + NAME[S.phase] + '</h3></div><dl><div><dt>What the person needs here</dt><dd>' + n[0] + "</dd></div><div><dt>Rule I follow</dt><dd>" + n[1] + '</dd></div></dl><span class="band">Latency ' + fmtS(S.L) + " · band " + b + " of 4</span>";
+  }
+
+  /* ---------- scheduler ---------- */
+  var raf = 0, lastTs = 0;
+  function go(p, t0, pin) {
+    if (S.ctx.edit) commitEdit(S.ctx, $("#chipEdit", pbody));
+    S.phase = p; S.t = t0 || 0; S.pin = !!pin; render();
+  }
+  function advance(dms) {
+    if (S.paused) return;
+    S.t += dms;
+    var g = 0;
+    while (g++ < 14) {
+      var e = endAt(S);
+      if (S.pin && e <= 0) break;
+      if (S.t < e) break;
+      var nx = nextOf(S); if (!nx) break;
+      var carry = S.t - e, d = T(S.L);
+      if (nx === "retry") S.ctx.retried = true;
+      if (S.phase === "partial") S.ctx.resent = false;
+      if (S.phase === "resend") S.ctx.resent = true;
+      if (S.phase === "retry" && nx === "working") carry = d.W * CUT;
+      go(nx, Math.min(carry, 5000), false);
+    }
+    live();
+  }
+  function loop(ts) {
+    raf = requestAnimationFrame(loop);
+    if (!lastTs) lastTs = ts;
+    var dt = Math.min(ts - lastTs, 250); lastTs = ts;
+    advance(dt / S.slow);
+  }
+  function startLoop() { cancelAnimationFrame(raf); lastTs = 0; raf = requestAnimationFrame(loop); }
+  function replay() { S.ctx = newCtx(); S.auto = true; S.paused = false; $("#pauseBtn").textContent = "Pause"; go("idle", 0, false); startLoop(); }
+  function jt(p) {
+    var d = T(S.L);
+    if (p === "understanding") return d.U * 0.6;
+    if (p === "working") return (S.scn === "offline" && !S.ctx.retried ? 0.3 : 0.5) * d.W;
+    if (p === "committing") return endAt({ phase: p, scn: S.scn, L: S.L, ctx: S.ctx }) * 0.5;
+    if (p === "partial") return 600;
+    return 0;
+  }
+  function jump(p) {
+    var c = S.ctx, early = PM[p] <= 3 && p !== "conflict" && p !== "alt";
+    c.room = "B2"; c.resent = false; c.addEmails = false; c.skipped = false; c.holdUnd = false; c.edit = null; c.emErr = false; c.cancel = null;
+    if (early || p === "offline" || p === "draftkept" || p === "retry" || p === "clarify") { c.retried = false; }
+    if (p === "idle" || p === "understanding" || p === "clarify") c.answered = false; else if (S.scn === "unclear") c.answered = true;
+    S.auto = false;
+    var st = { phase: p, scn: S.scn, L: S.L, ctx: c, auto: false };
+    go(p, jt(p), endAt(st) <= 0);
+  }
+  function act(a, el) {
+    var c = S.ctx;
+    switch (a) {
+      case "confirm": if (S.phase === "alt") c.room = "B4"; go("confirming"); break;
+      case "change": case "other": c.holdUnd = true; go("understanding", 9999); break;
+      case "resume": c.holdUnd = false; go("working"); break;
+      case "cancel": c.cancel = { wt: wtOf(S) }; go("cancelled"); break;
+      case "send":
+        if (S.phase === "clarify") { var tv = $("#req"); if (tv && tv.value.trim()) { c.team = tv.value.trim(); c.who = c.team; c.answered = true; go("answer"); } break; }
+        if (S.phase === "idle" || S.phase === "cancelled") { c.cancel = null; c.holdUnd = false; S.auto = true; go("understanding"); }
+        break;
+      case "retry": c.retried = true; go("retry"); break;
+      case "undo": go("undone"); break;
+      case "again": c.room = "B2"; go("proposal"); break;
+      case "answer": c.team = el.getAttribute("data-v"); c.who = c.team; c.answered = true; go("answer"); break;
+      case "addEmails": c.addEmails = true; c.emErr = false; render(); var e1 = $("#em1"); if (e1) e1.focus(); break;
+      case "backEmails": c.addEmails = false; c.emErr = false; render(); break;
+      case "sendEmails":
+        var a1 = $("#em1").value, a2 = $("#em2").value;
+        if (a1.indexOf("@") < 1 || a2.indexOf("@") < 1) { c.emErr = true; render(); $("#em1").focus(); break; }
+        c.emErr = false; c.skipped = false; go("resend"); break;
+      case "sendAnyway": c.skipped = true; go("resend"); break;
+    }
+  }
+  document.addEventListener("click", function (e) {
+    var t = e.target.closest ? e.target.closest("[data-act],[data-chip],[data-jump]") : null; if (!t || t.closest("[inert]")) return;
+    if (t.hasAttribute("data-jump")) { if (t.closest("#tl")) jump(t.getAttribute("data-jump")); return; }
+    if (t.hasAttribute("data-chip")) {
+      var own = t.closest("[data-ictx]"), ctx = own.getAttribute("data-ictx") === "lab" ? S.ctx : demoSt.ctx;
+      ctx.edit = t.getAttribute("data-chip");
+      if (ctx === S.ctx) render(); else renderDemoChips();
+      var inp = $("#chipEdit"); if (inp) { inp.focus(); inp.select(); }
+      return;
+    }
+    if (t.closest("#stage")) act(t.getAttribute("data-act"), t);
+  });
+  function chipDone(e, commit) {
+    var inp = e.target; if (!inp.id || inp.id !== "chipEdit") return;
+    var own = inp.closest("[data-ictx]"), lab = own.getAttribute("data-ictx") === "lab", ctx = lab ? S.ctx : demoSt.ctx;
+    if (ctx.edit) { if (commit) commitEdit(ctx, inp); else ctx.edit = null; }
+    if (lab) render(); else renderDemoChips();
+  }
+  document.addEventListener("keydown", function (e) {
+    if (e.target.id !== "chipEdit") return;
+    if (e.key === "Enter") { e.preventDefault(); chipDone(e, true); }
+    if (e.key === "Escape") { chipDone(e, false); }
+  });
+  document.addEventListener("focusout", function (e) { if (e.target.id === "chipEdit") { var own = e.target.closest("[data-ictx]"), ctx = own && (own.getAttribute("data-ictx") === "lab" ? S.ctx : demoSt.ctx); if (ctx && ctx.edit) chipDone(e, true); } });
+  document.addEventListener("input", function (e) { if (e.target.id === "req") S.ctx.req = e.target.value; });
+  pcomp.addEventListener("submit", function (e) { e.preventDefault(); act("send", null); });
+
+  /* ---------- dock ---------- */
+  function setPressed(grp, attr, val) { $$("button", grp).forEach(function (b) { b.setAttribute("aria-pressed", String(b.getAttribute(attr) === String(val))); }); }
+  function msFromV(v) { var ms = 200 * Math.pow(60, v / 100); ms = ms < 1000 ? Math.round(ms / 50) * 50 : Math.round(ms / 100) * 100; return clamp(ms, 200, 12000); }
+  function vFromMs(ms) { return Math.round(Math.log(ms / 200) / Math.log(60) * 100); }
+  var KN = [0, 0.4, 2, 8, 12], KP = [0, 12, 36, 80, 100], BN = ["", "no loader", "spinner", "step list", "steps + exit"];
+  function pctOf(s) { var i; for (i = 1; i < 5; i++) if (s <= KN[i]) return KP[i - 1] + (s - KN[i - 1]) / (KN[i] - KN[i - 1]) * (KP[i] - KP[i - 1]); return 100; }
+  function latUI() {
+    var s = S.L / 1000, b = band(S.L), txt = s.toFixed(s < 1 ? 2 : 1) + " s";
+    $("#latV").textContent = txt; $("#latB").textContent = "· " + BN[b]; $("#latR").setAttribute("aria-valuetext", txt.replace(" s", " seconds"));
+    $("#latMk").style.left = pctOf(s) + "%"; $("#latMkT").textContent = txt;
+    $$(".lc").forEach(function (c) { c.classList.toggle("is-now", +c.getAttribute("data-band") === b); });
+    setPressed($("#preGrp"), "data-ms", S.L);
+  }
+  $("#latR").addEventListener("input", function (e) { S.L = msFromV(+e.target.value); latUI(); });
+  $("#latR").addEventListener("change", function () { replay(); });
+  $("#preGrp").addEventListener("click", function (e) { var b = e.target.closest("button"); if (!b) return; S.L = +b.getAttribute("data-ms"); $("#latR").value = vFromMs(S.L); latUI(); replay(); });
+  $("#scnGrp").addEventListener("click", function (e) { var b = e.target.closest("button"); if (!b) return; S.scn = b.getAttribute("data-scn"); setPressed($("#scnGrp"), "data-scn", S.scn); replay(); });
+  function applyScale() {
+    var k = S.slow;
+    $$(".by[data-sync]").forEach(function (n) {
+      n.style.setProperty("--d1", 100 * k + "ms"); n.style.setProperty("--d2", 180 * k + "ms"); n.style.setProperty("--d3", 280 * k + "ms"); n.style.setProperty("--d4", 440 * k + "ms"); n.style.setProperty("--k", k);
+    });
+    document.documentElement.style.setProperty("--d3", 280 * k + "ms");
+  }
+  $("#spdGrp").addEventListener("click", function (e) { var b = e.target.closest("button"); if (!b) return; S.slow = +b.getAttribute("data-slow"); setPressed($("#spdGrp"), "data-slow", S.slow); applyScale(); });
+  $("#specsBtn").addEventListener("click", function () { S.specs = !S.specs; this.setAttribute("aria-pressed", String(S.specs)); if (S.specs) { var n = $("#pbody [data-k]:last-child") || $("#pbody [data-k]"); $$("#pbody [data-k], #ptoast [data-k]").forEach(function (x) { label(x, x.getAttribute("data-mo")); }); } });
+  $("#thGrp").addEventListener("click", function (e) { var b = e.target.closest("button"); if (!b) return; S.theme = b.getAttribute("data-th"); setPressed($("#thGrp"), "data-th", S.theme); $$(".by[data-sync]").forEach(function (n) { n.setAttribute("data-by", S.theme); }); });
+  $("#replayBtn").addEventListener("click", replay);
+  $("#pauseBtn").addEventListener("click", function () { S.paused = !S.paused; this.textContent = S.paused ? "Resume" : "Pause"; });
+
+  /* ---------- glance ---------- */
+  var G = [
+    ["idle", "Idle", "all", { phase: "idle" }],
+    ["und", "Understanding", "all", { phase: "understanding", t: 700, L: 3000 }],
+    ["w1", "Working, under 0.4 s", "all · 0.3 s", { phase: "working", L: 300, pin: true }],
+    ["w2", "Working, 0.4 to 2 s", "all · 1 s", { phase: "working", L: 1000, t: 400 }],
+    ["w3", "Working, 2 to 8 s", "all · 3 s", { phase: "working", L: 3000, t: 1100 }],
+    ["w4", "Working, over 8 s", "all · 10 s", { phase: "working", L: 10000, t: 5200 }],
+    ["pro", "Proposal", "all", { phase: "proposal" }],
+    ["cf", "Confirming", "all", { phase: "confirming", t: 120 }],
+    ["com", "Committing", "all", { phase: "committing", t: 600 }],
+    ["don", "Done, undo window", "all", { phase: "done", t: 3000 }],
+    ["set", "Settled", "all", { phase: "settled" }],
+    ["con", "Conflict", "room taken", { phase: "conflict", scn: "taken", t: 500 }],
+    ["alt", "Alternative proposed", "room taken", { phase: "alt", scn: "taken" }],
+    ["cla", "Clarify", "unclear request", { phase: "clarify", scn: "unclear" }],
+    ["ans", "Answer", "unclear request", { phase: "answer", scn: "unclear" }],
+    ["off", "Offline", "network drops", { phase: "offline", scn: "offline" }],
+    ["dra", "Draft kept", "network drops", { phase: "draftkept", scn: "offline" }],
+    ["ret", "Retry", "network drops", { phase: "retry", scn: "offline" }],
+    ["par", "Partial", "partial failure", { phase: "partial", scn: "partial", t: 700 }],
+    ["p6", "6 of 8 invites sent", "partial failure", { phase: "partial6", scn: "partial" }],
+    ["rs", "Resend 2", "partial failure", { phase: "resend", scn: "partial" }],
+    ["can", "Cancelled", "any step", { phase: "cancelled", L: 3000, cancel: { wt: 0.4 } }],
+    ["und2", "Undone", "after Done", { phase: "undone" }]
+  ];
+  function buildGlance() {
+    $("#glanceGrid").innerHTML = G.map(function (g) {
+      var o = g[3], st = { scn: o.scn || "happy", L: o.L || 3000, phase: o.phase, t: o.t || 0, pin: !!o.pin, ctx: newCtx() };
+      if (o.cancel) st.ctx.cancel = o.cancel;
+      var h = bodyHTML(st, { compact: true, inert: true }) + (st.phase === "done" ? toastHTML(st) : "");
+      h = h.replace(/ data-mo="[^"]*"/g, "");
+      return '<div class="gc"><header><b>' + g[1] + "</b><span>" + g[2] + '</span></header><div class="by gmini" data-by="light" data-sync inert>' + h + "</div></div>";
+    }).join("");
+  }
+
+  /* ---------- motion ---------- */
+  var dsel = 3, DUR = { 1: 100, 2: 180, 3: 280, 4: 440 };
+  function curvePath(c) { var p = c.split(",").map(Number); return "M10,110 C" + (10 + 100 * p[0]) + "," + (110 - 100 * p[1]) + " " + (10 + 100 * p[2]) + "," + (110 - 100 * p[3]) + " 110,10"; }
+  function bez(c, tau) {
+    var p = c.split(",").map(Number), lo = 0, hi = 1, u = tau, i;
+    function B3(a, b, uu) { return 3 * (1 - uu) * (1 - uu) * uu * a + 3 * (1 - uu) * uu * uu * b + uu * uu * uu; }
+    for (i = 0; i < 22; i++) { u = (lo + hi) / 2; if (B3(p[0], p[2], u) < tau) lo = u; else hi = u; }
+    return B3(p[1], p[3], u);
+  }
+  function buildCurves() {
+    $$(".ecard").forEach(function (b) {
+      var c = b.getAttribute("data-c"), svg = $("svg", b), p = c.split(",").map(Number);
+      svg.innerHTML = '<line class="axis" x1="10" y1="110" x2="110" y2="110"/><line class="axis" x1="10" y1="110" x2="10" y2="10"/><line class="hd" x1="10" y1="10" x2="110" y2="10"/><path class="crv" d="' + curvePath(c) + '"/><circle class="dt" cx="' + (REDUCE ? 110 : 10) + '" cy="' + (REDUCE ? 10 : 110) + '" r="6"/>';
+      b.__run = 0;
+      var go2 = function () { runCurve(b); };
+      b.addEventListener("click", go2); b.addEventListener("pointerenter", function (e) { if (e.pointerType === "mouse") go2(); });
+    });
+  }
+  function runCurve(b) {
+    var c = b.getAttribute("data-c"), dot = $(".dt", b), ball = $(".mtrack i", b), track = $(".mtrack", b);
+    var real = DUR[dsel] * S.slow, dem = real * 5, dist = track.clientWidth - 26;
+    cancelAnimationFrame(b.__run);
+    if (REDUCE) { dot.setAttribute("cx", 110); dot.setAttribute("cy", 10); ball.style.transform = "translateX(" + dist + "px)"; return; }
+    ball.style.transition = "none"; ball.style.transform = "translateX(0)"; void ball.offsetWidth;
+    ball.style.transition = "transform " + real + "ms cubic-bezier(" + c + ")"; ball.style.transform = "translateX(" + dist + "px)";
+    var t0 = performance.now();
+    (function step(now) {
+      var tau = clamp((now - t0) / dem, 0, 1), y = bez(c, tau);
+      dot.setAttribute("cx", 10 + 100 * tau); dot.setAttribute("cy", 110 - 100 * y);
+      if (tau < 1) b.__run = requestAnimationFrame(step);
+    })(t0);
+  }
+  $("#durGrp").addEventListener("click", function (e) { var b = e.target.closest("button"); if (!b) return; dsel = +b.getAttribute("data-d"); setPressed($("#durGrp"), "data-d", dsel); });
+
+  /* ---------- component demos ---------- */
+  function renderDemoChips() {
+    $("#cmpChips").innerHTML = chipsHTML({ ctx: demoSt.ctx, scn: "unclear", phase: "clarify" }, { owner: "demo" }).replace('data-ictx="demo"', "");
+    $("#cmpChips").setAttribute("data-ictx", "demo");
+    var c = demoSt.ctx; $("#cmpChipOut").textContent = "Parsed: " + c.people + " people, " + c.when + ", " + c.who + ", " + c.dur + ".";
+  }
+  function demoUndo(restart) {
+    var el = $("#cmpUndo"), done = el.getAttribute("data-done") === "1";
+    if (restart === true && !el.__phase) { el.__phase = "undone"; }
+    if (el.__phase === "undone") { el.innerHTML = '<div class="by-toast">' + ic("undo") + '<span>Booking undone.</span><button type="button" class="undo-b" data-act="demoUndo">Restart demo</button></div>'; el.__phase = "undoneShown"; return; }
+    el.__phase = null;
+    el.innerHTML = '<div class="by-toast">' + ic("check") + '<span>Room B2 booked. 8 invites sent.</span><span class="by-undo" style="margin-left:auto"><button type="button" class="undo-b" data-act="demoUndo" style="margin-left:0">Undo</button><span class="ring demo" aria-hidden="true"><svg viewBox="0 0 28 28"><circle class="bg" cx="14" cy="14" r="11"/><circle class="fg" cx="14" cy="14" r="11"/></svg><b>10</b></span></span></div>';
+    var fg = $(".fg", el), tm = $(".ring b", el);
+    clearInterval(el.__iv); var n0 = Date.now();
+    el.__iv = setInterval(function () {
+      var left = Math.max(0, 10 - (Date.now() - n0) / 1000 / S.slow * 1);
+      if (!document.body.contains(tm)) { clearInterval(el.__iv); return; }
+      tm.textContent = Math.ceil(left);
+      if (left <= 0) { clearInterval(el.__iv); el.innerHTML = '<div class="by-toast">' + ic("check") + '<span>Room B2 booked. Undo window closed.</span><button type="button" class="undo-b" data-act="demoUndo">Restart demo</button></div>'; el.__phase = "expired"; }
+    }, 250);
+  }
+  function buildDemos() {
+    $("#cmpSteps").innerHTML = '<div class="by-loader">' + stepsList([{ s: "done", sub: "Found 4 details" }, { s: "active", sub: "Checked 4 of 6" }, { s: "pending", sub: "" }, { s: "failed", sub: "Calendar service did not answer" }, { s: "skipped", sub: "Skipped" }]).replace(/<b>/g, '<b>').replace(STEPS[2], STEPS[2]) + '</div><p class="cap2">Done · Active · Pending · Failed · Skipped</p>';
+    renderDemoChips();
+    var el = $("#cmpUndo"); el.__phase = null;
+    el.addEventListener("click", function (e) { var b = e.target.closest("[data-act=demoUndo]"); if (!b) return; if (b.textContent === "Undo") { clearInterval(el.__iv); el.__phase = "undone"; demoUndo(); } else { el.__phase = null; demoUndo(); } });
+    demoUndo();
+    var mk = function (L, t, ph) { return { scn: "happy", L: L, phase: ph || "working", t: t, ctx: newCtx(), pin: true }; };
+    var s1 = mk(300, 0), s2 = mk(1000, 400), s3 = mk(3000, 1300), s4 = mk(10000, 5600);
+    $("#cmpLoad").innerHTML = '<div class="lgrid">' + [[s1, "Under 0.4 s", '<div class="ghost" style="font:500 13px var(--font)">Nothing shown</div>'], [s2, "0.4 to 2 s", loaderHTML(s2, {}, true)], [s3, "2 to 8 s", loaderHTML(s3, {}, true)], [s4, "Over 8 s", loaderHTML(s4, {}, true)]].map(function (x) { return '<div class="by" data-by="light" data-sync style="background:transparent;padding:0"><p class="cap2" style="margin-bottom:8px">' + x[1] + "</p>" + x[2].replace(/ data-mo="[^"]*"/g, "") + "</div>"; }).join("") + "</div>";
+  }
+
+  /* ---------- boot ---------- */
+  buildGlance(); buildCurves(); buildDemos(); applyScale(); latUI();
+  buildScrub();
+  window.addEventListener("resize", function () { updScrub(); });
+  if (REDUCE) { S.auto = false; S.ctx = newCtx(); go("proposal", 0, false); startLoop(); } else { replay(); }
+})();
+</script>
+</body>
+</html>

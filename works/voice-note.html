@@ -1,0 +1,1102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Voice Note to Flows</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="../assets/by.css">
+<style>
+/* by.css: '.by button' (0,1,1) beats '.by-btn--x' (0,1,0), so restate colours */
+.by .by-btn--primary, .by .vn__play { color: var(--on-brand); }
+.by .by-btn--ai { color: var(--on-ai); }
+.by .by-btn--danger { color: var(--bad); }
+.by .by-btn--ghost { color: var(--ink-2); }
+.by .by-btn--ghost:hover { color: var(--ink); }
+.by .gc.is-sel { color: var(--surface); }
+.by .by-chip[aria-pressed="true"] { color: var(--on-navy); }
+.case-hero { padding-block: 40px 4px; gap: 18px; }
+.case-hero h1 { font-size: clamp(38px, 6vw, 68px); }
+.sec-tight { padding-top: 28px; }
+.small { font-size: 13px; color: var(--ink-2); }
+
+/* ---------- Voice note player (new component) ---------- */
+.vn-host.by { background: transparent; }
+.vn { border: 1px solid var(--line); border-radius: 20px; background: var(--surface); padding: 20px; display: grid; gap: 16px; box-shadow: var(--shadow-2); min-width: 0; position: relative; }
+.vn__top { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.vn__av { width: 40px; height: 40px; font-size: 13px; }
+.vn__who { display: grid; min-width: 0; }
+.vn__who b { font: 750 15px/1.3 var(--font); }
+.vn__who span { font: 500 13px/1.3 var(--font); color: var(--ink-3); }
+.vn__tag { margin-left: auto; flex: none; }
+.vn__ctl { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 16px; align-items: center; }
+.vn__play { width: 54px; height: 54px; border-radius: 50%; border: 0; background: var(--brand); color: var(--on-brand); display: grid; place-items: center; transition: transform var(--d1) var(--ease), background var(--d2) var(--ease); flex: none; padding: 0; }
+.vn__play:hover { background: color-mix(in oklch, var(--brand), black 9%); }
+.vn__play:active { transform: scale(.93); }
+.vn__play svg { width: 22px; height: 22px; display: block; }
+.vn[data-state="idle"] .vn__play { animation: by-pulse 1.6s var(--ease-out) 3; }
+.vn[data-state="playing"] .vn__play { animation: by-pulse 1.8s var(--ease-out) infinite; }
+.vn__wave { position: relative; height: 56px; display: flex; align-items: center; gap: 2px; cursor: pointer; touch-action: pan-y; border-radius: 8px; user-select: none; }
+.vn__wave i { flex: 1 1 0; min-width: 2px; height: var(--h); border-radius: 2px; background: var(--line-2); transition: background var(--d2) var(--ease); }
+.vn__wave i.on { background: var(--brand-ink); }
+.vn__wave:hover i:not(.on) { background: var(--ink-3); }
+.vn__head { position: absolute; top: -2px; bottom: -2px; width: 2px; margin-left: -1px; border-radius: 1px; background: var(--ink); pointer-events: none; }
+.vn__head::before { content: ""; position: absolute; left: 50%; top: -3px; width: 10px; height: 10px; border-radius: 50%; background: var(--ink); transform: translateX(-50%) scale(.8); transition: transform var(--d2) var(--ease-out); }
+.vn.is-seeking .vn__head::before { transform: translateX(-50%) scale(1.5); box-shadow: 0 0 0 4px var(--brand-soft); }
+.vn__meta { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
+.vn__time { font: 600 14px var(--mono); font-variant-numeric: tabular-nums; color: var(--ink); margin-right: auto; }
+.vn__speed button { height: 30px; padding: 0 11px; font-size: 13px; }
+.vn__tx { position: relative; max-height: 136px; overflow: auto; padding: 14px 16px; border-radius: 14px; background: var(--surface-2); font: 650 19px/1.6 var(--font); color: var(--ink-3); scrollbar-width: thin; }
+.vn__tx .w { cursor: pointer; border-radius: 6px; padding: 1px 2px; margin: 0 -2px; transition: color var(--d2) var(--ease), background var(--d2) var(--ease); }
+.vn__tx .w:hover { color: var(--ink); }
+.vn__tx .w.on { color: var(--ink); }
+.vn__tx .w.cur { background: var(--brand-soft); color: var(--brand-ink); box-shadow: 0 0 0 2px var(--brand-soft); }
+.vn__tx .w.is-src { background: var(--warn-soft); color: var(--ink); box-shadow: 0 0 0 2px var(--warn-soft); text-decoration: underline; text-decoration-color: var(--warn); text-underline-offset: 4px; }
+.vn__tx .w.cur.is-src { background: var(--warn-soft); }
+.vn__note { font: 500 12.5px/1.4 var(--font); color: var(--ink-3); }
+.vn--compact { padding: 14px; gap: 10px; border-radius: 16px; }
+.vn--compact .vn__play { width: 42px; height: 42px; }
+.vn--compact .vn__play svg { width: 18px; height: 18px; }
+.vn--compact .vn__wave { height: 40px; }
+.vn--compact .vn__tx { font-size: 16px; max-height: 96px; padding: 10px 12px; }
+.vn--compact .vn__av { width: 32px; height: 32px; font-size: 12px; }
+
+.player-wrap { margin-top: 18px; display: grid; gap: 10px; }
+
+/* ---------- requirements ---------- */
+.rqgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 20px; }
+.rqcol { display: grid; gap: 10px; align-content: start; min-width: 0; }
+.rqcol h3 { font: 700 13px var(--mono); letter-spacing: .08em; text-transform: uppercase; border-top: 2px solid var(--ink); padding-top: 10px; }
+.rq { text-align: left; display: grid; gap: 3px; padding: 11px 12px; border: 1px solid var(--rule); border-radius: 10px; background: var(--surface); color: var(--ink); font: 600 14.5px/1.35 var(--text); transition: border-color 180ms, background 180ms, transform 100ms; position: relative; min-width: 0; }
+.rq:hover { border-color: var(--accent); }
+.rq:active { transform: scale(.99); }
+.rq[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); box-shadow: 0 0 0 1px var(--accent); }
+.rq em { font-style: normal; font-weight: 400; font-size: 13px; color: var(--ink-2); }
+.rq em b { font-weight: 600; color: var(--ink); }
+.rq.is-heard::after { content: ""; position: absolute; right: 10px; top: 12px; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); animation: by-pulse 1.2s infinite; }
+.rq.oos { border-style: dashed; color: var(--ink-2); }
+.srccap { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; padding: 12px 14px; border: 1px dashed var(--rule); border-radius: 10px; font-size: 14px; color: var(--ink-2); min-height: 52px; }
+.srccap q { color: var(--ink); font-weight: 600; }
+.srccap button { margin-left: auto; }
+
+/* ---------- brief ---------- */
+.briefgrid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+.brief { font: 400 13px/1.75 var(--mono); white-space: pre-wrap; overflow-wrap: anywhere; }
+.brief .k { display: inline-block; margin-top: 4px; }
+.pn { display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); font: 700 11px var(--mono); vertical-align: 1px; margin-left: 6px; }
+.notes { margin: 0; padding: 0; list-style: none; display: grid; gap: 14px; counter-reset: n; }
+.notes li { display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: 12px; font-size: 14.5px; color: var(--ink-2); }
+.notes li::before { counter-increment: n; content: counter(n); display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); font: 700 11px var(--mono); }
+.notes b { color: var(--ink); display: block; font-size: 15px; }
+
+/* ---------- variants ---------- */
+.dock { display: flex; flex-wrap: wrap; gap: 10px 20px; align-items: center; background: var(--surface); border: 1px solid var(--rule); border-radius: 14px; padding: 10px 14px; box-shadow: var(--shadow); }
+.dock .lbl { font: 500 11px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); }
+.grp { display: inline-flex; padding: 3px; background: var(--surface-2); border-radius: 10px; gap: 2px; }
+.grp button { border: 0; background: transparent; padding: 6px 12px; border-radius: 8px; font: 600 12.5px var(--text); color: var(--ink-2); }
+.grp button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.14); }
+.dock p { font-size: 13px; color: var(--ink-2); flex: 1 1 240px; }
+@media (min-width: 981px) { .dock { position: sticky; top: 64px; z-index: 40; } }
+.phones { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; align-items: start; }
+.var { display: grid; gap: 12px; min-width: 0; align-content: start; }
+.var__head { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 12px; align-items: center; }
+.var__tag { grid-row: span 2; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 10px; background: var(--ink); color: var(--bg); font: 800 20px var(--display); }
+.var__tag.ai { background: #6b3fd6; color: #fff; }
+.var__head b { font: 750 19px/1.2 var(--display); letter-spacing: -.01em; }
+.var__head span { font-size: 13.5px; color: var(--ink-2); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.sc { border: 1px solid var(--rule); background: var(--surface); color: var(--ink-2); border-radius: 999px; padding: 6px 11px; font: 600 12px/1 var(--text); transition: background 180ms, color 180ms, border-color 180ms; }
+.sc:hover { border-color: var(--accent); color: var(--ink); }
+.sc[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.var__cap { font-size: 13.5px; color: var(--ink-2); min-height: 4.2em; }
+.var__cap b { color: var(--ink); }
+@media (max-width: 980px) {
+  .phones { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 16px; padding: 4px 2px 12px; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; }
+  .phones > .var { flex: 0 0 min(88%, 340px); scroll-snap-align: center; }
+}
+
+.dev { width: 100%; max-width: 340px; margin-inline: auto; padding: 10px; border-radius: 46px; background: linear-gradient(160deg, #2b2f3a, #12141b); box-shadow: 0 24px 50px rgba(8,10,20,.3), inset 0 0 0 1.5px rgba(255,255,255,.08); }
+.ph { position: relative; width: 100%; aspect-ratio: 9 / 19; border-radius: 36px; overflow: hidden; display: flex; flex-direction: column; isolation: isolate; font-size: 14px; --r: 14px; }
+.ph--mini { aspect-ratio: auto; height: 400px; }
+.ph__st { height: 36px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 8px 24px 0; font: 700 13px var(--font); position: relative; z-index: 3; }
+.ph__st::before { content: ""; position: absolute; left: 50%; top: 9px; width: 84px; height: 22px; background: #0a0b10; border-radius: 14px; transform: translateX(-50%); }
+.ph__st .ic { width: 15px; height: 15px; }
+.ph__sig { display: flex; gap: 5px; align-items: center; }
+.ph__bat { width: 22px; height: 11px; border: 1.5px solid currentColor; border-radius: 4px; position: relative; opacity: .9; }
+.ph__bat::after { content: ""; position: absolute; inset: 1.5px; right: 5px; background: currentColor; border-radius: 1.5px; }
+.ph__bar { flex: none; display: flex; align-items: center; gap: 10px; padding: 6px 16px 8px; position: relative; z-index: 2; }
+.ph__bar div { flex: 1; min-width: 0; }
+.ph__bar h4 { font: 800 21px/1.15 var(--font); letter-spacing: -.02em; }
+.ph__bar p { font: 500 12.5px/1.3 var(--font); color: var(--ink-3); }
+.ph__bar .by-avatar { width: 32px; height: 32px; }
+.ph__screen { flex: 1; min-height: 0; overflow: auto; overflow-x: hidden; padding: 4px 16px 24px; display: flex; flex-direction: column; gap: 12px; scrollbar-width: none; }
+.ph__screen::-webkit-scrollbar { display: none; }
+.ph__screen > * { flex: none; }
+.ph__screen.enter > * { animation: by-pop var(--d3) var(--ease-out) both; }
+.ph__screen.enter > *:nth-child(2) { animation-delay: 40ms; } .ph__screen.enter > *:nth-child(3) { animation-delay: 80ms; } .ph__screen.enter > *:nth-child(4) { animation-delay: 120ms; } .ph__screen.enter > *:nth-child(5) { animation-delay: 160ms; }
+.ph__home { position: absolute; left: 50%; bottom: 7px; width: 104px; height: 4px; border-radius: 2px; background: var(--ink); opacity: .75; transform: translateX(-50%); z-index: 6; pointer-events: none; }
+.ph__banner { position: absolute; left: 10px; right: 10px; top: 40px; z-index: 5; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 10px; align-items: center; text-align: left; padding: 11px 12px; border-radius: 18px; border: 1px solid var(--line); background: color-mix(in oklch, var(--surface) 92%, transparent); backdrop-filter: blur(14px); box-shadow: var(--shadow-3); transform: translateY(-140%); opacity: 0; visibility: hidden; transition: transform var(--d4) var(--ease-out), opacity var(--d3) var(--ease), visibility 0s linear var(--d4); font: 500 13px/1.35 var(--font); color: var(--ink); }
+.ph__banner.is-in { transform: none; opacity: 1; visibility: visible; transition: transform var(--d4) var(--ease-out), opacity var(--d3) var(--ease), visibility 0s; }
+.ph__banner .app { width: 34px; height: 34px; border-radius: 9px; background: var(--brand); color: var(--on-brand); display: grid; place-items: center; grid-row: span 3; }
+.ph__banner small { font: 600 11px var(--mono); color: var(--ink-3); letter-spacing: .03em; }
+.ph__banner b { font: 750 14.5px/1.3 var(--font); }
+.ph__toast { position: absolute; left: 14px; right: 14px; bottom: 22px; z-index: 7; transform: translateY(20px); opacity: 0; transition: transform var(--d3) var(--ease-out), opacity var(--d2); pointer-events: none; font-size: 13px; }
+.ph__toast.is-in { transform: none; opacity: 1; }
+
+.h { font: 800 22px/1.15 var(--font); letter-spacing: -.02em; }
+.ph .by-btn { min-height: 44px; }
+.ph .by-btn--sm { min-height: 34px; }
+.ph .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.ph .demo { align-self: center; border: 0; background: none; font: 600 11px var(--mono); letter-spacing: .04em; color: var(--ink-3); text-decoration: underline; text-underline-offset: 3px; padding: 6px; }
+.ph .demo:hover { color: var(--ink); }
+.ph .carrow { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 12px; align-items: center; padding: 12px; }
+.ph .carrow .by-avatar { grid-row: span 3; width: 38px; height: 38px; }
+.ph .carrow b { font: 750 14px var(--font); }
+.ph .help { font: 500 12.5px/1.4 var(--font); color: var(--ink-3); text-align: center; }
+.ph .big { font: 800 34px/1 var(--font); letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+.ph .center { text-align: center; justify-items: center; display: grid; gap: 8px; }
+.ph .stat { display: grid; gap: 8px; padding: 14px; }
+.ph .stat .by-badge { justify-self: start; }
+.ph .stat b { font: 750 16px/1.3 var(--font); }
+.ph .stat p { font: 500 13.5px/1.45 var(--font); color: var(--ink-2); }
+.ph .stat.warn { border-color: color-mix(in oklch, var(--warn) 45%, var(--line)); background: var(--warn-soft); }
+.ph .stat.bad { border-color: var(--bad); background: var(--bad-soft); }
+.ph .stat.ok { border-color: color-mix(in oklch, var(--ok) 40%, var(--line)); background: var(--ok-soft); }
+
+/* charger slot tile (new component) */
+.sl-row { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; }
+.sl { position: relative; height: 62px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--line); overflow: hidden; display: grid; align-content: space-between; justify-items: start; padding: 6px 6px 5px; font: 700 10.5px/1.1 var(--mono); color: var(--ink); isolation: isolate; }
+.sl::before { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: var(--p, 0%); background: color-mix(in oklch, var(--brand) 40%, var(--surface-2)); z-index: -1; transition: height var(--d4) var(--ease-out); }
+.sl b { font: 800 14px var(--font); }
+.sl .ic { width: 12px; height: 12px; }
+.sl--done { background: var(--ok-soft); border-color: color-mix(in oklch, var(--ok) 35%, var(--line)); color: var(--ok); }
+.sl--done::before { display: none; }
+.sl--free { background: var(--surface); border: 1.5px dashed var(--line-2); color: var(--ink-2); }
+.sl--yours { background: var(--brand-soft); border: 2px solid var(--brand-ink); color: var(--brand-ink); }
+.sl--yours::before { display: none; }
+.sl.is-next { border: 2px solid var(--brand-ink); animation: by-pulse 1.8s var(--ease-out) infinite; }
+.sl-legend { display: flex; flex-wrap: wrap; gap: 4px 12px; font: 500 11.5px var(--font); color: var(--ink-3); }
+.qd { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.qd span { display: grid; place-items: center; min-width: 26px; height: 26px; padding: 0 6px; border-radius: 13px; background: var(--surface-3); color: var(--ink-2); font: 700 12px var(--mono); }
+.qd span.you { background: var(--brand); color: var(--on-brand); padding: 0 10px; }
+.qd span.later { opacity: .6; }
+.qd small { font: 500 12px var(--font); color: var(--ink-3); margin-left: 4px; }
+
+/* queue position card (new component) */
+.qpc { display: grid; gap: 6px; padding: 16px; border-radius: 18px; border: 1px solid var(--line); background: var(--surface); box-shadow: var(--shadow-1); position: relative; overflow: hidden; }
+.qpc__n { font: 800 52px/1 var(--font); letter-spacing: -.04em; display: flex; align-items: baseline; gap: 4px; }
+.qpc__n sup { font: 700 20px var(--font); letter-spacing: 0; }
+.qpc__eta { font: 650 15px var(--font); }
+.qpc__live { display: flex; gap: 8px; align-items: center; font: 500 12.5px var(--font); color: var(--ink-3); }
+.qpc__live i { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); animation: by-pulse 1.6s infinite; }
+.qpc[data-k="next"] { border-color: var(--brand-ink); background: var(--brand-soft); }
+.qpc[data-k="turn"] { border-color: var(--ok); background: var(--ok-soft); }
+.qpc[data-k="turn"] .qpc__n { color: var(--ok); font-size: 40px; }
+
+/* countdown ring (new component) */
+.cr { --sz: 148px; --off: 0; position: relative; width: var(--sz); height: var(--sz); display: grid; place-items: center; }
+.cr svg { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
+.cr circle { fill: none; stroke-width: 9; }
+.cr .tr { stroke: var(--surface-3); }
+.cr .ar { stroke: var(--brand-ink); stroke-linecap: round; stroke-dasharray: 339.292; stroke-dashoffset: var(--off); transition: stroke-dashoffset 1s linear, stroke var(--d3) var(--ease); }
+.cr__c { display: grid; text-align: center; gap: 2px; }
+.cr__t { font: 800 30px/1 var(--font); font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+.cr__w { font: 600 11px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); }
+.cr.is-last .ar { stroke: var(--warn); }
+.cr.is-last { animation: by-pulse 1.2s infinite; border-radius: 50%; }
+.cr.is-last .cr__w { color: var(--warn); }
+.cr.is-out .ar { stroke: var(--bad); }
+.cr.is-out .cr__w { color: var(--bad); }
+.cr.is-out .cr__t { color: var(--bad); }
+
+/* booking grid */
+.gr { display: grid; gap: 4px; }
+.gr__h, .gr__r { display: grid; grid-template-columns: 40px repeat(6, minmax(0, 1fr)); gap: 4px; align-items: center; }
+.gr__h b { text-align: center; font: 700 11px var(--mono); color: var(--ink-3); }
+.gr__t { font: 600 11px var(--mono); color: var(--ink-3); }
+.gc { height: 32px; border-radius: 7px; border: 1px solid var(--line-2); background: var(--surface); padding: 0; display: grid; place-items: center; color: var(--on-brand); transition: background var(--d2) var(--ease), border-color var(--d2) var(--ease), transform var(--d1) var(--ease); position: relative; }
+.gc:hover { background: var(--brand-soft); border-color: var(--brand-ink); }
+.gc:active { transform: scale(.92); }
+.gc.is-taken { background: repeating-linear-gradient(135deg, var(--surface-3) 0 4px, var(--surface-2) 4px 8px); border-color: var(--line); cursor: not-allowed; }
+.gc.is-sel { background: var(--brand-ink); border-color: var(--brand-ink); color: var(--surface); }
+.gc.is-sel .ic { width: 16px; height: 16px; }
+.gc.is-soon::after { content: ""; position: absolute; inset: -3px; border-radius: 9px; border: 1.5px solid var(--warn); pointer-events: none; }
+.sheet { display: grid; gap: 10px; padding: 14px; }
+.sheet b { font: 750 15px var(--font); }
+
+/* AI card tweaks */
+.ph .by-ai { padding: 14px; gap: 10px; }
+.ph .by-ai .by-chip { height: 36px; }
+.ph .conf { font: 500 12.5px/1.4 var(--font); color: var(--ink-2); display: flex; gap: 8px; align-items: flex-start; }
+.ph .conf .ic { color: var(--ai); margin-top: 1px; }
+.ph .qrs { display: flex; flex-wrap: wrap; gap: 8px; }
+.nt { display: grid; gap: 10px; padding: 14px; }
+.nt__h { display: flex; gap: 10px; align-items: center; font: 600 12px var(--mono); color: var(--ink-3); letter-spacing: .03em; }
+.nt__h .app { width: 28px; height: 28px; border-radius: 8px; background: var(--brand); color: var(--on-brand); display: grid; place-items: center; }
+.nt p { font: 600 14.5px/1.45 var(--font); color: var(--ink); }
+
+/* comparison */
+.tbl { overflow-x: auto; border: 1px solid var(--rule); border-radius: 12px; background: var(--surface); }
+.tbl table { border-collapse: collapse; width: 100%; min-width: 780px; font-size: 14.5px; }
+.tbl th, .tbl td { padding: 14px 16px; border-bottom: 1px solid var(--rule); text-align: left; vertical-align: top; }
+.tbl tr:last-child td { border-bottom: 0; }
+.tbl thead th { font: 600 11.5px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); background: var(--surface-2); }
+.tbl tbody th { font: 650 14px var(--text); color: var(--ink-2); width: 19%; }
+.mk { display: inline-flex; align-items: center; gap: 5px; font: 700 11px/1 var(--mono); letter-spacing: .04em; text-transform: uppercase; padding: 4px 7px; border-radius: 5px; margin-bottom: 6px; }
+.mk.good { background: var(--ok-soft); color: var(--ok); }
+.mk.risk { background: var(--warn-soft); color: var(--warn); }
+.tbl td span.t { display: block; color: var(--ink); }
+.pick { display: grid; gap: 16px; }
+.pick .box h3 { font-size: 22px; }
+
+/* round two + panel */
+.r2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; }
+.r2 .col { display: grid; gap: 10px; min-width: 0; }
+.r2 .col .row { gap: 8px; }
+.fm { border: 1px solid var(--line); border-radius: 16px; background: var(--bg); overflow: hidden; box-shadow: var(--shadow-2); min-width: 0; }
+.fm__top { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 14px 18px; background: var(--surface); border-bottom: 1px solid var(--line); }
+.fm__top h4 { font: 750 17px var(--font); margin-right: auto; }
+.fm__tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; padding: 14px 18px 0; }
+.fm__tile { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; display: grid; gap: 2px; }
+.fm__tile b { font: 800 24px/1.1 var(--font); font-variant-numeric: tabular-nums; }
+.fm__body { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 16px; padding: 14px 18px 18px; align-items: start; }
+.fm__tbl { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+.fm table { width: 100%; border-collapse: collapse; font: 500 13.5px var(--font); min-width: 420px; }
+.fm th, .fm td { padding: 9px 12px; text-align: left; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.fm tr:last-child td { border-bottom: 0; }
+.fm th { font: 600 11px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); background: var(--surface-2); }
+.fm .q { list-style: none; margin: 0; padding: 0; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+.fm .q li { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 10px 12px; border-top: 1px solid var(--line); font: 500 13.5px var(--font); }
+.fm .q li:first-child { border-top: 0; }
+.fm .q span.n { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 12px; background: var(--surface-3); font: 700 11px var(--mono); }
+.fm .q small { color: var(--ink-3); font: 500 12px var(--font); }
+
+/* reply */
+.chat { display: grid; gap: 10px; max-width: 640px; }
+.msg { border-radius: 18px; padding: 14px 16px; font-size: 15px; display: grid; gap: 8px; max-width: 92%; }
+.msg.me { background: var(--accent); color: var(--accent-ink); border-bottom-right-radius: 4px; justify-self: end; }
+.msg .who { font: 600 11px var(--mono); letter-spacing: .05em; text-transform: uppercase; opacity: .85; }
+.msg ol { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+.msg.them { background: var(--surface); border: 1px solid var(--rule); border-bottom-left-radius: 4px; }
+
+/* components */
+.cmpgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 16px; }
+.cmp { display: grid; gap: 8px; align-content: start; min-width: 0; }
+.cmp .label { display: flex; justify-content: space-between; gap: 8px; }
+.cmphead { display: grid; gap: 6px; }
+.cmphead h3 { font-size: 24px; }
+.cmphead p { color: var(--ink-2); max-width: 70ch; }
+.stage { border: 1px solid var(--rule); border-radius: 12px; background: var(--surface); padding: 16px; display: grid; gap: 14px; justify-items: center; align-content: center; min-width: 0; }
+.stage.by { border-color: var(--line); }
+.stage .vn { width: 100%; box-shadow: none; }
+.vn__read[hidden] { display: none !important; }
+.ringrow { width: 100%; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; }
+.cmpblock { display: grid; gap: 16px; }
+
+@media (max-width: 860px) {
+  .briefgrid, .r2, .fm__body { grid-template-columns: minmax(0, 1fr); }
+  .fm__tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .vn { padding: 14px; }
+  .vn__tx { font-size: 17px; }
+}
+</style>
+</head>
+<body>
+<header class="bar">
+  <div class="wrap">
+    <a class="brand" href="../index.html"><i aria-hidden="true"></i><span id="brandName">Your Name</span></a>
+    <nav aria-label="Work">
+      <a href="../index.html#work">All work</a>
+      <a href="telegram-bots.html">Bots</a>
+      <a href="security.html">Security</a>
+      <a href="plectra.html">Plectra</a>
+      <a href="brightyard-portal.html">Portal</a>
+      <a href="brightyard-mobile.html">Mobile</a>
+      <a href="brightyard-system.html">System</a>
+      <a href="voice-note.html" aria-current="page">Voice note</a>
+      <a href="ai-states.html">AI states</a>
+      <a href="space-finder.html">Space finder</a>
+    </nav>
+    <button class="toggle" id="themeBtn" type="button" aria-label="Switch colour theme">Theme: auto</button>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="case-hero">
+    <div class="row"><span class="kind concept">Concept</span><span class="kind">Mobile</span><span class="kind">Process</span></div>
+    <h1>Voice Note to Flows</h1>
+    <p class="sub">A product owner sends a voice note at 18:40. By morning there are three working flows to compare.</p>
+    <dl class="meta">
+      <div><dt class="label">Role</dt><dd>Listening, framing, prototyping, comparing</dd></div>
+      <div><dt class="label">Built with</dt><dd>Claude Code, by.css, plain HTML, CSS and JS</dd></div>
+      <div><dt class="label">Feature</dt><dd>EV charger queue, Brightyard tenant app, garage P2</dd></div>
+      <div><dt class="label">Status</dt><dd>Self-initiated concept, sample data</dd></div>
+    </dl>
+    <p class="honest"><b>Honest note.</b><span>Ilze, her voice note and every number are made up for this exercise. Nothing here was tested with real people.</span></p>
+  </div>
+
+  <div class="player-wrap">
+    <div class="vn-host by sync-site" data-by="light" id="mainPlayer"></div>
+  </div>
+
+  <section id="heard">
+    <div class="sec-head">
+      <span class="num">01 · WHAT I HEARD</span>
+      <h2>The note, split into decisions</h2>
+      <p>Goals, rules, open questions and things to leave out. Press any item to see the exact words it came from.</p>
+    </div>
+    <div class="rqgrid" id="rqgrid"></div>
+    <div class="srccap" id="srccap" role="status" aria-live="polite">Nothing selected yet. Press an item above, or press play and watch the items light up as Ilze says them.</div>
+  </section>
+
+  <section id="brief">
+    <div class="sec-head">
+      <span class="num">02 · THE BRIEF</span>
+      <h2>What I gave the agent</h2>
+      <p>Short, specific and checkable. Every line is there for a reason.</p>
+    </div>
+    <div class="briefgrid">
+<pre class="brief" aria-label="Prompt given to the agent"><span class="k">GOAL</span>
+Design an EV charger queue for the Brightyard tenant app.
+6 chargers in garage P2, about 40 electric cars.
+Source: voice note from Ilze, 18:40, transcript attached.<span class="pn">1</span>
+
+<span class="k">USERS</span>
+Tenant drivers. Sample user: Elena, Skoda Enyaq, battery 34%.
+Facility managers need to see who is waiting.
+
+<span class="k">CONSTRAINTS</span>
+- Use by.css tokens and components only.<span class="pn">2</span>
+- AI violet is reserved for AI. Use .by-ai for proposals only.<span class="pn">3</span>
+- Cover every state: empty, waiting, your turn, held,
+  expired, error.
+- Mobile first. English copy. 24-hour time.
+
+<span class="k">DELIVERABLE</span>
+Three variants, side by side, same data, each clickable
+through all states.<span class="pn">4</span>
+A: queue. B: book a slot. C: smart match (AI).
+
+<span class="k">ACCEPTANCE CHECKS</span>
+- State chips jump to any state.
+- Every state has a next action.<span class="pn">5</span>
+- Light and dark both readable.</pre>
+      <ol class="notes">
+        <li><div><b>Name the source</b>The agent reads Ilze's own words, so I can trace every decision back to the note.</div></li>
+        <li><div><b>Tokens and components only</b>The review stays about flow, not styling.</div></li>
+        <li><div><b>Reserve the AI colour</b>This line is why only variant C is violet.</div></li>
+        <li><div><b>Same data in all three</b>So we compare the idea, not the content.</div></li>
+        <li><div><b>No dead ends</b>A state without a next action is a bug. This check finds them.</div></li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="variants">
+    <div class="sec-head">
+      <span class="num">03 · THREE VARIANTS</span>
+      <h2>Side by side, same data</h2>
+      <p>Six chargers, four people waiting, Elena is the user. Tap inside a phone for the real flow, or jump with the chips under it.</p>
+    </div>
+    <div class="dock" role="group" aria-label="Prototype theme">
+      <span class="lbl">Phones</span>
+      <div class="grp"><button type="button" id="thLight" aria-pressed="true">Light</button><button type="button" id="thDark" aria-pressed="false">Dark</button></div>
+      <p>One switch for all three phones. Clock in the phones is 11:15 on Thursday.</p>
+    </div>
+    <div class="phones" id="phones">
+      <div class="var" id="vA">
+        <div class="var__head"><span class="var__tag">A</span><b>Queue</b><span>Join, wait, get a held charger</span></div>
+        <div class="dev"><div class="ph by sync-proto" data-by="light"><div class="ph__st"><b class="ph__time">11:15</b><span class="ph__sig"><svg class="ic"><use href="#i-wifi"/></svg><i class="ph__bat"></i></span></div><div class="ph__bar"><div><h4>EV charging</h4><p>Garage P2 · Brightyard Park</p></div><span class="by-avatar">EB</span></div><div class="ph__screen" aria-live="polite"></div><button class="ph__banner" type="button" aria-hidden="true" tabindex="-1"></button><div class="by-toast ph__toast" role="status"></div><i class="ph__home"></i></div></div>
+        <div class="chips" role="group" aria-label="Jump to a state in variant A"></div>
+        <p class="var__cap" aria-live="polite"></p>
+      </div>
+      <div class="var" id="vB">
+        <div class="var__head"><span class="var__tag">B</span><b>Book a slot</b><span>Pick a 30-minute slot on a charger</span></div>
+        <div class="dev"><div class="ph by sync-proto" data-by="light"><div class="ph__st"><b class="ph__time">11:15</b><span class="ph__sig"><svg class="ic"><use href="#i-wifi"/></svg><i class="ph__bat"></i></span></div><div class="ph__bar"><div><h4>EV charging</h4><p>Garage P2 · Brightyard Park</p></div><span class="by-avatar">EB</span></div><div class="ph__screen" aria-live="polite"></div><button class="ph__banner" type="button" aria-hidden="true" tabindex="-1"></button><div class="by-toast ph__toast" role="status"></div><i class="ph__home"></i></div></div>
+        <div class="chips" role="group" aria-label="Jump to a state in variant B"></div>
+        <p class="var__cap" aria-live="polite"></p>
+      </div>
+      <div class="var" id="vC">
+        <div class="var__head"><span class="var__tag ai">C</span><b>Smart match</b><span>An assistant proposes, you confirm</span></div>
+        <div class="dev"><div class="ph by sync-proto" data-by="light"><div class="ph__st"><b class="ph__time">11:15</b><span class="ph__sig"><svg class="ic"><use href="#i-wifi"/></svg><i class="ph__bat"></i></span></div><div class="ph__bar"><div><h4>EV charging</h4><p>Garage P2 · Brightyard Park</p></div><span class="by-avatar">EB</span></div><div class="ph__screen" aria-live="polite"></div><button class="ph__banner" type="button" aria-hidden="true" tabindex="-1"></button><div class="by-toast ph__toast" role="status"></div><i class="ph__home"></i></div></div>
+        <div class="chips" role="group" aria-label="Jump to a state in variant C"></div>
+        <p class="var__cap" aria-live="polite"></p>
+      </div>
+    </div>
+  </section>
+
+  <section id="compare">
+    <div class="sec-head">
+      <span class="num">04 · HOW I COMPARED THEM</span>
+      <h2>Seven questions, three answers</h2>
+      <p>My own judgement from clicking through the prototypes. Nothing here is measured.</p>
+    </div>
+    <div class="tbl" tabindex="0" role="region" aria-label="Comparison table, scrolls sideways on small screens">
+      <table>
+        <thead><tr><th scope="col">Question</th><th scope="col">A · Queue</th><th scope="col">B · Book a slot</th><th scope="col">C · Smart match</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Taps to get a charger</th>
+            <td><span class="mk good">&#10003; Good</span><span class="t">2 taps: join, then "I'm on my way".</span></td>
+            <td><span class="mk risk">! Risk</span><span class="t">3 taps and a grid to scan.</span></td>
+            <td><span class="mk good">&#10003; Good</span><span class="t">1 tap to accept, when the match is right.</span></td></tr>
+          <tr><th scope="row">What if you're late</th>
+            <td><span class="mk good">&#10003; Good</span><span class="t">10-minute hold, then it passes on.</span></td>
+            <td><span class="mk risk">! Risk</span><span class="t">The slot sits empty until the grace time ends.</span></td>
+            <td><span class="mk good">&#10003; Good</span><span class="t">Same hold as A once you accept.</span></td></tr>
+          <tr><th scope="row">What if the system is wrong</th>
+            <td><span class="mk good">&#10003; Good</span><span class="t">One simple rule. Easy to see why.</span></td>
+            <td><span class="mk good">&#10003; Good</span><span class="t">Conflicts show up and offer an alternative.</span></td>
+            <td><span class="mk risk">! Risk</span><span class="t">A wrong guess costs trust. Needs a clear way out.</span></td></tr>
+          <tr><th scope="row">Fairness</th>
+            <td><span class="mk good">&#10003; Good</span><span class="t">First come, first served.</span></td>
+            <td><span class="mk risk">! Risk</span><span class="t">Planners grab the best slots early.</span></td>
+            <td><span class="mk risk">! Risk</span><span class="t">Rules are hidden. Hard to explain.</span></td></tr>
+          <tr><th scope="row">Who is in control</th>
+            <td><span class="mk good">&#10003; Good</span><span class="t">The driver, with one rule.</span></td>
+            <td><span class="mk good">&#10003; Good</span><span class="t">The driver, but must plan ahead.</span></td>
+            <td><span class="mk risk">! Risk</span><span class="t">The assistant decides, the driver confirms.</span></td></tr>
+          <tr><th scope="row">New components needed</th>
+            <td><span class="mk good">&#10003; Good</span><span class="t">2: queue position card, countdown ring.</span></td>
+            <td><span class="mk risk">! Risk</span><span class="t">2 and both are heavy: slot grid, conflict sheet.</span></td>
+            <td><span class="mk good">&#10003; Good</span><span class="t">Reuses .by-ai, adds quick-reply chips.</span></td></tr>
+          <tr><th scope="row">Build effort</th>
+            <td><span class="mk good">&#10003; Good</span><span class="t">Small. A queue service and push messages.</span></td>
+            <td><span class="mk risk">! Risk</span><span class="t">Large. Calendar logic, conflicts, no-shows.</span></td>
+            <td><span class="mk risk">! Risk</span><span class="t">Large. A prediction model, and A as the fallback.</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="pick">
+      <div class="box">
+        <span class="label">My pick</span>
+        <h3>A as the base. C only as an optional hint. B dropped.</h3>
+        <ul class="check">
+          <li><span><b>The rule fits one sentence.</b> "First in line gets the next free charger" is easy to trust and easy to explain to a facility manager.</span></li>
+          <li><span><b>C's value is a small part of C.</b> The finish-time estimate helps in A's waiting state. The rest needs a model the garage does not have, and it names another tenant's car.</span></li>
+          <li><span><b>B asks people to plan.</b> Drivers who are done charging are not planners. Late arrivals leave idle chargers, which is the problem we started with.</span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="round2">
+    <div class="sec-head">
+      <span class="num">05 · ROUND TWO</span>
+      <h2>Ilze answers the next morning</h2>
+      <p>Two changes: a gentler nudge, and a list for facility managers instead of the app.</p>
+    </div>
+    <div class="vn-host by sync-site" data-by="light" id="r2Player"></div>
+    <div class="r2">
+      <div class="col">
+        <span class="label">Before and after: the nudge</span>
+        <div class="by-diff by sync-site" data-by="light" style="--r:10px;align-self:start">
+          <div class="old"><span>Your car is at 100%. 3 people are waiting. Move it in 15 min to keep your charging streak.</span><span>&minus;</span></div>
+          <div class="new"><span>Charging is complete. Please move your car when you can, so the next driver can plug in.</span><span>+</span></div>
+          <div class="keep"><span>Buttons: I'll move it, Remind me in 10 min</span><span>=</span></div>
+        </div>
+        <p class="small">Gone: the streak, the waiting count and the deadline. Kept: the two ways to respond.</p>
+      </div>
+      <div class="col">
+        <span class="label">The notice on the driver's phone</span>
+        <div class="row" style="align-items:flex-start;flex-wrap:wrap;justify-content:center">
+          <div class="dev" style="padding:8px;border-radius:38px;max-width:240px;flex:0 1 auto"><div class="ph ph--mini by sync-proto" data-by="light" style="border-radius:30px;height:340px;font-size:13px"><div class="ph__st"><b>11:52</b><span class="ph__sig"><i class="ph__bat"></i></span></div><div class="ph__screen" style="padding-top:10px"><span class="by-badge by-badge--warn">Before</span><div class="by-card nt"><div class="nt__h"><span class="app"><svg class="ic"><use href="#i-bell"/></svg></span>Brightyard · now</div><p>Your car is at 100%. 3 people are waiting. Move it in 15 min to keep your charging streak.</p><div style="display:grid;gap:6px"><button type="button" class="by-btn by-btn--primary by-btn--sm">I'll move it</button><button type="button" class="by-btn by-btn--secondary by-btn--sm">10 more min</button></div></div></div><i class="ph__home"></i></div></div>
+          <div class="dev" style="padding:8px;border-radius:38px;max-width:240px;flex:0 1 auto"><div class="ph ph--mini by sync-proto" data-by="light" style="border-radius:30px;height:340px;font-size:13px"><div class="ph__st"><b>11:52</b><span class="ph__sig"><i class="ph__bat"></i></span></div><div class="ph__screen" style="padding-top:10px"><span class="by-badge by-badge--ok">After</span><div class="by-card nt"><div class="nt__h"><span class="app"><svg class="ic"><use href="#i-bell"/></svg></span>Brightyard · now</div><p>Charging is complete. Please move your car when you can, so the next driver can plug in.</p><div style="display:grid;gap:6px"><button type="button" class="by-btn by-btn--primary by-btn--sm">I'll move it</button><button type="button" class="by-btn by-btn--secondary by-btn--sm">Remind me</button></div></div></div><i class="ph__home"></i></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="fm by sync-proto" data-by="light" aria-label="Facility manager panel, web">
+      <div class="fm__top"><h4>Garage P2 · EV chargers</h4><span class="by-badge by-badge--brand">Facility view</span><span class="by-badge by-badge--ok"><svg class="ic"><use href="#i-check"/></svg>Live · 11:52</span></div>
+      <div class="fm__tiles">
+        <div class="fm__tile"><span class="t-cap">Waiting</span><b>4</b></div>
+        <div class="fm__tile"><span class="t-cap">Longest wait</span><b>23 min</b></div>
+        <div class="fm__tile"><span class="t-cap">In use</span><b>6 / 6</b></div>
+        <div class="fm__tile"><span class="t-cap">Done, plugged</span><b>2</b></div>
+      </div>
+      <div class="fm__body">
+        <div class="fm__tbl"><table>
+          <thead><tr><th scope="col">Charger</th><th scope="col">Status</th><th scope="col">Car at</th><th scope="col">Plugged in</th><th scope="col"><span class="sr" style="position:absolute;left:-9999px">Action</span></th></tr></thead>
+          <tbody id="fmRows"></tbody>
+        </table></div>
+        <ol class="q" aria-label="Queue">
+          <li><span class="n">1</span><div>Kaspars O.<br><small>Hollin Logistics</small></div><small>23 min</small></li>
+          <li><span class="n">2</span><div>Dace L.<br><small>Northgate Labs</small></div><small>18 min</small></li>
+          <li><span class="n">3</span><div>Elena B.<br><small>Saltmarsh Studio</small></div><small>11 min</small></li>
+          <li><span class="n">4</span><div>Rihards V.<br><small>Quay Foods</small></div><small>4 min</small></li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <section id="reply">
+    <div class="sec-head">
+      <span class="num">06 · MY REPLY</span>
+      <h2>Back to Ilze</h2>
+      <p>Plain and friendly. What I decided, what I need, and when she gets the next version.</p>
+    </div>
+    <div class="chat">
+      <div class="msg them"><span class="who">Ilze · 09:15</span>Love the queue. But no shaming, people will hate the nudge. And facility managers need a list, not the app.</div>
+      <div class="msg me" role="group" aria-label="My reply">
+        <span class="who">Me · 09:48</span>
+        <p>Thanks Ilze. Going with the queue (A). The nudge is now a neutral notice, and there is a facility list with who is waiting and which cars are done but still plugged in.</p>
+        <p>Two things I need from you:</p>
+        <ol>
+          <li>Is 10 minutes the right hold, or should it be shorter at peak hours?</li>
+          <li>Should facility managers see driver names, or only company names?</li>
+        </ol>
+        <p>The next version with both changes is ready by Friday noon.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="test">
+    <div class="sec-head">
+      <span class="num">07 · WHAT I WOULD TEST</span>
+      <h2>Three hypotheses, not results</h2>
+      <p>Nobody has tested this yet. This is how I would find out.</p>
+    </div>
+    <div class="three">
+      <div><span class="label">Hypothesis 1</span><h3>"3rd · about 25 min" is clear on its own.</h3><p>Five tenants, think-aloud on prototype A. Ask each person what happens next. Count the ones who guess wrong.</p></div>
+      <div><span class="label">Hypothesis 2</span><h3>A 10-minute hold feels fair.</h3><p>Role-play with five drivers at 5, 10 and 15 minutes, once as the holder and once as the person waiting. Compare how each felt.</p></div>
+      <div><span class="label">Hypothesis 3</span><h3>A neutral notice moves cars as fast as a streak nudge.</h3><p>A two-week pilot in P2 with one message each. Measure minutes between 100% and unplugging. Watch for complaints.</p></div>
+    </div>
+  </section>
+
+  <section id="components">
+    <div class="sec-head">
+      <span class="num">08 · NEW COMPONENTS</span>
+      <h2>What I added to the system</h2>
+      <p>Built on by.css tokens. All of them are live below.</p>
+    </div>
+
+    <div class="cmpblock">
+      <div class="cmphead"><h3>Voice note player</h3><p>Plays a recorded message with a waveform and a synced transcript. States: idle, playing, paused, seeking, compact.</p></div>
+      <div class="cmpgrid" id="cmpPlayers"></div>
+    </div>
+
+    <div class="cmpblock">
+      <div class="cmphead"><h3>Countdown ring</h3><p>Shows a hold that is running out. The ring, the number and a word all change, so colour is never the only signal. States: running, last minute, expired.</p></div>
+      <div class="stage by sync-site" data-by="light"><div class="ringrow" id="cmpRings"></div></div>
+    </div>
+
+    <div class="cmpblock">
+      <div class="cmphead"><h3>Queue position card</h3><p>Answers "where am I and how long?" in one glance. States: waiting, next, your turn.</p></div>
+      <div class="stage by sync-site" data-by="light"><div class="cmpgrid" id="cmpQpc" style="width:100%"></div></div>
+    </div>
+
+    <div class="cmpblock">
+      <div class="cmphead"><h3>Charger slot tile</h3><p>One of six in the strip. Fill height shows battery level. States: charging, done, free, yours, next to free.</p></div>
+      <div class="stage by sync-site" data-by="light" id="cmpSlots" style="width:100%"></div>
+    </div>
+  </section>
+
+  <div class="next-work" style="margin-top:84px">
+    <a href="brightyard-portal.html"><span class="label">Next work</span><b>Brightyard Portal</b><span>The web app, where facility managers would live.</span></a>
+    <a href="ai-states.html"><span class="label">Next work</span><b>AI states</b><span>Suggestions, confirmations, statuses and errors.</span></a>
+    <a href="space-finder.html"><span class="label">Next work</span><b>Space finder</b><span>Leasing space in a business park, with an AI match.</span></a>
+  </div>
+
+  <footer><span>Concept work. Fictional company, sample data.</span><span>Designed and built with Claude Code, November 2026</span></footer>
+</main>
+<script src="../assets/profile.js"></script>
+<script src="../assets/icons.js"></script>
+<script src="../assets/site.js"></script>
+<script>
+(function () {
+  "use strict";
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+  var reduce = !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
+  function fmt(s) { s = Math.max(0, Math.floor(s)); return Math.floor(s / 60) + ":" + ("0" + (s % 60)).slice(-2); }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+  function mulberry(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; var t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+
+  /* ---------- theme sync ---------- */
+  var mq = window.matchMedia ? matchMedia("(prefers-color-scheme: dark)") : null;
+  function siteDark() { var t = document.documentElement.getAttribute("data-theme"); return t ? t === "dark" : !!(mq && mq.matches); }
+  var protoTheme = siteDark() ? "dark" : "light";
+  function applyTheme() {
+    $$(".sync-site").forEach(function (e) { e.setAttribute("data-by", siteDark() ? "dark" : "light"); });
+    $$(".sync-proto").forEach(function (e) { e.setAttribute("data-by", protoTheme); });
+    $("#thLight").setAttribute("aria-pressed", String(protoTheme === "light"));
+    $("#thDark").setAttribute("aria-pressed", String(protoTheme === "dark"));
+  }
+  new MutationObserver(function () { protoTheme = siteDark() ? "dark" : "light"; applyTheme(); }).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+  if (mq && mq.addEventListener) mq.addEventListener("change", function () { protoTheme = siteDark() ? "dark" : "light"; applyTheme(); });
+  $("#thLight").addEventListener("click", function () { protoTheme = "light"; applyTheme(); });
+  $("#thDark").addEventListener("click", function () { protoTheme = "dark"; applyTheme(); });
+
+  /* ================= VOICE NOTE PLAYER ================= */
+  var PLAY = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.2v13.6a.6.6 0 0 0 .9.5l11-6.8a.6.6 0 0 0 0-1L8.9 4.7a.6.6 0 0 0-.9.5z" fill="currentColor"/></svg>';
+  var PAUSE = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4.2" height="14" rx="1.2" fill="currentColor"/><rect x="13.8" y="5" width="4.2" height="14" rx="1.2" fill="currentColor"/></svg>';
+  var TEXT1 = "Hi, it's Ilze. So, the chargers in P2. People are fighting over them again. Six chargers, forty cars, and someone leaves their car plugged in all day at a hundred percent. Can the app run a queue? You join, it tells you when a charger is yours, and it holds it for you for a bit. And maybe nudge the people who are done charging to move. Keep it simple, one tap if possible. Oh, and facility managers want to see who is waiting. Can you show me a few options tomorrow morning? Thanks!";
+  var TEXT2 = "Love the queue. But no shaming, people will hate the nudge. And facility managers need a list, not the app.";
+
+  function buildWords(text, dur) {
+    var raw = text.split(/\s+/), ws = [], total = 0;
+    raw.forEach(function (t) {
+      var core = t.replace(/[^\w']/g, "");
+      var w = 0.55 + core.length * 0.12, tail = /[.?!]$/.test(t) ? 0.9 : /,$/.test(t) ? 0.4 : 0;
+      ws.push({ t: t, w: w, tail: tail }); total += w + tail;
+    });
+    var k = (dur - 0.7) / total, c = 0.35;
+    ws.forEach(function (x) { x.start = c; c += x.w * k; x.end = c; c += x.tail * k; });
+    return ws;
+  }
+  var WORDS1 = buildWords(TEXT1, 46), WORDS2 = buildWords(TEXT2, 14);
+  var players = {}, nPlayer = 0;
+
+  function Player(host, o) {
+    var id = o.id || "vn" + (++nPlayer), dur = o.dur, words = o.words || null, N = 60;
+    var pos = o.start || 0, playing = false, speed = 1, raf = 0, last = 0, lastBi = -1, lastSec = -1, lastWi = -2, lastTop = -1, reading = false, src = null;
+    var rnd = mulberry(o.seed || 7);
+    var bars = "";
+    for (var i = 0; i < N; i++) {
+      var t = (i + 0.5) / N * dur, h;
+      var quiet = words && !words.some(function (w) { return t >= w.start - 0.08 && t <= w.end + 0.08; });
+      if (words) h = quiet ? 0.1 + rnd() * 0.1 : 0.32 + rnd() * 0.68;
+      else h = 0.25 + 0.75 * rnd() * (0.6 + 0.4 * Math.sin(i / N * Math.PI));
+      bars += '<i style="--h:' + Math.round(h * 100) + '%"></i>';
+    }
+    var tx = "";
+    if (o.tx && words) tx = '<div class="vn__tx" id="' + id + '-tx" tabindex="0" role="region" aria-label="Transcript">' + words.map(function (w, j) { return '<span class="w" data-i="' + j + '">' + esc(w.t) + "</span>"; }).join(" ") + "</div>";
+    var speedUI = !o.compact ? '<div class="by-seg vn__speed" role="group" aria-label="Playback speed">' + [1, 1.5, 2].map(function (s) { return '<button type="button" data-s="' + s + '" aria-pressed="' + (s === 1) + '">' + s + "x</button>"; }).join("") + "</div>" : "";
+    host.innerHTML = '<div class="vn' + (o.compact ? " vn--compact" : "") + (o.seeking ? " is-seeking" : "") + '" data-state="' + (o.start && !playing ? "paused" : "idle") + '">' +
+      '<div class="vn__top"><span class="by-avatar vn__av" aria-hidden="true">IL</span><div class="vn__who"><b>Ilze</b><span>Product owner · ' + o.at + '</span></div><span class="by-badge vn__tag">' + ic("mic") + " Voice note</span></div>" +
+      '<div class="vn__ctl"><button type="button" class="vn__play" id="' + id + '-play" aria-label="Play voice note">' + PLAY + "</button>" +
+      '<div class="vn__wave" id="' + id + '-wave" role="slider" tabindex="0" aria-label="Voice note position" aria-valuemin="0" aria-valuemax="' + dur + '" aria-valuenow="0" aria-valuetext="0:00 of ' + fmt(dur) + '">' + bars + '<u class="vn__head"></u></div></div>' +
+      '<div class="vn__meta"><span class="vn__time" id="' + id + '-time">0:00 / ' + fmt(dur) + "</span>" + speedUI + '<button type="button" class="by-btn by-btn--ghost by-btn--sm vn__read" id="' + id + '-read" hidden>Read aloud</button></div>' +
+      tx + (o.note ? '<p class="vn__note">Script written by me for this exercise. Playback is simulated, no audio.</p>' : "") + "</div>";
+    var root = $(".vn", host), btn = $(".vn__play", host), wave = $(".vn__wave", host), head = $(".vn__head", host), time = $(".vn__time", host), txEl = $(".vn__tx", host), read = $(".vn__read", host);
+    var barEls = $$("i", wave), spans = txEl ? $$(".w", txEl) : [];
+
+    function findWord(t) {
+      if (!words) return -1;
+      var lo = 0, hi = words.length - 1, r = -1;
+      while (lo <= hi) { var m = (lo + hi) >> 1; if (words[m].start <= t) { r = m; lo = m + 1; } else hi = m - 1; }
+      return r;
+    }
+    function scrollTo(span, smooth) {
+      if (!txEl || !span) return;
+      var top = span.offsetTop;
+      if (top === lastTop) return;
+      lastTop = top;
+      var target = clamp(top - txEl.clientHeight / 2 + span.offsetHeight / 2, 0, txEl.scrollHeight - txEl.clientHeight);
+      try { txEl.scrollTo({ top: target, behavior: smooth && !reduce ? "smooth" : "auto" }); } catch (e) { txEl.scrollTop = target; }
+    }
+    function render(smooth) {
+      var bi = Math.min(N, Math.floor(pos / dur * N + 0.0001));
+      if (bi !== lastBi) { for (var i = 0; i < N; i++) barEls[i].classList.toggle("on", i < bi); lastBi = bi; }
+      head.style.left = (pos / dur * 100) + "%";
+      var sec = Math.floor(pos);
+      if (sec !== lastSec) {
+        time.textContent = fmt(pos) + " / " + fmt(dur);
+        wave.setAttribute("aria-valuenow", sec); wave.setAttribute("aria-valuetext", fmt(pos) + " of " + fmt(dur)); lastSec = sec;
+      }
+      if (words) {
+        var wi = pos <= 0.001 ? -1 : findWord(pos);
+        if (wi !== lastWi) {
+          for (var j = 0; j < spans.length; j++) { spans[j].classList.toggle("on", j < wi); spans[j].classList.toggle("cur", j === wi); }
+          lastWi = wi;
+          if (wi >= 0) scrollTo(spans[wi], smooth !== false);
+          if (o.onWord) o.onWord(wi);
+        }
+      }
+    }
+    function setState(s) { root.setAttribute("data-state", s); btn.innerHTML = s === "playing" ? PAUSE : PLAY; btn.setAttribute("aria-label", s === "playing" ? "Pause voice note" : (pos >= dur ? "Play again" : "Play voice note")); }
+    function tick(now) {
+      if (!playing) return;
+      var dt = Math.min(0.25, (now - last) / 1000); last = now;
+      pos += dt * speed;
+      if (pos >= dur) {
+        if (o.loop) { pos = 0; lastTop = -1; if (txEl) txEl.scrollTop = 0; }
+        else { pos = dur; playing = false; render(); setState("paused"); stopRead(); return; }
+      }
+      render();
+      raf = requestAnimationFrame(tick);
+    }
+    function play() {
+      if (pos >= dur - 0.05) { pos = 0; lastTop = -1; }
+      playing = true; last = performance.now(); setState("playing"); cancelAnimationFrame(raf); raf = requestAnimationFrame(tick);
+    }
+    function pause() { playing = false; cancelAnimationFrame(raf); setState(pos > 0 ? "paused" : "idle"); stopRead(); }
+    function seek(t, fromUser) {
+      pos = clamp(t, 0, dur); lastTop = -1; render(true);
+      if (fromUser) { root.classList.add("is-seeking"); setTimeout(function () { if (!o.seeking) root.classList.remove("is-seeking"); }, 260); }
+      if (!playing) setState(pos > 0 ? "paused" : "idle");
+    }
+    function toggle() { playing ? pause() : play(); }
+    btn.addEventListener("click", toggle);
+    function fromX(e) { var r = wave.getBoundingClientRect(); return clamp((e.clientX - r.left) / r.width, 0, 1) * dur; }
+    var drag = false;
+    wave.addEventListener("pointerdown", function (e) { drag = true; try { wave.setPointerCapture(e.pointerId); } catch (x) {} root.classList.add("is-seeking"); seek(fromX(e), false); });
+    wave.addEventListener("pointermove", function (e) { if (drag) seek(fromX(e), false); });
+    function up() { if (!drag) return; drag = false; setTimeout(function () { if (!o.seeking) root.classList.remove("is-seeking"); }, 220); }
+    wave.addEventListener("pointerup", up); wave.addEventListener("pointercancel", up);
+    wave.addEventListener("keydown", function (e) {
+      var d = { ArrowLeft: -3, ArrowDown: -3, ArrowRight: 3, ArrowUp: 3 }[e.key];
+      if (d) { e.preventDefault(); seek(pos + d, true); }
+      else if (e.key === "Home") { e.preventDefault(); seek(0, true); }
+      else if (e.key === "End") { e.preventDefault(); seek(dur - 0.1, true); }
+      else if (e.key === " ") { e.preventDefault(); toggle(); }
+    });
+    if (txEl) txEl.addEventListener("click", function (e) { var s = e.target.closest(".w"); if (s) seek(words[+s.dataset.i].start + 0.01, true); });
+    $$(".vn__speed button", host).forEach(function (b) {
+      b.addEventListener("click", function () { speed = +b.dataset.s; $$(".vn__speed button", host).forEach(function (x) { x.setAttribute("aria-pressed", String(x === b)); }); });
+    });
+
+    /* read aloud: optional, never throws */
+    function stopRead() { try { if (reading) { reading = false; window.speechSynthesis.cancel(); read.textContent = "Read aloud"; } } catch (e) {} }
+    try {
+      if ("speechSynthesis" in window && o.read && words && typeof SpeechSynthesisUtterance !== "undefined") {
+        read.hidden = false;
+        var offs = [], c = 0; words.forEach(function (w) { offs.push(c); c += w.t.length + 1; });
+        read.addEventListener("click", function () {
+          try {
+            if (reading) { pause(); return; }
+            window.speechSynthesis.cancel();
+            var u = new SpeechSynthesisUtterance(words.map(function (w) { return w.t; }).join(" "));
+            u.lang = "en-GB"; u.rate = 1;
+            u.onboundary = function (ev) {
+              try { var k = 0; for (var q = 0; q < offs.length; q++) if (offs[q] <= ev.charIndex) k = q; seek(words[k].start + 0.01, false); } catch (x) {}
+            };
+            u.onend = u.onerror = function () { try { if (reading) { reading = false; read.textContent = "Read aloud"; pause(); } } catch (x) {} };
+            reading = true; read.textContent = "Stop reading"; seek(0, false); play(); window.speechSynthesis.speak(u);
+          } catch (e) { reading = false; }
+        });
+      }
+    } catch (e) {}
+
+    function setSource(a, b) {
+      spans.forEach(function (s, j) { s.classList.toggle("is-src", a != null && j >= a && j <= b); });
+      src = a == null ? null : [a, b];
+      if (a != null && txEl) { lastTop = -1; var s = spans[a]; var target = clamp(s.offsetTop - txEl.clientHeight / 2, 0, txEl.scrollHeight - txEl.clientHeight); try { txEl.scrollTo({ top: target, behavior: reduce ? "auto" : "smooth" }); } catch (e) { txEl.scrollTop = target; } }
+    }
+    var api = { play: play, pause: pause, seek: seek, setSource: setSource, words: words, host: host, isPlaying: function () { return playing; } };
+    players[id] = api;
+    render(false);
+    if (pos > 0) setState(o.paused === false ? "idle" : "paused"); else setState("idle");
+    if (o.autoplay) play();
+    return api;
+  }
+
+  var main = null, heardEls = [];
+  main = Player($("#mainPlayer"), { id: "vn-main", dur: 46, words: WORDS1, seed: 18, at: "18:40", tx: true, note: true, read: true, onWord: function (wi) { heardEls.forEach(function (h) { h.el.classList.toggle("is-heard", wi >= h.a && wi <= h.b); }); } });
+  Player($("#r2Player"), { id: "vn-r2", dur: 14, words: WORDS2, seed: 42, at: "09:15", compact: true, tx: true, note: false });
+
+  /* ================= REQUIREMENTS ================= */
+  function norm(s) { return s.toLowerCase().replace(/[^a-z0-9' ]/g, "").split(/\s+/).filter(Boolean); }
+  var tokens = WORDS1.map(function (w) { return w.t.toLowerCase().replace(/[^a-z0-9']/g, ""); });
+  function locate(q) {
+    var p = norm(q);
+    for (var i = 0; i + p.length <= tokens.length; i++) { var ok = true; for (var j = 0; j < p.length; j++) if (tokens[i + j] !== p[j]) { ok = false; break; } if (ok) return [i, i + p.length - 1]; }
+    return null;
+  }
+  var RQ = [
+    { h: "Goals", items: [
+      { t: "Stop the fights over chargers", q: "People are fighting over them again" },
+      { t: "Give everyone a fair turn", q: "Can the app run a queue" },
+      { t: "Free chargers held by finished cars", q: "someone leaves their car plugged in all day at a hundred percent" },
+      { t: "One tap where possible", q: "Keep it simple, one tap if possible" } ] },
+    { h: "Rules", items: [
+      { t: "Join, then get told when it is your turn", q: "You join, it tells you when a charger is yours" },
+      { t: "Hold the charger for a short time", q: "it holds it for you for a bit" },
+      { t: "Nudge drivers who are done charging", q: "nudge the people who are done charging to move" },
+      { t: "Facility managers see who is waiting", q: "facility managers want to see who is waiting" } ] },
+    { h: "Open questions", items: [
+      { t: "How long is \"a bit\"?", a: "10 minutes, then the spot passes to the next person.", q: "for a bit" },
+      { t: "What counts as done charging?", a: "100%, or no power drawn for 15 minutes.", q: "done charging" },
+      { t: "Who sees whose name?", a: "Drivers see positions only. Facility managers see names.", q: "who is waiting" },
+      { t: "Is one shared queue right for 40 cars?", a: "Yes. Reserved spots wait for a later round.", q: "Six chargers, forty cars" } ] },
+    { h: "Out of scope", items: [
+      { t: "Billing per kWh", oos: 1 }, { t: "Balancing power between chargers", oos: 1 }, { t: "Booking days ahead", oos: 1 } ] }
+  ];
+  var grid = $("#rqgrid"), cap = $("#srccap");
+  grid.innerHTML = RQ.map(function (g) {
+    return '<div class="rqcol"><h3>' + g.h + "</h3>" + g.items.map(function (it, k) {
+      return '<button type="button" class="rq' + (it.oos ? " oos" : "") + '" aria-pressed="false" data-g="' + g.h + '" data-k="' + k + '">' + esc(it.t) + (it.a ? "<em><b>My assumption:</b> " + esc(it.a) + "</em>" : "") + (it.oos ? "<em>Not in the note. Left out on purpose.</em>" : "") + "</button>";
+    }).join("") + "</div>";
+  }).join("");
+  $$(".rq", grid).forEach(function (b) {
+    var it = RQ.filter(function (g) { return g.h === b.dataset.g; })[0].items[+b.dataset.k];
+    if (it.q) { var r = locate(it.q); it.r = r; if (r) heardEls.push({ el: b, a: r[0], b: r[1] }); }
+    b.addEventListener("click", function () {
+      $$(".rq", grid).forEach(function (x) { x.setAttribute("aria-pressed", String(x === b && b.getAttribute("aria-pressed") !== "true")); });
+      var on = b.getAttribute("aria-pressed") === "true";
+      if (!on) { main.setSource(null); cap.textContent = "Nothing selected."; return; }
+      if (it.oos || !it.r) { main.setSource(null); cap.innerHTML = "<span>Not in the voice note. I left it out on purpose, so round one stays small.</span>"; return; }
+      var host = $("#mainPlayer"), rect = host.getBoundingClientRect();
+      if (rect.top < 70 || rect.bottom > window.innerHeight) { try { host.scrollIntoView({ block: "center", behavior: reduce ? "auto" : "smooth" }); } catch (e) { host.scrollIntoView(); } }
+      main.setSource(it.r[0], it.r[1]);
+      var t0 = WORDS1[it.r[0]].start;
+      cap.innerHTML = "<span>Source at " + fmt(t0) + ": <q>" + esc(WORDS1.slice(it.r[0], it.r[1] + 1).map(function (w) { return w.t; }).join(" ")) + '</q></span><button type="button" class="cta ghost" id="playFrom" style="padding:7px 12px;font-size:13px">Play from here</button>';
+      $("#playFrom").addEventListener("click", function () { main.seek(t0, true); main.play(); });
+    });
+  });
+
+  /* ================= SHARED UI PIECES ================= */
+  var C = 2 * Math.PI * 54;
+  function ringHTML(left, total, word) {
+    var cls = left <= 0 ? " is-out" : left <= 60 ? " is-last" : "";
+    var w = left <= 0 ? "Expired" : left <= 60 ? "Last minute" : (word || "left");
+    return '<div class="cr' + cls + '" role="img" aria-label="' + fmt(left) + ' ' + w + '" style="--off:' + (C * (1 - left / total)) + '" data-total="' + total + '"><svg viewBox="0 0 120 120" aria-hidden="true"><circle class="tr" cx="60" cy="60" r="54"/><circle class="ar" cx="60" cy="60" r="54"/></svg><div class="cr__c"><span class="cr__t">' + fmt(left) + '</span><span class="cr__w">' + w + "</span></div></div>";
+  }
+  function ringSet(el, left, word) {
+    if (!el) return;
+    var total = +el.dataset.total;
+    el.style.setProperty("--off", C * (1 - left / total));
+    el.classList.toggle("is-last", left > 0 && left <= 60); el.classList.toggle("is-out", left <= 0);
+    $(".cr__t", el).textContent = fmt(left);
+    var w = left <= 0 ? "Expired" : left <= 60 ? "Last minute" : (word || "left");
+    $(".cr__w", el).textContent = w; el.setAttribute("aria-label", fmt(left) + " " + w);
+  }
+  function ordinal(n) { return n + (n === 1 ? "st" : n === 2 ? "nd" : n === 3 ? "rd" : "th"); }
+  function qpc(kind, n) {
+    if (kind === "turn") return '<div class="qpc" data-k="turn"><span class="t-cap">Your turn</span><div class="qpc__n">Charger 4</div><div class="qpc__eta">Free now · held for you for 10 min</div><div class="qpc__live"><i></i>Live</div></div>';
+    if (kind === "next") return '<div class="qpc" data-k="next"><span class="t-cap">Your place</span><div class="qpc__n">Next</div><div class="qpc__eta">about 6 min · est. 11:22</div><div class="qpc__live"><i></i>Live, updated just now</div></div>';
+    return '<div class="qpc" data-k="wait"><span class="t-cap">Your place</span><div class="qpc__n">' + (n || 3) + "<sup>" + ordinal(n || 3).replace(/^\d+/, "") + '</sup></div><div class="qpc__eta">about 25 min · est. 11:40</div><div class="qpc__live"><i></i>Live, updated just now</div></div>';
+  }
+  var CH = [{ n: 1, p: 88 }, { n: 2, p: 100 }, { n: 3, p: 61 }, { n: 4, p: 92 }, { n: 5, p: 47 }, { n: 6, p: 100 }];
+  function tile(c, o) {
+    o = o || {};
+    var k = c.p >= 100 ? "done" : "busy", lab = c.p + "%", ico = "";
+    if (o.free && o.free.indexOf(c.n) > -1) { k = "free"; lab = "Free"; }
+    if (o.yours === c.n) { k = "yours"; lab = "You"; }
+    if (k === "done") { lab = "Done"; ico = ic("check"); }
+    return '<div class="sl sl--' + k + (o.next === c.n ? " is-next" : "") + '" style="--p:' + (k === "busy" ? c.p : 0) + '%"><b>' + c.n + "</b><span>" + ico + lab + "</span></div>";
+  }
+  function slots(o) {
+    o = o || {};
+    var label = CH.map(function (c) { return "Charger " + c.n + (o.free && o.free.indexOf(c.n) > -1 ? " free" : c.p >= 100 ? " done, still plugged" : " at " + c.p + "%"); }).join(", ");
+    return '<div class="sl-row" role="img" aria-label="' + label + '">' + CH.map(function (c) { return tile(c, o); }).join("") + '</div><div class="sl-legend"><span>Fill = battery</span><span>Done = still plugged</span><span>Dashed = free</span></div>';
+  }
+  function car() { return '<div class="by-card carrow"><span class="by-avatar">' + ic("car") + '</span><b>Skoda Enyaq · LV-4821</b><div class="by-progress" style="--p:34%"><i></i></div><span class="t-small">Battery 34%</span></div>'; }
+  function btn(act, label, cls, icon, extra) { return '<button type="button" class="by-btn ' + cls + '" data-act="' + act + '"' + (extra || "") + ">" + (icon ? ic(icon) : "") + label + "</button>"; }
+  function errorView(what, fix, act) {
+    return '<div class="by-card stat bad"><span class="by-badge by-badge--bad">' + ic("wifi") + 'Offline</span><b>' + what + "</b><p>" + fix + "</p></div>" + btn("retry", "Try again", "by-btn--primary by-btn--block", "refresh") + btn("help", "Contact facility", "by-btn--secondary by-btn--block");
+  }
+
+  /* ================= PHONE ENGINE ================= */
+  function Phone(root, def) {
+    var el = $(".ph", root), scr = $(".ph__screen", el), bn = $(".ph__banner", el), clock = $(".ph__time", el), cap = $(".var__cap", root), chipBox = $(".chips", root), tst = $(".ph__toast", el);
+    var P = { s: {}, id: null }, timers = [], cdTimer = null, toastT = null;
+    function clear() { timers.forEach(function (t) { clearTimeout(t); clearInterval(t); }); timers = []; cdTimer = null; }
+    P.after = function (ms, fn) { var t = setTimeout(fn, ms); timers.push(t); return t; };
+    P.every = function (ms, fn) { var t = setInterval(fn, ms); timers.push(t); return t; };
+    P.toast = function (msg) { tst.textContent = msg; tst.classList.add("is-in"); clearTimeout(toastT); toastT = setTimeout(function () { tst.classList.remove("is-in"); }, 2200); };
+    P.countdown = function (left, onEnd, word) {
+      var ring = $(".cr", scr); P.left = left;
+      P.every(1000, function () { P.left--; ringSet(ring, Math.max(0, P.left), word); if (P.left <= 0) { clearClock(); onEnd(); } });
+      function clearClock() { timers.forEach(function (t) { clearInterval(t); }); }
+    };
+    P.go = function (id, opt) {
+      clear(); opt = opt || {};
+      var st = def.states.filter(function (x) { return x.id === id; })[0]; if (!st) return;
+      P.id = id; tst.classList.remove("is-in");
+      scr.innerHTML = st.view(P.s, P);
+      scr.classList.remove("enter"); void scr.offsetWidth; scr.classList.add("enter"); scr.scrollTop = 0;
+      clock.textContent = st.time || "11:15";
+      var b = st.banner ? st.banner(P.s) : "";
+      if (b) { bn.innerHTML = b; bn.setAttribute("aria-hidden", "false"); bn.tabIndex = 0; bn.dataset.act = st.bannerAct || ""; P.after(reduce ? 0 : 450, function () { bn.classList.add("is-in"); }); }
+      else { bn.classList.remove("is-in"); bn.setAttribute("aria-hidden", "true"); bn.tabIndex = -1; bn.dataset.act = ""; }
+      cap.innerHTML = "<b>" + st.label + ".</b> " + st.cap;
+      $$(".sc", chipBox).forEach(function (c) { c.setAttribute("aria-pressed", String(c.dataset.id === id)); });
+      if (st.enter) st.enter(P.s, P);
+    };
+    chipBox.innerHTML = def.states.map(function (s) { return '<button type="button" class="sc" data-id="' + s.id + '" aria-pressed="false">' + s.label + "</button>"; }).join("");
+    chipBox.addEventListener("click", function (e) { var c = e.target.closest(".sc"); if (c) { P.s.chip = true; def.reset && def.reset(P.s); P.go(c.dataset.id); } });
+    el.addEventListener("click", function (e) {
+      var a = e.target.closest("[data-act]"); if (!a || !a.dataset.act) return;
+      var cur = def.states.filter(function (x) { return x.id === P.id; })[0];
+      if (def.act) def.act(a.dataset.act, a, P, e);
+    });
+    P.root = el; P.scr = scr;
+    def.init && def.init(P);
+    P.go(def.start);
+    return P;
+  }
+  function bannerHTML(title, body, time) { return '<span class="app">' + ic("car") + "</span><small>BRIGHTYARD · " + time + "</small><b>" + title + "</b><span>" + body + "</span>"; }
+  function titleBlock(h, sub) { return '<div><h2 class="h">' + h + '</h2><p class="t-small">' + sub + "</p></div>"; }
+
+  /* ---------- A: Queue ---------- */
+  var A = Phone($("#vA"), {
+    start: "join",
+    states: [
+      { id: "empty", label: "Empty", time: "11:15", cap: "Nobody is waiting and charger 2 is free. The only action is to plug in.",
+        view: function () { return titleBlock("Chargers in P2", "6 chargers · 1 free") + slots({ free: [2] }) + '<div class="by-card stat ok"><span class="by-badge by-badge--ok">' + ic("check") + 'Free now</span><b>Nobody is waiting</b><p>Charger 2 is free. Plug in and start.</p></div>' + car() + btn("plug2", "Start at charger 2", "by-btn--primary by-btn--lg by-btn--block", "") + '<p class="help">No queue needed right now.</p>'; } },
+      { id: "join", label: "Join", time: "11:15", cap: "All six chargers are busy. Two people are waiting. One tap joins the queue.",
+        view: function () { return titleBlock("Chargers in P2", "6 chargers · all in use · 2 waiting") + slots({ next: 4 }) + car() + '<div class="by-card stat"><b>If you join now, you are 3rd</b><p>About 25 min. We tell you when a charger is yours and hold it for 10 minutes.</p></div>' + btn("join", "Join queue", "by-btn--primary by-btn--lg by-btn--block", "") + ""; } },
+      { id: "wait", label: "Waiting", time: "11:18", cap: "A live position card. At 11:18 one more driver joined behind you, so four are waiting.",
+        view: function () { return qpc("wait", 3) + slots({ next: 4 }) + '<div class="qd" role="img" aria-label="Queue: two ahead of you, you third, one behind you"><span>1</span><span>2</span><span class="you">3 You</span><span class="later">4</span><small>4 waiting</small></div>' + '<div class="row2">' + btn("leave", "Leave queue", "by-btn--secondary", "") + btn("fast", "Notify me", "by-btn--ghost", "bell") + '</div><button type="button" class="demo" data-act="skip">Demo: skip ahead to my turn</button>'; } },
+      { id: "turn", label: "Your turn", time: "11:40", cap: "A push-style banner slides in. Tapping it opens the held charger.", bannerAct: "open",
+        banner: function () { return bannerHTML("Charger 4 is yours", "Held until 11:50. Tap to open.", "NOW"); },
+        view: function () { return qpc("turn") + slots({ yours: 4 }) + btn("open", "Open charger 4", "by-btn--primary by-btn--lg by-btn--block", "") + '<p class="help">If you do nothing, the charger goes to the next driver at 11:50.</p>'; } },
+      { id: "held", label: "Held", time: "11:41", cap: "A 10:00 hold ring. Press 'I'm on my way' to confirm, then plug in. Pass to next gives the charger away.",
+        view: function (s) {
+          return '<div class="center">' + ringHTML(600, 600, "held") + '<b class="t-h3" style="font:750 17px var(--font)">Charger 4 is held for you</b><p class="t-small">Hold ends 11:50. Plug in before then.</p></div>' +
+            (s.omw ? '<div class="by-card stat ok"><span class="by-badge by-badge--ok">' + ic("check") + "On your way</span><p>Thanks. We keep charger 4 until 11:50.</p></div>" + btn("plug", "I've plugged in", "by-btn--primary by-btn--lg by-btn--block", "")
+              : btn("omw", "I'm on my way", "by-btn--primary by-btn--lg by-btn--block", "")) +
+            btn("pass", "Pass to next", "by-btn--ghost by-btn--block", "") + '<button type="button" class="demo" data-act="last">Demo: jump to the last minute</button>';
+        },
+        enter: function (s, P) { P.countdown(600, function () { s.reason = "time"; P.go("expired"); }, "held"); } },
+      { id: "charge", label: "Charging", time: "11:46", cap: "Plugged in. The bar moves while it charges.",
+        view: function (s) { return titleBlock("Charging at charger " + (s.ch || 4), "Started 11:46 · target 80%") + '<div class="by-card stat"><span class="by-badge by-badge--brand">' + ic("check") + 'Plugged in</span><div class="big" id="aPct">34%</div><div class="by-progress"><i id="aBar" style="--p:34%"></i></div><p id="aEta">About 80% at 12:25.</p></div>' + btn("stop", "Stop charging", "by-btn--secondary by-btn--block", "") + '<p class="help">We tell you a few minutes before it is done.</p>'; },
+        enter: function (s, P) {
+          var v = 34, pct = $("#aPct", P.scr), bar = $("#aBar", P.scr);
+          P.every(500, function () { if (v < 80) { v++; pct.textContent = v + "%"; bar.style.setProperty("--p", v + "%"); } else { $("#aEta", P.scr).textContent = "Charged to 80%. Please unplug and move your car."; } });
+        } },
+      { id: "expired", label: "Expired", time: "11:52", cap: "The hold ended or the driver passed. The state says what happened and offers a way back.",
+        view: function (s) { return '<div class="by-card stat warn"><span class="by-badge by-badge--warn">' + ic("clock") + "Expired</span><b>Charger 4 went to the next driver</b><p>" + (s.reason === "pass" ? "You passed charger 4 on." : "The 10-minute hold ended at 11:50.") + " Your place in line is gone.</p></div>" + qpc("wait", 5).replace("about 25 min · est. 11:40", "if you rejoin now · about 40 min") + btn("rejoin", "Rejoin the queue", "by-btn--primary by-btn--lg by-btn--block", "refresh") + btn("home", "Back to chargers", "by-btn--ghost by-btn--block", ""); } },
+      { id: "error", label: "Error", time: "11:17", cap: "The garage system does not answer. The state says what failed, that the place is saved, and offers a retry.",
+        view: function () { return errorView("Can't reach the garage system", "Your place in the queue is saved. Check your connection and try again.") ; } }
+    ],
+    reset: function (s) { s.omw = false; s.reason = null; },
+    act: function (a, el, P) {
+      var s = P.s;
+      if (a === "join") { el.classList.add("is-loading"); P.after(700, function () { P.go("wait"); }); }
+      else if (a === "leave" || a === "home") P.go("join");
+      else if (a === "fast") P.toast("Notifications are on for this queue");
+      else if (a === "skip") P.go("turn");
+      else if (a === "open") { s.omw = false; P.go("held"); }
+      else if (a === "omw") { s.omw = true; P.go("held"); P.left; }
+      else if (a === "plug") { s.ch = 4; P.go("charge"); }
+      else if (a === "plug2") { s.ch = 2; P.go("charge"); }
+      else if (a === "pass") { s.reason = "pass"; P.go("expired"); }
+      else if (a === "last") { P.left = 62; }
+      else if (a === "stop") { P.toast("Charging stopped at " + ($("#aPct", P.scr) ? $("#aPct", P.scr).textContent : "")); P.after(900, function () { P.go("join"); }); }
+      else if (a === "rejoin") { P.go("join"); }
+      else if (a === "retry") { el.classList.add("is-loading"); P.after(1100, function () { P.go("wait"); }); }
+      else if (a === "help") P.toast("Facility desk: 0 min away, ext. 214");
+    }
+  });
+
+  /* ---------- B: Book a slot ---------- */
+  var SLT = ["11:30", "12:00", "12:30", "13:00", "13:30", "14:00", "14:30", "15:00"];
+  var OCC = ["xxx.xx", "x.xx.x", "xx.xx.", "..x.xx", ".x..x.", "x....x", "......", "......"];
+  function bgrid(s) {
+    var h = '<div class="gr" role="group" aria-label="Charger availability today"><div class="gr__h"><span></span>' + [1, 2, 3, 4, 5, 6].map(function (n) { return "<b>" + n + "</b>"; }).join("") + "</div>";
+    SLT.forEach(function (t, r) {
+      h += '<div class="gr__r"><span class="gr__t">' + t + "</span>";
+      for (var c = 0; c < 6; c++) {
+        var lab = "Charger " + (c + 1) + ", " + t;
+        if (OCC[r][c] === "x") h += '<span class="gc is-taken" role="img" aria-label="' + lab + ', taken"></span>';
+        else { var sel = s.sel && s.sel[0] === r && s.sel[1] === c; h += '<button type="button" class="gc' + (sel ? " is-sel" : "") + (r === 0 && c === 3 ? " is-soon" : "") + '" data-act="pick" data-r="' + r + '" data-c="' + c + '" aria-pressed="' + !!sel + '" aria-label="' + lab + ', free">' + (sel ? ic("check") : "") + "</button>"; }
+      }
+      h += "</div>";
+    });
+    return h + "</div>";
+  }
+  function ticket() { return '<div class="by-card stat"><span class="by-badge by-badge--ok">' + ic("check") + 'Booked</span><b>Charger 2 · 12:00 to 12:30</b><p>Skoda Enyaq · LV-4821. About +20% in 30 minutes.</p></div>'; }
+  var B = Phone($("#vB"), {
+    start: "grid",
+    states: [
+      { id: "grid", label: "Grid", time: "11:15", cap: "A 30-minute grid for six chargers. Struck cells are taken. The outlined cell is the soonest free one. Tap a free cell.",
+        view: function (s) { return titleBlock("Book a slot", "Thursday 12 Nov · 30-minute slots") + bgrid({}) + '<div class="sl-legend"><span>Hatched = taken</span><span>Outlined = soonest free</span></div>'; } },
+      { id: "sel", label: "Selected", time: "11:16", cap: "A sheet confirms what you picked and what it gives you.",
+        view: function (s) { var sel = s.sel || [1, 1]; return titleBlock("Book a slot", "Thursday 12 Nov") + bgrid({ sel: sel }) + '<div class="by-card sheet"><b>Charger ' + (sel[1] + 1) + " · " + SLT[sel[0]] + '</b><p class="t-small">About +20% in 30 minutes. You are at 34%.</p>' + btn("book", "Book " + SLT[sel[0]], "by-btn--primary by-btn--block", "") + "</div>"; },
+        enter: function (s) { if (!s.sel) s.sel = [1, 1]; } },
+      { id: "conflict", label: "Conflict", time: "11:16", cap: "Someone booked the same cell a moment earlier. The state names what happened and offers the nearest free slot.",
+        view: function () { return '<div class="by-card stat warn"><span class="by-badge by-badge--warn">' + ic("alert") + 'Just taken</span><b>Someone just took 11:30</b><p>Charger 4 at 11:30 is no longer free. 12:00 on charger 2 is free.</p></div>' + btn("alt", "Book 12:00 · Charger 2", "by-btn--primary by-btn--lg by-btn--block", "") + btn("again", "Pick another slot", "by-btn--secondary by-btn--block", ""); } },
+      { id: "booked", label: "Booked", time: "11:17", cap: "The ticket, with a reminder switch you can change and a way to cancel.",
+        view: function (s) { return titleBlock("Your booking", "Thursday 12 Nov") + ticket() + '<div class="by-card" style="display:flex;gap:12px;align-items:center"><div style="flex:1"><b style="font:700 14px var(--font)">Remind me 10 minutes before</b><div class="t-small">Push message</div></div><button type="button" class="by-switch" id="bSw" role="switch" aria-label="Remind me 10 minutes before" aria-checked="true" data-act="sw"></button></div>' + btn("cancel", "Cancel booking", "by-btn--danger by-btn--block", "") + '<button type="button" class="demo" data-act="remind">Demo: jump to 11:50</button>'; } },
+      { id: "remind", label: "Reminder", time: "11:50", cap: "Ten minutes before the slot a banner arrives. The screen behind shows the countdown to the start.", bannerAct: "okr",
+        banner: function () { return bannerHTML("Your slot starts in 10 minutes", "Charger 2 is free. Tap to see it.", "NOW"); },
+        view: function () { return titleBlock("Starts soon", "Charger 2 · 12:00 to 12:30") + '<div class="center">' + ringHTML(600, 600, "to start") + "</div>" + ticket() + btn("okr", "On my way", "by-btn--primary by-btn--block", "") + '<button type="button" class="demo" data-act="late">Demo: arrive late</button>'; },
+        enter: function (s, P) { P.countdown(600, function () { P.go("late"); }, "to start"); } },
+      { id: "late", label: "Late", time: "12:09", cap: "You are 9 minutes late. A short grace time is left before the slot is released.",
+        view: function () { return '<div class="by-card stat warn"><span class="by-badge by-badge--warn">' + ic("clock") + "Late</span><b>You're 9 minutes late</b><p>We release the slot at 12:10 so another driver can use charger 2.</p></div><div class=\"center\">" + ringHTML(60, 60, "grace") + "</div>" + btn("here", "I'm at the charger", "by-btn--primary by-btn--block", "") + btn("rel", "Release the slot", "by-btn--ghost by-btn--block", ""); },
+        enter: function (s, P) { P.countdown(60, function () { P.go("released"); }, "grace"); } },
+      { id: "released", label: "Released", time: "12:10", cap: "The slot went back to the grid. The state says so and offers the next step.",
+        view: function () { return '<div class="by-card stat bad"><span class="by-badge by-badge--bad">' + ic("x") + 'Released</span><b>Your 12:00 slot was released</b><p>Charger 2 went back to the grid. You can book another slot.</p></div>' + btn("again", "Book another slot", "by-btn--primary by-btn--lg by-btn--block", "") + ""; } },
+      { id: "error", label: "Error", time: "11:17", cap: "The grid cannot load. Same pattern as A: what failed, what is safe, what to do.",
+        view: function () { return errorView("Can't reach the garage system", "Your booking is safe. Check your connection and try again."); } }
+    ],
+    act: function (a, el, P) {
+      var s = P.s;
+      if (a === "pick") { s.sel = [+el.dataset.r, +el.dataset.c]; P.go("sel"); }
+      else if (a === "book") { if (s.sel[0] === 0 && s.sel[1] === 3) P.go("conflict"); else { s.booked = s.sel; P.go("booked"); } }
+      else if (a === "alt") { s.sel = [1, 1]; P.go("booked"); }
+      else if (a === "again") { s.sel = null; P.go("grid"); }
+      else if (a === "sw") { var on = el.getAttribute("aria-checked") !== "true"; el.setAttribute("aria-checked", String(on)); P.toast(on ? "Reminder on" : "Reminder off"); }
+      else if (a === "cancel") { P.toast("Booking cancelled"); P.after(900, function () { s.sel = null; P.go("grid"); }); }
+      else if (a === "remind" || a === "late") P.go(a === "remind" ? "remind" : "late");
+      else if (a === "okr") P.toast("Great. Charger 2 is waiting for you");
+      else if (a === "here") { P.toast("Checked in. Enjoy the charge"); P.after(900, function () { P.go("booked"); }); }
+      else if (a === "rel") P.go("released");
+      else if (a === "retry") { el.classList.add("is-loading"); P.after(1100, function () { P.go("grid"); }); }
+      else if (a === "help") P.toast("Facility desk: ext. 214");
+    }
+  });
+
+  /* ---------- C: Smart match ---------- */
+  var QR = ["12:30", "14:00", "16:00", "End of day"];
+  var CP = Phone($("#vC"), {
+    start: "proposal",
+    states: [
+      { id: "think", label: "Thinking", time: "11:15", cap: "While the assistant works, the card is dashed and shows what it is checking. It never blocks the manual route.",
+        view: function () { return '<div class="by-ai"><span class="by-ai-tag">' + ic("spark") + 'Smart match</span><div class="by-ai__title">Checking chargers and the queue</div><span class="by-skel" style="width:90%"></span><span class="by-skel" style="width:70%"></span><span class="by-skel" style="width:80%"></span><div class="conf"><span class="by-spin" style="color:var(--ai)"></span>Looking at 6 chargers and 4 people waiting.</div></div>' + btn("manual", "Join the plain queue instead", "by-btn--secondary by-btn--block", ""); } },
+      { id: "proposal", label: "Proposal", time: "11:15", cap: "A dashed violet proposal: not real yet. It shows reasons and says how sure it is. Accept or Not now.",
+        view: function (s) { var hi = s.when; return '<div class="by-ai"><span class="by-ai-tag">' + ic("spark") + 'Suggestion</span><div class="by-ai__title">Charger 4 frees around 11:40. Andris is at 92% and leaving at 11:30.</div><dl class="by-dl"><dt>Charger</dt><dd>4</dd><dt>Plug in</dt><dd>about 11:40</dd><dt>Needed by</dt><dd>' + (hi || "not set") + '</dd></dl><div class="by-why"><span>' + ic("check") + 'Car at 92%</span><span>' + ic("check") + 'Usually leaves 11:30</span><span>' + ic("check") + "Next in line for it</span></div><p class=\"conf\">" + ic("info") + "<span>Confidence: " + (hi ? "high" : "medium") + ". An estimate from charging speed and past departures. It can be wrong.</span></p><div class=\"row2\">" + btn("accept", "Accept", "by-btn--ai", "") + btn("notnow", "Not now", "by-btn--secondary", "") + "</div></div>" + '<div class="by-card stat"><b>Nothing is booked yet</b><p>A suggestion holds nothing until you accept it.</p></div>'; } },
+      { id: "question", label: "Question", time: "11:15", cap: "When confidence is low the assistant asks one question with quick replies, instead of guessing.",
+        view: function () { return '<div class="by-ai"><span class="by-ai-tag">' + ic("spark") + 'Question</span><div class="by-ai__title">When do you need the car charged by?</div><p class="conf">' + ic("info") + "<span>Confidence: low. Charger 4 may free at 11:40 or at 12:10, and your answer changes the pick.</span></p><div class=\"qrs\">" + QR.map(function (q) { return '<button type="button" class="by-chip" data-act="reply" data-v="' + q + '">' + q + "</button>"; }).join("") + "</div></div>" + btn("manual", "Skip, join the plain queue", "by-btn--ghost by-btn--block", ""); } },
+      { id: "committed", label: "Committed", time: "11:16", cap: "After Accept the card turns solid: it is real now. The hold, the charger and a way to cancel.",
+        view: function () { return '<div class="by-ai is-committed"><span class="by-ai-tag">' + ic("spark") + 'Accepted</span><div class="by-ai__title">Charger 4 is held for you from 11:40</div><dl class="by-dl"><dt>Charger</dt><dd>4</dd><dt>Hold</dt><dd>11:40 to 11:50</dd><dt>Car</dt><dd>Skoda Enyaq, 34%</dd></dl><span class="by-badge by-badge--ok" style="justify-self:start">' + ic("check") + "Held</span></div>" + btn("cancelh", "Cancel hold", "by-btn--secondary by-btn--block", "") + '<p class="help">We message you at 11:40.</p>'; } },
+      { id: "nudge", label: "Nudge", time: "11:52", cap: "Seen on the phone of a driver who is done charging. A system notice that names nobody. This is the round-one wording.",
+        view: function () { return '<span class="by-badge by-badge--warn" style="justify-self:start">Round one wording</span><div class="by-card nt"><div class="nt__h"><span class="app">' + ic("bell") + "</span>Brightyard · now</div><p>Your car is at 100%. 3 people are waiting. Move it in 15 min to keep your charging streak.</p><div class=\"row2\">" + btn("move", "I'll move it", "by-btn--primary by-btn--sm", "") + btn("snooze", "10 more min", "by-btn--secondary by-btn--sm", "") + "</div></div>" + '<p class="help">Not AI, so no violet. Round two rewrites this.</p>'; } },
+      { id: "declined", label: "Not now", time: "11:16", cap: "Declining is safe. Nothing was held, and the next step is one tap.",
+        view: function () { return '<div class="by-card stat"><b>No problem</b><p>Nothing was held. You can ask again, or join the plain queue.</p></div>' + btn("ask", "Ask again", "by-btn--ai by-btn--block", "spark") + btn("manual", "Join the plain queue", "by-btn--secondary by-btn--block", ""); } },
+      { id: "error", label: "Error", time: "11:17", cap: "The AI route fails on its own. The card turns red, says so, and the manual route stays one tap away.",
+        view: function () { return '<div class="by-ai is-error"><span class="by-ai-tag" style="color:var(--bad)">' + ic("alert") + 'Smart match</span><div class="by-ai__title">Smart match is unavailable</div><p class="t-small">I could not check the chargers. Nothing was held.</p></div>' + btn("retry", "Try again", "by-btn--ai by-btn--block", "refresh") + btn("manual", "Join the plain queue", "by-btn--secondary by-btn--block", ""); } }
+    ],
+    reset: function (s) { s.when = null; },
+    act: function (a, el, P) {
+      var s = P.s;
+      if (a === "accept") { el.classList.add("is-loading"); P.after(700, function () { P.go("committed"); }); }
+      else if (a === "notnow") P.go("declined");
+      else if (a === "ask") { s.when = null; P.go("think"); P.after(1300, function () { P.go("question"); }); }
+      else if (a === "reply") { s.when = el.dataset.v; P.go("think"); P.after(1200, function () { P.go("proposal"); }); }
+      else if (a === "cancelh") { P.toast("Hold cancelled"); P.after(900, function () { P.go("declined"); }); }
+      else if (a === "manual") P.toast("You joined the plain queue: 3rd");
+      else if (a === "move") P.toast("Thanks for moving it");
+      else if (a === "snooze") P.toast("We will ask again in 10 minutes");
+      else if (a === "retry") { el.classList.add("is-loading"); P.after(1200, function () { P.go("proposal"); }); }
+    }
+  });
+  /* the banner is a button: route its tap to the owning phone */
+  [[A, "#vA"], [B, "#vB"]].forEach(function (pair) {
+    var b = $(".ph__banner", $(pair[1]));
+    b.addEventListener("click", function () { var P = pair[0]; if (pair[1] === "#vA") { P.s.omw = false; P.go("held"); } else { P.toast("Charger 2 is waiting for you"); } });
+  });
+
+  /* ================= FACILITY PANEL ================= */
+  var FM = [
+    [1, "Charging", 88, "42 min"], [2, "Done", 100, "52 min"], [3, "Charging", 61, "30 min"],
+    [4, "Charging", 92, "1 h 05"], [5, "Charging", 47, "18 min"], [6, "Done", 100, "18 min"]
+  ];
+  $("#fmRows").innerHTML = FM.map(function (r) {
+    var done = r[1] === "Done";
+    return "<tr><td><b>" + r[0] + "</b></td><td>" + (done ? '<span class="by-badge by-badge--warn">' + ic("clock") + "Done, plugged</span>" : '<span class="by-badge by-badge--brand">Charging</span>') + "</td><td class=\"t-num\">" + r[2] + "%</td><td class=\"t-num\">" + r[3] + "</td><td>" + (done ? '<button type="button" class="by-btn by-btn--secondary by-btn--sm" data-rem="' + r[0] + '" id="fm-rem-' + r[0] + '">Send reminder</button>' : "") + "</td></tr>";
+  }).join("");
+  $$("[data-rem]").forEach(function (b) { b.addEventListener("click", function () { b.textContent = "Reminder sent"; b.disabled = true; }); });
+
+  /* ================= COMPONENT GALLERY ================= */
+  var cp = $("#cmpPlayers");
+  [["Idle", { start: 0 }], ["Playing", { start: 17, autoplay: true, loop: true }], ["Paused", { start: 29 }], ["Seeking", { start: 24, seeking: true }], ["Compact", { start: 0, compact: true }]].forEach(function (d, i) {
+    var cell = document.createElement("div"); cell.className = "cmp";
+    cell.innerHTML = '<span class="label"><span>State</span><b>' + d[0] + '</b></span><div class="stage by sync-site" data-by="' + (siteDark() ? "dark" : "light") + '"><div class="vn-host" style="width:100%"></div></div>';
+    cp.appendChild(cell);
+    var o = { id: "vn-g" + i, dur: 46, seed: 18, at: "18:40", words: WORDS1, tx: false, note: false };
+    for (var k in d[1]) o[k] = d[1][k];
+    Player($(".vn-host", cell), o);
+  });
+  $("#cmpRings").innerHTML = [[420, "Running"], [48, "Last minute"], [0, "Expired"]].map(function (r) { return '<div class="cmp" style="justify-items:center"><span class="label"><b>' + r[1] + "</b></span>" + ringHTML(r[0], 600, "left") + "</div>"; }).join("");
+  $("#cmpQpc").innerHTML = ["wait", "next", "turn"].map(function (k) { return '<div class="cmp"><span class="label"><b>' + { wait: "Waiting", next: "Next", turn: "Your turn" }[k] + "</b></span>" + qpc(k, 3) + "</div>"; }).join("");
+  $("#cmpSlots").innerHTML = '<div class="sl-row" style="width:100%;max-width:520px">' + [tile({ n: 1, p: 62 }), tile({ n: 2, p: 100 }), tile({ n: 3, p: 0 }, { free: [3] }), tile({ n: 4, p: 92 }, { yours: 4 }), tile({ n: 5, p: 47 }, { next: 5 }), tile({ n: 6, p: 100 })].join("") + '</div><div class="sl-legend" style="width:100%;max-width:520px"><span>1 charging</span><span>2 done</span><span>3 free</span><span>4 yours</span><span>5 next to free</span></div>';
+
+  applyTheme();
+})();
+</script>
+</body>
+</html>

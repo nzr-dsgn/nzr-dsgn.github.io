@@ -1,0 +1,459 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Salon Booking Bot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="../assets/site.css">
+<style>
+
+/* ---------- one accent per bot (light + dark). A page sets --accent from its own --bN ---------- */
+:root { --b1:#C42463; --b1s:#fce3ed; --b1i:#ffffff; --b2:#6A35D8; --b2s:#ece4ff; --b2i:#ffffff; --b3:#0A7468; --b3s:#d9f2ed; --b3i:#ffffff; --b4:#A94B06; --b4s:#fdebd0; --b4i:#ffffff; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --b1:#FF8DB3; --b1s:#3c1428; --b1i:#2a0a17; --b2:#B99CFF; --b2s:#2a1f58; --b2i:#1a0b3a; --b3:#4FD3C2; --b3s:#0f3430; --b3i:#05211d; --b4:#F5A524; --b4s:#3a2a0a; --b4i:#241600; }
+}
+:root[data-theme="dark"] { --b1:#FF8DB3; --b1s:#3c1428; --b1i:#2a0a17; --b2:#B99CFF; --b2s:#2a1f58; --b2i:#1a0b3a; --b3:#4FD3C2; --b3s:#0f3430; --b3i:#05211d; --b4:#F5A524; --b4s:#3a2a0a; --b4i:#241600; }
+body.p-b1, .bc.b1 { --accent: var(--b1); --accent-soft: var(--b1s); --accent-ink: var(--b1i); }
+body.p-b2, .bc.b2 { --accent: var(--b2); --accent-soft: var(--b2s); --accent-ink: var(--b2i); }
+body.p-b3, .bc.b3 { --accent: var(--b3); --accent-soft: var(--b3s); --accent-ink: var(--b3i); }
+body.p-b4, .bc.b4 { --accent: var(--b4); --accent-soft: var(--b4s); --accent-ink: var(--b4i); }
+.mono-ava { width: 64px; height: 64px; flex: none; border-radius: 18px; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font: 800 32px/1 var(--display); box-shadow: 0 0 0 4px var(--accent-soft); }
+
+/* ---------- page-level helpers ---------- */
+.meta div { align-content: start; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.ic { width: 18px; height: 18px; flex: none; }
+.four { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 16px; }
+.four .box { gap: 10px; }
+.four .box h3 { font-size: 19px; }
+.four .box p { font-size: 14.5px; color: var(--ink-2); }
+.four .box p b { color: var(--ink); font-weight: 600; }
+.four .box a { font: 600 13.5px var(--text); margin-top: 4px; }
+.stage { display: grid; grid-template-columns: minmax(0, 360px) minmax(0, 1fr); gap: 32px 40px; align-items: start; }
+.stage > * { min-width: 0; }
+.stack { display: grid; gap: 20px; align-content: start; min-width: 0; }
+.duo { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 360px)); gap: 28px 32px; align-items: start; }
+.duo > * { min-width: 0; }
+.cap { font-size: 14px; color: var(--ink-2); max-width: 60ch; }
+.cap b { color: var(--ink); }
+.small { font-size: 14.5px; color: var(--ink-2); }
+.small b { color: var(--ink); font-weight: 600; }
+.note-line { font: 500 12px/1.5 var(--mono); color: var(--ink-2); }
+@media (max-width: 860px) { .stage { grid-template-columns: minmax(0, 1fr); } }
+/* ---------- Telegram-like phone (new component: chat bubble + inline keyboard) ---------- */
+.tg { width: 100%; max-width: 360px; height: 580px; display: grid; grid-template-rows: auto minmax(0, 1fr) auto auto; background: var(--surface); border: 1px solid var(--rule); border-radius: 28px; box-shadow: var(--shadow); overflow: hidden; }
+.tg-head { display: flex; gap: 12px; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--rule); background: var(--surface); min-width: 0; }
+.tg-head > div { min-width: 0; display: grid; }
+.tg-head b { font: 700 15px/1.2 var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tg-head small { font: 500 11.5px var(--mono); color: var(--ink-2); }
+.tg-ava { width: 36px; height: 36px; flex: none; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font: 700 15px var(--display); }
+.tg-body { overflow-y: auto; overscroll-behavior: contain; padding: 14px 12px; display: flex; flex-direction: column; gap: 8px; background: var(--surface-2); scroll-behavior: auto; }
+.tg-body:focus-visible { outline-offset: -3px; }
+.tg-msg { max-width: 88%; font: 400 14px/1.45 var(--text); padding: 9px 12px; border-radius: 14px; overflow-wrap: anywhere; word-break: break-word; }
+.tg-msg.in { align-self: flex-start; background: var(--surface); border: 1px solid var(--rule); border-bottom-left-radius: 4px; }
+.tg-msg.out { align-self: flex-end; background: var(--accent); color: var(--accent-ink); border-bottom-right-radius: 4px; }
+.tg-msg b { font-weight: 600; }
+.tg-msg code { font: 500 12.5px var(--mono); }
+.tg-msg.pill { align-self: center; max-width: 94%; text-align: center; background: transparent; padding: 4px 8px; font: 500 11px/1.4 var(--mono); letter-spacing: .04em; text-transform: uppercase; color: var(--ink-2); }
+.tg-msg.card { align-self: center; max-width: 96%; width: 96%; border: 1px dashed var(--rule); border-radius: 12px; background: var(--surface); }
+.tg-msg.card .who { font: 600 12px var(--mono); color: var(--ink-2); margin-bottom: 4px; display: block; letter-spacing: .04em; text-transform: uppercase; }
+.tg-msg.typing { display: flex; gap: 4px; padding: 12px 14px; }
+.tg-msg.typing i { width: 6px; height: 6px; border-radius: 50%; background: var(--ink-2); animation: tgdot 1s infinite ease-in-out; }
+.tg-msg.typing i:nth-child(2) { animation-delay: .15s; } .tg-msg.typing i:nth-child(3) { animation-delay: .3s; }
+@keyframes tgdot { 0%, 80%, 100% { opacity: .25; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-3px); } }
+.tg-msg.is-new { animation: tgin 180ms cubic-bezier(.2, 0, 0, 1); }
+@keyframes tgin { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.tg-kb { display: grid; gap: 4px; align-self: stretch; margin-top: -2px; }
+.tg-kb .r { display: flex; gap: 4px; }
+.tg-btn { flex: 1 1 0; min-width: 0; min-height: 38px; padding: 8px 10px; border: 0; border-radius: 10px; background: var(--accent-soft); color: var(--accent); font: 600 13px/1.25 var(--text); text-align: center; overflow-wrap: anywhere; transition: background 100ms, transform 100ms, opacity 180ms; display: flex; align-items: center; justify-content: center; }
+.tg-btn:hover:not(:disabled) { background: var(--accent); color: var(--accent-ink); }
+.tg-btn:active:not(:disabled) { transform: scale(.98); }
+.tg-btn:disabled { cursor: default; }
+.tg-btn.is-picked { background: var(--accent); color: var(--accent-ink); }
+.tg-btn.is-spent:not(.is-picked) { opacity: .45; }
+.tg-btn.is-inert { opacity: .55; cursor: not-allowed; }
+.tg-chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 12px 0; background: var(--surface); border-top: 1px solid var(--rule); min-height: 8px; }
+.tg-chips:empty { display: none; }
+.tg-chips button { border: 1px dashed var(--accent); background: transparent; color: var(--accent); border-radius: 999px; padding: 5px 11px; font: 500 12.5px var(--mono); }
+.tg-chips button:hover { background: var(--accent-soft); }
+.tg-form { display: flex; gap: 8px; padding: 10px 12px 12px; background: var(--surface); }
+.tg-chips:empty + .tg-form { border-top: 1px solid var(--rule); }
+.tg-form input { flex: 1; min-width: 0; font: 400 14px var(--text); color: var(--ink); background: var(--surface-2); border: 1px solid var(--rule); border-radius: 999px; padding: 9px 14px; }
+.tg-form input:disabled { opacity: .6; }
+.tg-form input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.tg-send { width: 40px; height: 40px; flex: none; border: 0; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; }
+.tg-send:disabled { opacity: .4; cursor: default; }
+.tg-static { display: grid; gap: 4px; max-width: 360px; background: var(--surface-2); border: 1px solid var(--rule); border-radius: 20px; padding: 12px; }
+.tg-static .tg-btn { cursor: default; }
+/* demo control bar: the narrator, not the bot (new component) */
+.ctl { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; max-width: 360px; }
+.ctl button { border: 1px dashed var(--ink-2); background: transparent; color: var(--ink); border-radius: 8px; padding: 8px 12px; font: 600 12.5px var(--text); display: inline-flex; gap: 6px; align-items: center; transition: border-color 100ms, background 100ms; }
+.ctl button:hover { border-color: var(--accent); background: var(--accent-soft); }
+.ctl button .ic { width: 14px; height: 14px; }
+.ctl .hint { flex-basis: 100%; font: 500 11.5px/1.4 var(--mono); color: var(--ink-2); letter-spacing: .03em; }
+/* phone-shaped screenshot frame */
+.pshots { display: flex; flex-wrap: wrap; gap: 28px 24px; align-items: flex-start; }
+.pshot { width: min(100%, 270px); display: grid; gap: 12px; }
+.pshot > div { background: var(--surface); border: 1px solid var(--rule); border-radius: 32px; padding: 7px; box-shadow: var(--shadow); }
+.pshot img { border-radius: 26px; border: 0; box-shadow: none; width: 100%; height: auto; display: block; background: var(--surface-2); aspect-ratio: 780 / 1688; }
+.pshot figcaption { font-size: 13.5px; }
+.pshots .side { flex: 1 1 240px; display: grid; gap: 14px; align-content: start; max-width: 46ch; }
+/* staff timeline */
+.tl { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; border-left: 2px solid var(--rule); margin-left: 6px; }
+.tl li { padding: 0 0 14px 18px; position: relative; font-size: 14.5px; color: var(--ink-2); }
+.tl li:last-child { padding-bottom: 0; }
+.tl li::before { content: ""; position: absolute; left: -7px; top: 5px; width: 12px; height: 12px; border-radius: 50%; background: var(--surface); border: 2px solid var(--accent); }
+.tl li.late::before { border-color: var(--warn); } .tl li.later::before { border-color: var(--crit); background: var(--crit); }
+.tl b { font: 600 12px var(--mono); color: var(--ink); display: block; letter-spacing: .04em; margin-bottom: 2px; }
+/* new component sheet */
+.comp { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 16px; }
+.comp .box { align-content: start; }
+.comp .box h3 { font-size: 17px; }
+.comp .demo { display: grid; gap: 8px; justify-items: start; }
+.comp .states { font: 500 12px/1.5 var(--mono); color: var(--ink-2); }
+.pipe-mini { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
+.pipe-mini .pn { margin: 0; } .pipe-mini .pn::before, .pipe-mini .pn::after { display: none; }
+
+/* ---------- bot switcher ---------- */
+.bs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-top: 20px; }
+.bs a { display: flex; align-items: center; gap: 8px; min-width: 0; padding: 11px 12px; border: 1px solid var(--rule); border-radius: 10px; background: var(--surface); color: var(--ink-2); text-decoration: none; font: 600 13.5px/1.2 var(--text); transition: border-color 100ms, background 100ms; }
+.bs a:hover { border-color: var(--ink-2); color: var(--ink); }
+.bs a > i { width: 10px; height: 10px; border-radius: 50%; flex: none; background: var(--c); }
+.bs a > b { font: 600 11px var(--mono); color: var(--ink-2); flex: none; }
+.bs a > span { min-width: 0; overflow-wrap: anywhere; }
+.bs a[aria-current="page"] { color: var(--ink); background: var(--surface-2); border-color: var(--c); box-shadow: inset 0 -3px 0 var(--c); font-weight: 700; }
+.bs .c1 { --c: var(--b1); } .bs .c2 { --c: var(--b2); } .bs .c3 { --c: var(--b3); } .bs .c4 { --c: var(--b4); }
+@media (max-width: 720px) { .bs { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.case-hero.bot { padding-block-start: 40px; }
+.bot-id { display: flex; gap: 16px; align-items: center; min-width: 0; }
+.bot-id > div { display: grid; gap: 4px; min-width: 0; }
+.bot-id .label b { color: var(--accent); font-weight: 600; }
+.bot-id a { font: 500 13px var(--text); }
+.who { font-size: 16.5px; max-width: 62ch; border-left: 3px solid var(--accent); padding: 2px 0 2px 14px; color: var(--ink); }
+.who b { font: 600 11.5px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--accent); margin-right: 6px; }
+.case-hero.bot h1 { font-size: clamp(36px, 6.2vw, 72px); }
+
+/* security checklist (new component) */
+.sl { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 14px; }
+.sl > div { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 4px 12px; background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 16px 18px; align-content: start; min-width: 0; }
+.sl > div > i { width: 28px; height: 28px; border-radius: 8px; background: var(--ok-soft); color: var(--ok); display: grid; place-items: center; font-style: normal; grid-row: span 2; }
+.sl .ic { width: 16px; height: 16px; }
+.sl b { font: 600 15px/1.35 var(--text); }
+.sl p { font-size: 14px; color: var(--ink-2); grid-column: 2; }
+.todo { border-style: dashed; }
+.todo li::before { content: "\2192"; background: var(--warn-soft); color: var(--warn); }
+.nextbot { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 24px; align-items: center; padding: 22px 24px; border: 1px solid var(--rule); border-left: 8px solid var(--nc); border-radius: 12px; background: var(--surface); text-decoration: none; color: var(--ink); margin-top: 84px; }
+.nextbot:hover { border-color: var(--nc); }
+.nextbot > div { display: grid; gap: 4px; min-width: 0; }
+.nextbot b { font: 700 24px var(--display); letter-spacing: -.02em; }
+.nextbot span { font-size: 14.5px; color: var(--ink-2); }
+.nextbot em { font: 600 14px var(--text); font-style: normal; color: var(--ink); background: var(--nc); color: var(--nci); padding: 10px 16px; border-radius: 8px; white-space: nowrap; }
+.nextbot.n1 { --nc: var(--b1); --nci: var(--b1i); } .nextbot.n2 { --nc: var(--b2); --nci: var(--b2i); } .nextbot.n3 { --nc: var(--b3); --nci: var(--b3i); } .nextbot.n4 { --nc: var(--b4); --nci: var(--b4i); }
+.allbots { margin-top: 14px; font-size: 14px; }
+@media (max-width: 560px) { .nextbot { grid-template-columns: minmax(0, 1fr); } .nextbot em { justify-self: start; } }
+
+</style>
+</head>
+<body class="p-b1">
+<header class="bar">
+  <div class="wrap">
+    <a class="brand" href="../index.html"><i aria-hidden="true"></i><span id="brandName">Your Name</span></a>
+    <nav aria-label="Work">
+      <a href="../index.html#work">All work</a>
+      <a href="telegram-bots.html" aria-current="page">Bots</a>
+      <a href="security.html">Security</a>
+      <a href="plectra.html">Plectra</a>
+      <a href="brightyard-portal.html">Portal</a>
+      <a href="brightyard-mobile.html">Mobile</a>
+      <a href="brightyard-system.html">System</a>
+      <a href="voice-note.html">Voice note</a>
+      <a href="ai-states.html">AI states</a>
+      <a href="space-finder.html">Space finder</a>
+    </nav>
+    <button class="toggle" id="themeBtn" type="button" aria-label="Switch colour theme">Theme: auto</button>
+  </div>
+</header>
+
+<main class="wrap">
+  <nav class="bs" aria-label="The four bots">
+    <a class="c1" href="bot-salon.html" aria-current="page"><i aria-hidden="true"></i><b>1</b><span>Salon</span></a>
+    <a class="c2" href="bot-shop.html"><i aria-hidden="true"></i><b>2</b><span>Aura Wear</span></a>
+    <a class="c3" href="bot-fabric.html"><i aria-hidden="true"></i><b>3</b><span>Fabric stock</span></a>
+    <a class="c4" href="bot-revenue.html"><i aria-hidden="true"></i><b>4</b><span>Revenue</span></a>
+  </nav>
+  <div class="case-hero bot">
+    <div class="bot-id"><span class="mono-ava" aria-hidden="true">S</span><div><span class="label">Bot <b>1 of 4</b></span><a href="telegram-bots.html">All four bots</a></div></div>
+    <div class="row"><span class="kind shipped">Shipped</span><span class="kind">Telegram</span><span class="kind">Mini App</span><span class="kind">Instagram</span></div>
+    <h1>Salon Booking Bot</h1>
+    <p class="sub">A booking bot where every step is a button, and a slot is offered only when the schedule, the bookings and the calendar agree.</p>
+    <p class="who"><b>For</b>A beauty salon: clients who book from their phone, the staff who run the day and the owner who wants to see what needs a decision.</p>
+    <dl class="meta">
+      <div><dt class="label">Role</dt><dd>Product and conversation design, owner Mini App UI, built and deployed with Claude Code</dd></div>
+      <div><dt class="label">Stack</dt><dd>Python, aiogram 3, APScheduler, SQLite, Google Calendar and Sheets (optional)</dd></div>
+      <div><dt class="label">Status</dt><dd>Shipped, ran on my server in October 2026</dd></div>
+      <div><dt class="label">Scale</dt><dd>9,455 lines of Python, 19 SQLite tables, 1 Mini App, no automated tests yet</dd></div>
+    </dl>
+    <p class="honest"><b>Honest note</b><span>This is a working product built with Claude Code and run on a Linux server in October 2026. Every demo and screenshot on this page uses invented data. Real customer data stays in the bot.</span></p>
+  </div>
+  <section id="chat" style="padding-top:56px">
+    <div class="sec-head">
+      <span class="num">01 · CLIENT AND STAFF</span>
+      <h2>Book, remind, ask for a review</h2>
+      <p>The bot offers a free slot only when the schedule, the existing bookings and the calendar agree. Tap the buttons below. The texts are the bot's own, with an invented client.</p>
+    </div>
+    <div class="stage">
+      <div class="stack">
+        <div class="tg" id="tgSalon" role="group" aria-label="Salon booking chat demo">
+          <div class="tg-head"><span class="tg-ava" aria-hidden="true">Л</span><div><b>Студія краси «Лілея»</b><small>бот · demo</small></div></div>
+          <div class="tg-body" role="log" aria-live="polite" aria-label="Chat messages" tabindex="0"></div>
+          <div class="tg-chips" aria-label="Suggested messages"></div>
+          <form class="tg-form"><label class="sr" for="salonIn">Message</label><input id="salonIn" type="text" autocomplete="off" placeholder="Повідомлення" disabled><button class="tg-send" type="submit" aria-label="Send message" disabled><svg class="ic" aria-hidden="true"><use href="#i-send"/></svg></button></form>
+        </div>
+        <div class="ctl" id="ctlSalon" role="group" aria-label="Demo controls">
+          <button type="button" data-act="restart"><svg class="ic" aria-hidden="true"><use href="#i-refresh"/></svg>Restart</button>
+          <button type="button" data-act="evening"><svg class="ic" aria-hidden="true"><use href="#i-moon"/></svg>Next evening</button>
+          <button type="button" data-act="after"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>After the visit</button>
+          <span class="hint">Dashed buttons are the demo, not the bot.</span>
+        </div>
+      </div>
+      <div class="stack">
+        <div class="box">
+          <h3>What the client gets</h3>
+          <ul class="check">
+            <li><span>Service, master, day, time, confirm. Every step is a button, and "any free master" shows the most slots.</span></li>
+            <li><span>Reschedule or cancel up to 3 hours ahead. If a slot is taken in the meantime, the bot says so and offers another.</span></li>
+            <li><span>A reminder the evening before (confirm, reschedule, cancel) and another 2 hours before.</span></li>
+            <li><span>A waitlist, loyalty on every Nth visit, referrals and prepayment by card.</span></li>
+            <li><span>After the visit, a 1 to 5 rating. 4 or 5 asks for a Google review. 1 to 3 goes straight to the owner.</span></li>
+          </ul>
+        </div>
+        <div class="box">
+          <h3>What the staff gets</h3>
+          <p class="small">Every request lands in the staff group as a card with <b>Take</b>, <b>Cancel</b> and <b>Complete</b>. Nobody has to ask who is on it.</p>
+          <div class="tg-static" aria-label="Example staff card">
+            <div class="tg-msg in" style="max-width:100%"><b>🆕 Нова заявка №3662</b><br>Софія К. · Манікюр класичний<br>Завтра, 14:00 · Дарина</div>
+            <div class="tg-kb"><div class="r"><div class="tg-btn">✅ Взяти в роботу</div><div class="tg-btn">❌ Скасувати</div></div></div>
+          </div>
+          <ol class="tl">
+            <li><b>0 MIN</b>The card appears in the staff group.</li>
+            <li class="late"><b>10 MIN</b>Still unclaimed: a reminder in the group.</li>
+            <li class="later"><b>30 MIN</b>Still unclaimed: a message to the owner.</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+    <div class="pshots">
+      <figure class="pshot"><div><img src="../shots/bots/salon-overview.png" width="780" height="1688" loading="lazy" alt="Salon owner Mini App overview in light theme: revenue for 30 days with a trend line, visit count, average check, and a list of bookings that need a mark."></div><figcaption><b>Overview.</b> Revenue, trend and what needs attention today.</figcaption></figure>
+      <figure class="pshot"><div><img src="../shots/bots/salon-bookings.png" width="780" height="1688" loading="lazy" alt="Salon Mini App bookings tab: today's bookings with time, client, service, source icon and payment status chips."></div><figcaption><b>Bookings.</b> Source, status and deposit on one row.</figcaption></figure>
+      <figure class="pshot"><div><img src="../shots/bots/salon-order.png" width="780" height="1688" loading="lazy" alt="Booking sheet for one client with Came and Did not come buttons, booking details and client history counts."></div><figcaption><b>Booking sheet.</b> One tap marks a visit, and that mark drives bonuses.</figcaption></figure>
+      <div class="side">
+        <p class="small">The owner panel covers analytics, bookings, services, schedule and days off. It runs as a Telegram Mini App on the same data as the bot.</p>
+        <p><a class="cta" href="bots/salon-demo.html#tab=home">Open the panel demo</a></p>
+        <p class="note-line">Demo data: a fictional salon, invented clients.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="security">
+    <div class="sec-head">
+      <span class="num">SECURITY IN THIS BOT</span>
+      <h2>What keeps this bot safe</h2>
+      <p>Checked in the code on 12 November 2026. Each line says what the guard is and what goes wrong without it.</p>
+    </div>
+    <div class="sl">
+      <div><i aria-hidden="true"><svg class="ic"><use href="#i-check"/></svg></i><b>Mini App sign-in is checked with HMAC-SHA256</b><p>Telegram signs the data it gives a Mini App. The bot rebuilds the signature from a key derived from its own token, compares it in constant time, validates the user object and ends the session after 2 days. Without this check, anyone could open the owner panel by sending someone else's Telegram id.</p></div>
+      <div><i aria-hidden="true"><svg class="ic"><use href="#i-check"/></svg></i><b>Payment callbacks need a valid signature</b><p>WayForPay tells the bot that a deposit was paid. Without the signature check, anyone could post a fake "paid" message and get a booking marked as paid.</p></div>
+      <div><i aria-hidden="true"><svg class="ic"><use href="#i-check"/></svg></i><b>Instagram webhooks need a valid signature</b><p>Without it, a stranger could send fake Direct messages or comments to the bot and trigger bookings or replies.</p></div>
+      <div><i aria-hidden="true"><svg class="ic"><use href="#i-check"/></svg></i><b>Parameterised SQL</b><p>User text goes into queries as values, never as query text, so a client who types SQL into a name field only gets a strange name. Where a column name has to be dynamic, it must come from a fixed whitelist.</p></div>
+      <div><i aria-hidden="true"><svg class="ic"><use href="#i-check"/></svg></i><b>All user text is escaped before it enters a Telegram HTML message</b><p>An <code>esc()</code> helper is used at about 175 call sites. A client who types an HTML tag in their name gets that text shown as typed. It cannot change how the owner's message looks.</p></div>
+      <div><i aria-hidden="true"><svg class="ic"><use href="#i-check"/></svg></i><b>Staff and owner actions check the user id</b><p>Cards in the staff group show Take, Cancel and Complete to everyone in the group. The bot compares the user id with the configured owner and staff ids before it acts.</p></div>
+      <div><i aria-hidden="true"><svg class="ic"><use href="#i-check"/></svg></i><b>Tokens and keys come from environment variables</b><p>No secret is in the code, and an <code>.env.example</code> lists what is needed. Sharing or backing up the code never leaks a key.</p></div>
+      <div><i aria-hidden="true"><svg class="ic"><use href="#i-check"/></svg></i><b>Sending retries with backoff, and the bot never closes a visit on its own</b><p>If Telegram fails, a message waits and tries again instead of vanishing. A visit drives bonuses and money, so the bot only reminds staff and a person closes it.</p></div>
+    </div>
+    <div class="box todo"><h3>Still to harden in this bot</h3><ul class="check">
+      <li><span>No automated tests yet. Next: tests for payments and booking slots.</span></li>
+      <li><span>Versions were kept as <code>.bak</code> files on the server. Next: git with a private remote and checks on every push.</span></li>
+    </ul></div>
+    <p class="small">Server-wide measures and the full audit are in <a href="security.html">How I keep all four safe</a>.</p>
+  </section>
+  <section id="components">
+    <div class="sec-head">
+      <span class="num">NEW COMPONENTS</span>
+      <h2>Built for this page</h2>
+      <p>The chat style is a small kit on the portfolio tokens. Brightyard is not used here.</p>
+    </div>
+    <div class="comp">
+      <div class="box"><h3>Chat bubble</h3><p class="small">Carries a bot or user message. Keeps long Ukrainian words inside the bubble.</p>
+        <div class="demo"><div class="tg-msg in">Підтвердіть, будь ласка, що прийдете 👇</div><div class="tg-msg out">✅ Буду</div><div class="tg-msg in typing" aria-label="Typing"><i></i><i></i><i></i></div></div>
+        <p class="states">STATES: bot, user, typing, centre pill</p></div>
+      <div class="box"><h3>Inline keyboard</h3><p class="small">Buttons under a bubble. After a tap, the picked one fills and the others dim, so history reads clearly.</p>
+        <div class="demo" style="width:100%"><div class="tg-kb" style="width:100%"><div class="r"><div class="tg-btn">Default</div><div class="tg-btn is-picked">Picked</div><div class="tg-btn is-spent">Spent</div></div></div></div>
+        <p class="states">STATES: default, hover, picked, spent, inert</p></div>
+      <div class="box"><h3>Demo control</h3><p class="small">A dashed button that jumps the chat in time. The dash says it is the narrator, not the bot.</p>
+        <div class="demo"><div class="ctl"><button type="button" tabindex="-1"><svg class="ic" aria-hidden="true"><use href="#i-moon"/></svg>Next evening</button></div></div>
+        <p class="states">STATES: default, hover, focus</p></div>
+    </div>
+  </section>
+  <a class="nextbot n2" href="bot-shop.html"><div><span class="label">Next bot · Bot 2 of 4</span><b>Aura Wear Shop Bot</b><span>An Instagram comment that becomes an order.</span></div><em>Open Aura Wear →</em></a>
+  <p class="allbots"><a href="telegram-bots.html">All four bots</a> · <a href="security.html">How I keep them safe</a></p>
+  <footer><span>Working products. Demos use invented data.</span><span>Built with Claude Code, October–November 2026</span></footer>
+</main>
+<script src="../assets/profile.js"></script>
+<script src="../assets/icons.js"></script>
+<script src="../assets/site.js"></script>
+<script>
+(function () {
+  "use strict";
+  var reduceMq = window.matchMedia ? matchMedia("(prefers-reduced-motion: reduce)") : { matches: false };
+  function wait(ms) { return new Promise(function (r) { setTimeout(r, reduceMq.matches ? 0 : ms); }); }
+
+  /* ---------- tiny chat engine ---------- */
+  function Chat(root, nodes) {
+    var body = root.querySelector(".tg-body"), chips = root.querySelector(".tg-chips"), form = root.querySelector(".tg-form");
+    var input = form.querySelector("input"), send = form.querySelector(".tg-send");
+    var busy = false, token = 0, pending = null;
+    var api = { S: {}, nodes: nodes, onSend: null };
+
+    function toBottom() { body.scrollTop = body.scrollHeight; }
+    function bubble(cls, html, fresh) {
+      var d = document.createElement("div");
+      d.className = "tg-msg " + cls + (fresh && !reduceMq.matches ? " is-new" : "");
+      d.innerHTML = html; body.appendChild(d); toBottom(); return d;
+    }
+    function lockKeyboards() {
+      body.querySelectorAll(".tg-kb .tg-btn").forEach(function (b) { b.disabled = true; b.classList.add("is-spent"); });
+    }
+    function addKb(rows, instant) {
+      var kb = document.createElement("div"); kb.className = "tg-kb";
+      rows.forEach(function (row) {
+        var r = document.createElement("div"); r.className = "r";
+        row.forEach(function (b) {
+          var el = document.createElement("button"); el.type = "button"; el.className = "tg-btn"; el.textContent = b.t;
+          if (b.inert) { el.classList.add("is-inert"); el.disabled = true; el.title = "Not wired in this demo"; }
+          else el.addEventListener("click", function () { if (busy) return; pick(kb, el, b); });
+          r.appendChild(el);
+        });
+        kb.appendChild(r);
+      });
+      body.appendChild(kb); toBottom();
+    }
+    function pick(kb, el, b) {
+      kb.querySelectorAll(".tg-btn").forEach(function (x) { x.disabled = true; x.classList.add("is-spent"); });
+      el.classList.add("is-picked");
+      run(function () { return userThen(b.say || b.t, b); });
+    }
+    function userThen(text, b) {
+      bubble("out", esc(text), true);
+      var next = typeof b.fn === "function" ? b.fn() : b.go;
+      return next ? go(next) : Promise.resolve();
+    }
+    function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+    function run(fn) { var my = token; busy = true; setInput(null); return Promise.resolve().then(fn).then(function () { if (my === token) busy = false; }, function (e) { busy = false; throw e; }); }
+
+    function setInput(cfg) {
+      chips.innerHTML = ""; pending = cfg;
+      input.disabled = send.disabled = !cfg; input.value = "";
+      input.placeholder = "Повідомлення";
+      if (!cfg) return;
+      (cfg.chips || []).forEach(function (c) {
+        var b = document.createElement("button"); b.type = "button"; b.textContent = c;
+        b.addEventListener("click", function () { submit(c); }); chips.appendChild(b);
+      });
+    }
+    function submit(text) {
+      text = String(text || "").trim(); if (!text || !pending || busy) return;
+      var cfg = pending;
+      run(function () {
+        bubble("out", esc(text), true);
+        var r = cfg.on(text, api);
+        return typeof r === "string" ? go(r) : say(r.say, false).then(function () { setInput(r.input || null); });
+      });
+    }
+    form.addEventListener("submit", function (e) { e.preventDefault(); submit(input.value); });
+
+    function say(items, instant) {
+      var my = token, p = Promise.resolve();
+      items.forEach(function (it) {
+        p = p.then(function () {
+          if (my !== token) return;
+          if (it.pill) { bubble("pill", it.pill, !instant); return instant ? null : wait(250); }
+          if (it.card) { bubble("card", it.card, !instant); return instant ? null : wait(250); }
+          var t = null;
+          if (!instant) { t = bubble("in typing", "<i></i><i></i><i></i>"); return wait(it.delay || 520).then(function () { if (t.parentNode) t.parentNode.removeChild(t); return show(it, false); }); }
+          return show(it, true);
+        });
+      });
+      return p;
+    }
+    function show(it, instant) {
+      if (it.then) it.then();
+      bubble("in", it.b, !instant);
+      if (it.kb) addKb(it.kb);
+      if (it.after) it.after();
+    }
+    function go(id, instant) {
+      var n = nodes[id]; n = typeof n === "function" ? n(api.S) : n;
+      return say(n.say, !!instant).then(function () { setInput(n.input || null); });
+    }
+    api.go = go;
+    api.jump = function (id) { if (busy) return; lockKeyboards(); run(function () { return go(id); }); };
+    api.restart = function () { token++; busy = false; body.innerHTML = ""; api.S = {}; setInput(null); return go("start", true); };
+    api.root = root;
+    return api;
+  }
+
+  /* ================= SALON ================= */
+  var salon = Chat(document.getElementById("tgSalon"), {
+    start: function () { return { say: [
+      { b: "🛎 <b>Крок 3 — Послуга</b><br><br>Ваш номер: <code>+380 50 000 00 00</code><br><br>Оберіть послугу кнопкою нижче 👇",
+        kb: [[{ t: "💅 Манікюр класичний", fn: function () { salon.S.service = "Манікюр класичний"; return "master"; } }],
+             [{ t: "💆 Масаж обличчя", fn: function () { salon.S.service = "Масаж обличчя"; return "master"; } }],
+             [{ t: "🎨 Фарбування", fn: function () { salon.S.service = "Фарбування"; return "master"; } }]] }] }; },
+    master: function (S) { return { say: [
+      { b: "👩‍🎨 <b>Крок 4 — Майстер</b><br><br>Послуга: <b>" + S.service + "</b><br><br>Оберіть майстра або «👥 Будь-який вільний майстер» — тоді вільних вікон буде найбільше 👇",
+        kb: [[{ t: "Дарина", fn: function () { S.master = "Дарина"; return "date"; } }, { t: "Ірина", fn: function () { S.master = "Ірина"; return "date"; } }],
+             [{ t: "👥 Будь-який вільний майстер", fn: function () { S.master = "будь-який вільний"; return "date"; } }]] }] }; },
+    date: function (S) { return { say: [
+      { b: (S.resched ? "🔄 <b>Перенесення запису — нова дата</b>" : "📅 <b>Останній крок — Дата та час</b>") + "<br><br>Послуга: <b>" + S.service + "</b><br>Майстер: <b>" + S.master + "</b><br><br>Оберіть зручний день 👇",
+        kb: [[{ t: "Сьогодні, 12.11", fn: function () { S.day = "Сьогодні, 12.11"; return "time"; } }, { t: "Завтра, 13.11", fn: function () { S.day = "Завтра, 13.11"; return "time"; } }],
+             [{ t: "Сб, 14.11", fn: function () { S.day = "Сб, 14.11"; return "time"; } }, { t: "Нд, 15.11", fn: function () { S.day = "Нд, 15.11"; return "time"; } }]] }] }; },
+    time: function (S) {
+      function t(x) { return { t: x, fn: function () { S.time = x; return "booked"; } }; }
+      return { say: [{ b: "🕒 <b>Оберіть час на " + S.day + "</b><br><br>Послуга: <b>" + S.service + "</b> (~60 хв)<br>Майстер: <b>" + S.master + "</b><br>Показано лише вільні вікна 👇",
+        kb: [[t("10:00"), t("11:30")], [t("14:00"), t("16:30")], [{ t: "⬅️ Інша дата", fn: function () { return "date"; } }]] }] };
+    },
+    booked: function (S) { var again = S.resched; S.resched = false; return { say: [
+      { b: "✅ Дякуємо! Вас записано.<br><br>🛎 " + S.service + "<br>👩‍🎨 " + S.master + "<br>🕒 " + S.day + " о <b>" + S.time + "</b>" },
+      { pill: again ? "Запис перенесено" : "Тепер натисніть «Next evening» під чатом" }] }; },
+    evening: function (S) {
+      if (!S.service) { S.service = "Манікюр класичний"; S.master = "Дарина"; S.day = "Завтра, 13.11"; S.time = "14:00"; }
+      var d = S.day.split(",")[0].toLowerCase();
+      return { say: [
+        { pill: "Вечір перед візитом" },
+        { b: "👋 Нагадуємо: " + d + " о <b>" + S.time + "</b> у вас запис — " + S.service + ", майстер " + S.master + ".<br>Підтвердіть, будь ласка, що прийдете 👇",
+          kb: [[{ t: "✅ Буду", go: "confirmed" }, { t: "🔄 Перенести", fn: function () { S.resched = true; return "date"; } }], [{ t: "❌ Скасувати", go: "cancelled" }]] }] };
+    },
+    confirmed: function (S) { return { say: [{ b: "✅ Дякуємо! Чекаємо на вас " + S.day + " о " + S.time + ".<br>📍 вул. Липова, 8" }] }; },
+    cancelled: function (S) { return { say: [{ b: "😔 Ваш запис на " + S.day + " о " + S.time + " скасовано.<br>Вікно знову вільне для інших клієнтів." }] }; },
+    after: function () { return { say: [
+      { pill: "Наступного дня" },
+      { b: "Як пройшов ваш візит? Оцініть якість від 1 до 5 👇",
+        kb: [[{ t: "1 ⭐", go: "bad" }, { t: "2 ⭐", go: "bad" }, { t: "3 ⭐", go: "bad" }, { t: "4 ⭐", go: "good" }, { t: "5 ⭐", go: "good" }], [{ t: "😔 Не вдалося прийти", go: "missed" }]] }] }; },
+    good: { say: [{ b: "💛 Дякуємо за високу оцінку!<br>Будемо щиро вдячні за відгук на Google Maps — це дуже допомагає нам.", kb: [[{ t: "⭐ Залишити відгук на Google Maps", inert: true }]] },
+                  { pill: "Оцінка 4 або 5 → прохання про відгук" }] },
+    bad: { say: [{ b: "😔 Нам дуже шкода, що візит вас не порадував.<br>Напишіть, будь ласка, що пішло не так, — ваше повідомлення одразу отримає власник." }],
+           input: { chips: ["Майстер запізнилась на 25 хвилин"], on: function () { return { say: [{ b: "🙏 Дякуємо, що розповіли. Власник уже отримав ваше повідомлення і зв'яжеться з вами." }, { pill: "Оцінка 1–3 → скарга одразу власнику" }] }; } } },
+    missed: { say: [{ b: "Нічого страшного. Натисніть «✍️ Записатися», коли буде зручно." }] }
+  });
+  document.getElementById("ctlSalon").addEventListener("click", function (e) {
+    var b = e.target.closest("button"); if (!b) return;
+    if (b.dataset.act === "restart") salon.restart(); else salon.jump(b.dataset.act);
+  });
+  salon.restart();
+})();
+</script>
+</body>
+</html>

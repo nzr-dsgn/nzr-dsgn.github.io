@@ -1,0 +1,1472 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Brightyard Space Finder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="../assets/by.css">
+<style>
+/* compact hero so the prototype is near the first screen */
+.case-hero { padding-block: 36px 0; gap: 16px; }
+.case-hero h1 { font-size: clamp(38px, 6vw, 68px); }
+.case-hero .sub { font-size: clamp(17px, 2vw, 20px); }
+.meta { gap: 12px 24px; padding-top: 14px; }
+/* ---------- try row ---------- */
+.try-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 24px; }
+.try-row button { border: 1px solid var(--rule); background: var(--surface); border-radius: 999px; padding: 8px 14px; font: 600 13px/1 var(--text); color: var(--ink); }
+.try-row button:hover { border-color: var(--accent); }
+
+/* ---------- app frame ---------- */
+.app { position: relative; margin-top: 14px; border: 1px solid var(--line-2); border-radius: 18px; overflow: hidden; box-shadow: var(--shadow-2); height: 760px; display: flex; flex-direction: column; min-width: 0; }
+.app [hidden] { display: none !important; }
+.app-top { display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 8px 16px; border-bottom: 1px solid var(--line); background: var(--surface); flex: none; flex-wrap: wrap; }
+.app-brand { display: flex; align-items: center; gap: 10px; margin-right: auto; min-width: 0; }
+.app-brand i { width: 24px; height: 24px; border-radius: 7px; background: var(--brand); position: relative; flex: none; }
+.app-brand i::after { content: ""; position: absolute; inset: 7px; border: 2px solid var(--on-brand); border-radius: 2px; }
+.app-brand b { font: 800 16px/1 var(--font); letter-spacing: -0.02em; }
+.app-brand span { font: 600 13px/1 var(--font); color: var(--ink-3); }
+.app-top .by-btn .cnt { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 10px; background: var(--navy); color: var(--on-navy); font: 700 11.5px/1 var(--font); }
+.app-body { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 460px; }
+.map-col { display: flex; flex-direction: column; min-height: 0; min-width: 0; border-right: 1px solid var(--line); }
+.map-wrap { position: relative; flex: 1; min-height: 0; background: radial-gradient(120% 90% at 50% 38%, var(--surface) 0%, var(--bg) 72%); }
+.map-wrap canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.map-title { position: absolute; left: 14px; top: 12px; display: grid; gap: 2px; pointer-events: none; }
+.map-title b { font: 800 15px/1.2 var(--font); letter-spacing: -0.01em; }
+.map-title span { font: 500 12.5px/1.3 var(--font); color: var(--ink-3); }
+.map-tip { position: absolute; z-index: 4; pointer-events: none; background: var(--toast-bg); color: var(--toast-ink); border-radius: 8px; padding: 7px 10px; font: 600 12.5px/1.3 var(--font); box-shadow: var(--shadow-2); display: grid; gap: 1px; white-space: nowrap; }
+.map-tip span { font-weight: 500; opacity: .85; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 12px; border-top: 1px solid var(--line); background: var(--surface); flex: none; }
+.lg { display: inline-flex; align-items: center; gap: 7px; height: 32px; padding: 0 11px 0 5px; border-radius: 999px; border: 1px solid var(--line-2); background: var(--surface); font: 600 12.5px/1 var(--font); color: var(--ink); transition: border-color var(--d2) var(--ease), background var(--d2) var(--ease); }
+.lg i { font-style: normal; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--surface-3); font: 700 11.5px/1 var(--mono); }
+.lg em { font-style: normal; font-weight: 700; color: var(--brand-ink); }
+.lg:hover, .lg.is-hover { border-color: var(--brand-ink); background: var(--brand-soft); }
+.lg[aria-pressed="true"] { background: var(--navy); border-color: var(--navy); color: var(--on-navy); }
+.lg[aria-pressed="true"] em { color: var(--on-navy); }
+.lg[aria-pressed="true"] i { background: var(--brand); color: var(--on-brand); }
+.lg.is-off { color: var(--ink-3); }
+
+/* ---------- panel ---------- */
+.panel-col { background: var(--surface); overflow-y: auto; min-width: 0; position: relative; scroll-behavior: smooth; }
+.p-tabs { position: sticky; top: 0; z-index: 5; background: var(--surface); padding: 12px 16px; border-bottom: 1px solid var(--line); display: flex; gap: 8px; align-items: center; }
+.p-tabs .by-seg { flex: 1; }
+.p-tabs .by-seg button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+.p-tabs .by-seg .ic { width: 15px; height: 15px; }
+.p-body { padding: 16px; display: grid; gap: 14px; min-width: 0; }
+.p-body > * { min-width: 0; }
+.filters { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; align-items: end; }
+.filters .f-types { grid-column: 1 / -1; display: grid; gap: 6px; }
+.filters .f-people { grid-column: span 3; } .filters .f-min, .filters .f-max { grid-column: span 2; }
+.filters .f-move { grid-column: span 3; } .filters .f-rent { grid-column: span 2; }
+.filters .f-hint { grid-column: 1 / -1; }
+.filters .by-input { height: 40px; }
+.f-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.f-row .by-chip { height: 32px; }
+.f-row .by-chip .ic { width: 14px; height: 14px; }
+.hint { display: flex; align-items: flex-start; gap: 8px; background: var(--surface-2); border-radius: 10px; padding: 10px 12px; font: 500 13px/1.4 var(--font); color: var(--ink-2); }
+.hint .ic { margin-top: 1px; color: var(--brand-ink); width: 16px; height: 16px; }
+.hint button { margin-left: auto; flex: none; }
+.hint span { min-width: 0; }
+.sheet-head, .sheet-foot, .sheet-bd, #fBtn { display: none; }
+.chips-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.fchip { height: 30px; padding: 0 8px 0 12px; font-size: 13px; }
+.fchip .ic { width: 14px; height: 14px; color: var(--ink-3); }
+.res-head { display: flex; align-items: center; gap: 10px; justify-content: space-between; flex-wrap: wrap; }
+.res-head b { font: 700 15px/1.2 var(--font); }
+.res-head .by-seg button { height: 30px; padding: 0 11px; font-size: 13px; }
+.res-list { display: grid; gap: 10px; }
+.uc { border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; display: grid; gap: 10px; background: var(--surface); transition: border-color var(--d2) var(--ease), box-shadow var(--d2) var(--ease); }
+.uc:hover { border-color: var(--line-2); box-shadow: var(--shadow-1); }
+.uc.is-ai { border-color: var(--ai-line); box-shadow: 0 0 0 3px var(--ai-soft); }
+.uc.is-dim { opacity: .75; }
+.uc-top { display: flex; gap: 8px; align-items: flex-start; justify-content: space-between; }
+.uc-open { background: none; border: 0; padding: 0; text-align: left; display: grid; gap: 1px; border-radius: 6px; }
+.uc-open b { font: 750 17px/1.2 var(--font); letter-spacing: -0.01em; }
+.uc-open:hover b { text-decoration: underline; text-underline-offset: 3px; }
+.uc-open span { font: 500 13px/1.3 var(--font); color: var(--ink-3); }
+.uc-badges { display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end; }
+.uc-stats { display: grid; grid-template-columns: repeat(3, minmax(0, auto)); gap: 4px 18px; justify-content: start; }
+.uc-stats div { display: grid; gap: 1px; }
+.uc-stats small { font: 600 10.5px/1.2 var(--mono); letter-spacing: .05em; text-transform: uppercase; color: var(--ink-3); }
+.uc-stats b { font: 700 15px/1.2 var(--font); font-variant-numeric: tabular-nums; }
+.uc-stats .tot b { font-size: 17px; }
+.uc-foot { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; }
+.feat { display: flex; flex-wrap: wrap; gap: 4px 10px; font: 600 12px/1.2 var(--font); color: var(--ink-2); }
+.feat span { display: inline-flex; gap: 4px; align-items: center; }
+.feat .ic { width: 14px; height: 14px; color: var(--ink-3); }
+.empty { border: 1.5px dashed var(--line-2); border-radius: 14px; padding: 22px 18px; display: grid; gap: 10px; justify-items: start; }
+.empty h3 { font: 750 17px/1.3 var(--font); }
+.empty p { color: var(--ink-2); font: 500 14px/1.45 var(--font); }
+.empty .ic.big { width: 28px; height: 28px; color: var(--ink-3); }
+.drill { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--surface); z-index: 5; }
+.drill b { font: 750 15px/1.2 var(--font); min-width: 0; }
+.alert div.actions, .alert .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.alert .actions .by-btn, .alert .actions .by-chip { width: auto; }
+#drillT:focus { outline: none; }
+.f-err:empty { display: none; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.alert { display: flex; gap: 10px; align-items: flex-start; border-radius: 12px; padding: 10px 12px; font: 600 13.5px/1.4 var(--font); }
+.alert .ic { margin-top: 1px; }
+.alert.warn { background: var(--warn-soft); color: var(--warn); }
+.alert.bad { background: var(--bad-soft); color: var(--bad); }
+.alert.ok { background: var(--ok-soft); color: var(--ok); }
+.alert div { display: grid; gap: 6px; min-width: 0; color: var(--ink); font-weight: 500; }
+.alert div b { color: inherit; font-weight: 700; }
+.alert.warn div b { color: var(--warn); } .alert.bad div b { color: var(--bad); }
+.toast-slot { position: absolute; left: 12px; right: 12px; bottom: 12px; z-index: 30; display: grid; justify-items: center; pointer-events: none; }
+.toast-slot .by-toast { pointer-events: auto; max-width: 440px; animation: by-pop var(--d3) var(--ease-out); }
+
+/* ---------- stacking plan ---------- */
+.sp { border: 1px solid var(--line); border-radius: 14px; padding: 12px; display: grid; gap: 10px; position: relative; background: var(--surface-2); }
+.sp-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.sp-head b { font: 750 16px/1.2 var(--font); }
+.sp-head span { font: 500 12.5px/1.2 var(--font); color: var(--ink-3); }
+.sp-head button { margin-left: auto; }
+.sp-floors { display: grid; gap: 4px; }
+.sp-row { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 6px; align-items: stretch; }
+.sp-fl { font: 600 11px/1 var(--mono); color: var(--ink-3); display: grid; place-items: center; }
+.sp-bar { display: flex; gap: 2px; min-height: 36px; }
+.sp-u { flex: var(--w) 1 0; min-width: 0; position: relative; border-radius: 5px; border: 1px solid var(--brand-line); background: var(--brand-soft); color: var(--brand-ink); padding: 2px 3px; display: grid; align-content: center; justify-items: center; gap: 0; overflow: hidden; font: 700 10.5px/1.15 var(--font); transition: transform var(--d2) var(--ease), box-shadow var(--d2) var(--ease); }
+.sp-u small { font: 600 9.5px/1.1 var(--mono); opacity: .85; }
+.sp-u:hover, .sp-u:focus-visible { transform: translateY(-1px); box-shadow: var(--shadow-2); z-index: 2; }
+.sp-u.is-leased { background: repeating-linear-gradient(135deg, var(--surface-3) 0 4px, var(--surface-2) 4px 8px); border-color: var(--line-2); color: var(--ink-3); }
+.sp-u.is-res { background: radial-gradient(circle, var(--warn) 1px, transparent 1.4px) 0 0 / 6px 6px, var(--warn-soft); border-color: var(--warn); color: var(--warn); }
+.sp-u.is-res { text-shadow: 0 0 3px var(--warn-soft), 0 0 3px var(--warn-soft); }
+.sp-u.is-short { background: var(--navy); border-color: var(--navy); color: var(--on-navy); }
+.sp-u.is-match { outline: 2px solid var(--brand-ink); outline-offset: 1px; }
+.sp-u.is-ai { outline: 2px solid var(--ai); outline-offset: 1px; }
+.sp-u.is-core { background: transparent; border: 1px dashed var(--line-2); color: var(--ink-3); cursor: default; font-weight: 600; }
+.sp-u.is-core:hover { transform: none; box-shadow: none; }
+.sp-u.is-dimmed:not(.is-match):not(.is-ai):not(.is-short):not(.is-leased):not(.is-res):not(.is-core) { opacity: .6; }
+.sp-leg { display: flex; flex-wrap: wrap; gap: 6px 12px; font: 600 11.5px/1.2 var(--font); color: var(--ink-2); }
+.sp-leg span { display: inline-flex; align-items: center; gap: 5px; }
+.sp-leg i { width: 16px; height: 12px; border-radius: 3px; border: 1px solid var(--brand-line); background: var(--brand-soft); display: block; }
+.sp-leg i.l { background: repeating-linear-gradient(135deg, var(--surface-3) 0 3px, var(--surface-2) 3px 6px); border-color: var(--line-2); }
+.sp-leg i.r { background: radial-gradient(circle, var(--warn) 1px, transparent 1.4px) 0 0 / 5px 5px, var(--warn-soft); border-color: var(--warn); }
+.sp-leg i.s { background: var(--navy); border-color: var(--navy); }
+.sp-leg i.m { outline: 2px solid var(--brand-ink); outline-offset: 1px; }
+.sp-leg i.a { outline: 2px solid var(--ai); outline-offset: 1px; }
+.sp-tip { position: absolute; z-index: 6; pointer-events: none; background: var(--toast-bg); color: var(--toast-ink); border-radius: 8px; padding: 6px 9px; font: 600 12px/1.35 var(--font); box-shadow: var(--shadow-2); max-width: 240px; }
+.sp-note { font: 600 12.5px/1.3 var(--font); color: var(--ink-2); min-height: 16px; }
+
+/* ---------- unit detail ---------- */
+.fp { border: 1px solid var(--line); border-radius: 14px; background: var(--surface-2); padding: 10px; display: grid; gap: 6px; }
+.fp svg { width: 100%; height: auto; display: block; }
+.fp .fp-room { fill: var(--surface); stroke: var(--line-2); stroke-width: 1; }
+.fp .fp-open { fill: var(--brand-soft); stroke: var(--brand-line); stroke-width: 1; }
+.fp .fp-core { fill: var(--surface-3); stroke: var(--line-2); stroke-width: 1; }
+.fp .fp-shop { fill: url(#fpHatch); stroke: var(--warn); stroke-width: 1; }
+.fp .fp-wall { fill: none; stroke: var(--ink-2); stroke-width: 2; }
+.fp .fp-win { stroke: var(--brand-ink); stroke-width: 3; stroke-linecap: butt; }
+.fp .fp-door { stroke: var(--warn); stroke-width: 3; }
+.fp text { font: 600 9.5px var(--font); fill: var(--ink-2); text-anchor: middle; dominant-baseline: middle; }
+.fp .fp-t2 { font-weight: 500; fill: var(--ink-3); font-size: 8.5px; }
+.fp .fp-hatch { stroke: var(--warn); stroke-width: 1; opacity: .6; }
+.fp small { font: 500 12px/1.3 var(--font); color: var(--ink-3); }
+.stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.stat { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; display: grid; gap: 2px; background: var(--surface); }
+.stat small { font: 600 10.5px/1.2 var(--mono); letter-spacing: .05em; text-transform: uppercase; color: var(--ink-3); }
+.stat b { font: 750 17px/1.2 var(--font); font-variant-numeric: tabular-nums; }
+.stat em { font: 500 12px/1.3 var(--font); color: var(--ink-3); font-style: normal; }
+.stat.wide { grid-column: 1 / -1; background: var(--brand-soft); border-color: var(--brand-line); }
+.stat.wide b { font-size: 22px; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* ---------- compare ---------- */
+.cmp-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
+.cmp { border-collapse: collapse; width: 100%; min-width: 440px; }
+.cmp th, .cmp td { padding: 10px 12px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); font: 600 14px/1.3 var(--font); }
+.cmp tr:last-child td { border-bottom: 0; }
+.cmp thead th { background: var(--surface-2); vertical-align: bottom; }
+.cmp tbody th { font: 600 11px/1.3 var(--mono); letter-spacing: .05em; text-transform: uppercase; color: var(--ink-3); white-space: nowrap; background: var(--surface); position: sticky; left: 0; z-index: 1; width: 96px; }
+.cmp td { font-variant-numeric: tabular-nums; }
+.cmp td .cell { display: flex; flex-wrap: wrap; gap: 4px 6px; align-items: center; }
+.cmp .col-h { display: grid; gap: 4px; }
+.cmp .col-h b { font: 750 16px/1.2 var(--font); }
+.cmp .col-h span { font: 500 12px/1.3 var(--font); color: var(--ink-3); }
+.cmp .col-h .by-iconbtn { width: 28px; height: 28px; min-height: 28px; justify-self: start; }
+.best { display: inline-flex; align-items: center; gap: 3px; height: 20px; padding: 0 7px 0 5px; border-radius: 6px; background: var(--ok-soft); color: var(--ok); font: 700 11px/1 var(--font); letter-spacing: .02em; border: 1px solid color-mix(in oklch, var(--ok) 35%, transparent); }
+.best .ic { width: 12px; height: 12px; }
+
+/* ---------- booking ---------- */
+.bk { display: grid; gap: 14px; }
+.bk fieldset { border: 0; margin: 0; padding: 0; display: grid; gap: 8px; min-width: 0; }
+.bk legend { padding: 0; font: 650 13px/1.2 var(--font); color: var(--ink-2); margin-bottom: 8px; }
+.bk .f-row .by-chip { height: 38px; }
+.bk .by-chip:disabled { text-decoration: line-through; }
+.bk .by-input { height: 44px; }
+.sum { display: grid; gap: 4px; border-radius: 12px; background: var(--surface-2); padding: 10px 12px; font: 600 14px/1.4 var(--font); }
+.sum span { color: var(--ink-3); font-weight: 500; font-size: 13px; }
+.done { display: grid; gap: 12px; justify-items: start; }
+.done .tick { width: 44px; height: 44px; border-radius: 50%; background: var(--ok-soft); color: var(--ok); display: grid; place-items: center; animation: by-pop var(--d4) var(--ease-out); }
+.done .tick .ic { width: 24px; height: 24px; }
+
+/* ---------- assistant ---------- */
+.ai-text { height: auto; min-height: 128px; padding: 12px 14px; resize: vertical; line-height: 1.45; }
+.ai-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.ai-steps li { display: flex; align-items: center; gap: 10px; font: 600 14px/1.3 var(--font); color: var(--ink-3); }
+.ai-steps li .st { width: 18px; height: 18px; display: grid; place-items: center; flex: none; border-radius: 50%; border: 1.5px solid var(--line-2); }
+.ai-steps li.is-run { color: var(--ink); } .ai-steps li.is-run .st { border: 0; color: var(--ai); }
+.ai-steps li.is-done { color: var(--ink); } .ai-steps li.is-done .st { border: 0; background: var(--ok-soft); color: var(--ok); }
+.ai-steps li.is-done .st .ic { width: 12px; height: 12px; }
+.ai-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.ai-item { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; display: grid; gap: 8px; }
+.ai-item.flash { animation: by-flash 900ms var(--ease-out); }
+.ai-item-top { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center; }
+.rank { width: 26px; height: 26px; border-radius: 50%; background: var(--ai); color: var(--on-ai); display: grid; place-items: center; font: 750 13px/1 var(--mono); }
+.ai-item b.id { font: 750 16px/1.2 var(--font); }
+.ai-item .sub { font: 500 12.5px/1.3 var(--font); color: var(--ink-3); }
+.ai-item .tot { text-align: right; font: 750 16px/1.1 var(--font); font-variant-numeric: tabular-nums; }
+.ai-item .tot small { display: block; font: 500 11.5px var(--font); color: var(--ink-3); }
+.fit { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: center; font: 650 12px/1 var(--mono); color: var(--ink-2); }
+.by-ai .by-progress > i { background: var(--ai); }
+.by-why .warn .ic { color: var(--warn); }
+.by-why span { text-align: left; }
+.assume { display: grid; gap: 8px; }
+.assume > b { font: 750 13.5px/1.2 var(--font); }
+.as-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.as-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 34px; padding: 0 4px 0 12px; border-radius: 999px; border: 1px dashed var(--ai-line); background: var(--surface); color: var(--ink); font: 600 13px/1 var(--font); transition: border-color var(--d2) var(--ease), background var(--d2) var(--ease); }
+.as-chip > button { border: 0; background: none; display: inline-flex; align-items: center; gap: 6px; padding: 0; height: 32px; font: inherit; color: inherit; border-radius: 999px; }
+.as-chip b { font: 700 13px/1 var(--mono); color: var(--ai); }
+.as-chip .ic { width: 14px; height: 14px; color: var(--ink-3); margin-right: 8px; }
+.as-chip:hover, .as-chip.is-hover { border-color: var(--ai); background: var(--ai-soft); }
+.as-chip.is-edited { border-style: solid; border-color: var(--ai); }
+.as-chip.is-edited::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--ai); margin-right: -2px; }
+.as-chip.is-editing { padding: 3px 4px 3px 12px; border-style: solid; border-color: var(--focus); box-shadow: 0 0 0 3px var(--ai-soft); background: var(--surface); }
+.as-chip.is-error { border-color: var(--bad); box-shadow: 0 0 0 3px var(--bad-soft); }
+.as-chip input { width: 64px; height: 28px; border: 1px solid var(--line-2); border-radius: 8px; padding: 0 8px; background: var(--surface); color: var(--ink); font: 600 13px var(--mono); }
+.as-chip input:focus { outline: 2px solid var(--focus); outline-offset: 0; border-color: var(--focus); }
+.as-chip .by-iconbtn { width: 28px; height: 28px; min-height: 28px; }
+.as-chip.locked { border-style: solid; border-color: var(--line-2); padding-right: 12px; color: var(--ink-2); }
+.as-chip.locked b { color: var(--ink); }
+.ai-how { font: 500 13px/1.5 var(--font); color: var(--ink-2); }
+.ai-how summary { cursor: pointer; font-weight: 650; color: var(--ink); }
+.ai-how ul { margin: 6px 0 0; padding-left: 18px; }
+.try-ask { display: flex; flex-wrap: wrap; gap: 6px; }
+
+/* ---------- page sections ---------- */
+.nc-grid { align-items: start; display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 480px), 1fr)); }
+.nc { border: 1px solid var(--rule); border-radius: 14px; background: var(--surface); padding: 20px; display: grid; gap: 14px; align-content: start; min-width: 0; }
+.nc h3 { font-size: 20px; }
+.nc > p { color: var(--ink-2); font-size: 15px; }
+.nc .by { border-radius: 12px; padding: 14px; border: 1px solid var(--line); display: grid; gap: 12px; min-width: 0; }
+.st4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 96px), 1fr)); gap: 10px; }
+.st4 figure { gap: 6px; }
+.st4 canvas { width: 100%; height: 130px; display: block; border-radius: 10px; background: radial-gradient(120% 90% at 50% 38%, var(--surface) 0%, var(--bg) 72%); }
+.st4 figcaption { font: 600 11.5px/1.3 var(--mono); letter-spacing: .04em; text-transform: uppercase; color: var(--ink-3); }
+.st-list { display: grid; gap: 12px; }
+.st-list > div { display: grid; gap: 6px; }
+.st-list > div > small { font: 600 11px/1.2 var(--mono); letter-spacing: .05em; text-transform: uppercase; color: var(--ink-3); }
+.edge-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 12px; overflow: hidden; }
+.edge-list > div { background: var(--surface); padding: 18px 20px; display: grid; gap: 8px; align-content: start; justify-items: start; min-width: 0; }
+.edge-list h3 { font-size: 18px; }
+.edge-list p { font-size: 14.5px; color: var(--ink-2); }
+.edge-list button { margin-top: 2px; border: 1px solid var(--rule); background: transparent; color: var(--ink); border-radius: 8px; padding: 8px 12px; font: 600 13px/1 var(--text); }
+.edge-list button:hover { border-color: var(--accent); }
+.hyp { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 16px; }
+.hyp > div { border-left: 3px solid var(--accent); padding: 4px 0 4px 16px; display: grid; gap: 6px; }
+.hyp h3 { font-size: 19px; }
+.hyp p { color: var(--ink-2); font-size: 15px; }
+.hyp b { font: 500 11.5px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--accent); }
+
+/* ---------- narrow ---------- */
+@media (max-width: 880px) {
+  .app { height: auto; }
+  .app-body { display: flex; flex-direction: column; }
+  .map-col { border-right: 0; border-bottom: 1px solid var(--line); }
+  .map-wrap { flex: none; height: 290px; }
+  .panel-col { overflow: visible; }
+  .p-tabs { position: static; padding: 10px 12px; }
+  .p-tabs .by-seg { min-width: 0; } .p-tabs .by-seg button { padding: 0 8px; font-size: 13px; } #fBtn { flex: none; }
+  #fBtn { display: inline-flex; }
+  .filters { display: none; }
+  .filters.is-open { display: grid; position: fixed; left: 0; right: 0; bottom: 0; max-height: 88vh; overflow: auto; z-index: 90; background: var(--surface); border-radius: 20px 20px 0 0; padding: 0 16px 20px; box-shadow: var(--shadow-3); animation: by-pop var(--d3) var(--ease-out); }
+  .filters.is-open .sheet-head { display: flex; grid-column: 1 / -1; align-items: center; justify-content: space-between; padding: 14px 0 4px; position: sticky; top: 0; background: var(--surface); z-index: 2; }
+  .filters.is-open .sheet-head b { font: 750 18px/1.2 var(--font); }
+  .filters.is-open .sheet-foot { display: block; grid-column: 1 / -1; position: sticky; bottom: 0; background: var(--surface); padding-top: 8px; }
+  .sheet-bd.is-open { display: block; position: fixed; inset: 0; z-index: 85; background: oklch(0.2 0.03 255 / .5); }
+  .toast-slot { position: fixed; bottom: 12px; z-index: 95; }
+}
+@media (max-width: 520px) {
+  .map-wrap { height: 250px; }
+  .app-top { padding: 8px 12px; }
+  .app-brand span { display: none; }
+  .p-body { padding: 14px 12px; }
+  .filters .f-people, .filters .f-move { grid-column: span 3; }
+  .filters .f-min, .filters .f-max { grid-column: span 3; }
+  .filters .f-rent { grid-column: 1 / -1; }
+  .uc-stats { gap: 4px 14px; }
+}
+</style>
+</head>
+<body>
+<header class="bar">
+  <div class="wrap">
+    <a class="brand" href="../index.html"><i aria-hidden="true"></i><span id="brandName">Your Name</span></a>
+    <nav aria-label="Work">
+      <a href="../index.html#work">All work</a>
+      <a href="telegram-bots.html">Bots</a>
+      <a href="security.html">Security</a>
+      <a href="plectra.html">Plectra</a>
+      <a href="brightyard-portal.html">Portal</a>
+      <a href="brightyard-mobile.html">Mobile</a>
+      <a href="brightyard-system.html">System</a>
+      <a href="voice-note.html">Voice note</a>
+      <a href="ai-states.html">AI states</a>
+      <a href="space-finder.html" aria-current="page">Space finder</a>
+    </nav>
+    <button class="toggle" id="themeBtn" type="button" aria-label="Switch colour theme">Theme: auto</button>
+  </div>
+</header>
+<main class="wrap">
+  <div class="case-hero">
+    <div class="row"><span class="kind concept">Concept</span><span class="kind">Web app</span><span class="kind">AI</span><span class="kind">Data</span></div>
+    <h1>Brightyard Space Finder</h1>
+    <p class="sub">Finding office space usually means a PDF and three emails. Here a company sees the whole park, filters by what it needs, asks the assistant, compares units and books a viewing in one place.</p>
+    <dl class="meta">
+      <div><dt class="label">Role</dt><dd>Product and interaction design, prototype in code</dd></div>
+      <div><dt class="label">Built with</dt><dd>Canvas 2D, inline SVG, plain JavaScript, Brightyard tokens</dd></div>
+      <div><dt class="label">Audience</dt><dd>A company looking to lease space in Brightyard Park, not an existing tenant</dd></div>
+      <div><dt class="label">Status</dt><dd>Concept with invented sample data</dd></div>
+    </dl>
+    <p class="honest"><b>Honest note.</b><span>Self-initiated concept. The park, the 34 units and every price are invented. The assistant is a deterministic scoring function written for this page, not a language model. No user has tested it.</span></p>
+  </div>
+
+  <div class="try-row" role="group" aria-label="Try the prototype">
+    <span class="label">Try</span>
+    <button type="button" data-jump="bldD">Open building D</button>
+    <button type="button" data-jump="ai">Ask the assistant</button>
+    <button type="button" data-jump="compare">Compare three units</button>
+    <button type="button" data-jump="book">Book a viewing</button>
+  </div>
+
+  <div class="app by" id="app" data-by="light" role="region" aria-label="Space finder prototype">
+    <div class="app-top">
+      <div class="app-brand"><i aria-hidden="true"></i><b>Brightyard</b><span>Space finder</span></div>
+      <button class="by-btn by-btn--ghost by-btn--sm" type="button" id="resetBtn" aria-label="Reset the demo data"><svg class="ic"><use href="#i-refresh"/></svg>Reset</button>
+      <button class="by-btn by-btn--secondary by-btn--sm" type="button" id="shortBtn" data-act="compare">Shortlist <span class="cnt" id="shortCnt">0</span></button>
+      <div class="by-seg" role="group" aria-label="Prototype theme"><button type="button" data-th="light" aria-pressed="true"><svg class="ic" style="width:15px;height:15px;vertical-align:-3px"><use href="#i-sun"/></svg> Light</button><button type="button" data-th="dark" aria-pressed="false"><svg class="ic" style="width:15px;height:15px;vertical-align:-3px"><use href="#i-moon"/></svg> Dark</button></div>
+    </div>
+    <div class="app-body">
+      <div class="map-col">
+        <div class="map-wrap" id="mapWrap">
+          <canvas id="map" role="img" aria-label="Isometric map of Brightyard Park with five buildings. Use the building buttons under the map to select one."></canvas>
+          <div class="map-title"><b>Brightyard Park</b><span id="mapSub">Badge = units matching your filters</span></div>
+          <div class="map-tip" id="mapTip" hidden></div>
+        </div>
+        <div class="legend" id="legend" role="group" aria-label="Buildings"></div>
+      </div>
+      <div class="panel-col" id="panel">
+        <div class="p-tabs" id="vTabs">
+          <div class="by-seg" role="group" aria-label="Panel">
+            <button type="button" data-act="tab" data-v="browse" aria-pressed="true">Browse units</button>
+            <button type="button" data-act="tab" data-v="ask" aria-pressed="false"><svg class="ic by-spark"><use href="#i-spark"/></svg>Ask assistant</button>
+          </div>
+          <button class="by-btn by-btn--secondary by-btn--sm" type="button" id="fBtn" aria-haspopup="dialog" aria-expanded="false"><svg class="ic"><use href="#i-sliders"/></svg><span id="fBtnT">Filters</span></button>
+        </div>
+
+        <div class="p-body" id="vBrowse">
+          <div class="sheet-bd" id="sheetBd"></div>
+          <form class="filters" id="filters" novalidate aria-label="Filters">
+            <div class="sheet-head"><b id="sheetT">Filters</b><button class="by-btn by-btn--ghost by-iconbtn" type="button" id="sheetX" aria-label="Close filters"><svg class="ic"><use href="#i-x"/></svg></button></div>
+            <fieldset class="f-types" style="border:0;margin:0;padding:0;min-width:0"><legend class="by-label" style="padding:0;margin-bottom:6px">Space type</legend>
+              <div class="f-row" id="fTypes">
+                <button class="by-chip" type="button" data-type="Office" aria-pressed="true">Office</button>
+                <button class="by-chip" type="button" data-type="Warehouse" aria-pressed="false">Warehouse</button>
+                <button class="by-chip" type="button" data-type="Lab" aria-pressed="false">Lab</button>
+              </div>
+            </fieldset>
+            <div class="by-field f-people"><label class="by-label" for="fPeople">Team size (people)</label><input class="by-input t-num" id="fPeople" inputmode="numeric" autocomplete="off" value="35" aria-describedby="ePeople hHint"></div>
+            <div class="by-field f-move"><label class="by-label" for="fMove">Move in by</label><select class="by-input" id="fMove"></select></div>
+            <div class="f-hint hint" id="hHint" aria-live="polite"></div>
+            <div class="by-field f-min"><label class="by-label" for="fMin">Min area (m²)</label><input class="by-input t-num" id="fMin" inputmode="numeric" autocomplete="off" placeholder="No minimum" aria-describedby="eMin"></div>
+            <div class="by-field f-max"><label class="by-label" for="fMax">Max area (m²)</label><input class="by-input t-num" id="fMax" inputmode="numeric" autocomplete="off" placeholder="No maximum" aria-describedby="eMax"></div>
+            <div class="by-field f-rent"><label class="by-label" for="fRent">Max rent / month (EUR)</label><input class="by-input t-num" id="fRent" inputmode="numeric" autocomplete="off" placeholder="No limit" aria-describedby="eRent"></div>
+            <div class="f-err" style="grid-column:1/-1;display:grid;gap:6px"><div class="by-help is-error" id="ePeople" hidden></div><div class="by-help is-error" id="eMin" hidden></div><div class="by-help is-error" id="eMax" hidden></div><div class="by-help is-error" id="eRent" hidden></div></div>
+            <div class="sheet-foot"><button class="by-btn by-btn--primary by-btn--block" type="button" id="sheetOk">Show results</button></div>
+          </form>
+          <div class="chips-row" id="activeChips"></div>
+          <div id="stackHost"></div>
+          <div class="res-head">
+            <b id="resCount" role="status" aria-live="polite">Units</b>
+            <div class="by-seg" role="group" aria-label="Sort units">
+              <button type="button" data-act="sort" data-s="best" aria-pressed="true">Best match</button>
+              <button type="button" data-act="sort" data-s="price" aria-pressed="false">Price</button>
+              <button type="button" data-act="sort" data-s="area" aria-pressed="false">Area</button>
+            </div>
+          </div>
+          <div class="res-list" id="results"></div>
+        </div>
+
+        <div class="p-body" id="vAsk" hidden>
+          <div class="by-field">
+            <label class="by-label" for="aiText">Describe what you need</label>
+            <textarea class="by-input ai-text" id="aiText" aria-describedby="aiHelp"></textarea>
+            <div class="by-help" id="aiHelp"><svg class="ic" style="width:15px;height:15px;margin-top:1px"><use href="#i-info"/></svg><span>The assistant only proposes. Nothing changes in your search until you apply it.</span></div>
+          </div>
+          <div><button class="by-btn by-btn--ai" type="button" id="aiGo"><svg class="ic"><use href="#i-spark"/></svg>Find matches</button></div>
+          <div id="aiOut" aria-live="polite"></div>
+        </div>
+
+        <div id="vDrill" hidden>
+          <div class="drill"><button class="by-btn by-btn--ghost by-btn--sm" type="button" data-act="back" id="backBtn"><svg class="ic"><use href="#i-arrowleft"/></svg><span id="backT">Results</span></button><b id="drillT"></b></div>
+          <div class="p-body" id="drillBody"></div>
+        </div>
+      </div>
+    </div>
+    <div class="toast-slot" id="toastSlot" aria-live="polite"></div>
+    <div class="sr" id="sr" role="status" aria-live="polite"></div>
+  </div>
+
+  <section id="decisions">
+    <div class="sec-head">
+      <span class="num">01 · THE DECISIONS</span>
+      <h2>Four choices that shape the screen</h2>
+      <p>A tenant who is shopping for space behaves differently from one who already has a desk. These are the calls I made for that visitor.</p>
+    </div>
+    <div class="grid-cells" style="grid-template-columns:repeat(auto-fit,minmax(min(100%,440px),1fr))">
+      <div><h3>The map comes first</h3><p>People think in buildings, not unit IDs. "The one by the bus stop" is a better handle than "B-3.2". The map is the filter result you can see, and each roof shows how many units match.</p></div>
+      <div><h3>The assistant shows its guesses</h3><p>It turns 35 people into 25 desks. That is a guess, so it sits in chips you can read and fix. Change one and the ranking moves. The result stays a proposal until you apply it.</p></div>
+      <div><h3>Monthly total, not €/m²</h3><p>A price per square metre hides the number a finance lead asks for. Cards lead with the monthly total, rent plus service charge, and keep the rate small beside it.</p></div>
+      <div><h3>A stacking plan per building</h3><p>It shows what is left and how each floor splits. A tenant can see that a 280 m² unit sits on top of a leased floor without reading a table. Status uses pattern and text, never colour alone.</p></div>
+    </div>
+  </section>
+
+  <section id="edges">
+    <div class="sec-head">
+      <span class="num">02 · EDGE CASES I DESIGNED</span>
+      <h2>The states a demo usually skips</h2>
+      <p>Each button below resets the prototype above and jumps to that state.</p>
+    </div>
+    <div class="edge-list">
+      <div><h3>No matches</h3><p>Says what to change and gives one tap to do it, for example "Widen the area to 60-300 m² to see 1 unit".</p><button type="button" data-jump="nomatch">Show this state</button></div>
+      <div><h3>Filter error</h3><p>Minimum above maximum, or letters in a number field. The error sits under the field and the area filter pauses.</p><button type="button" data-jump="filtererr">Show this state</button></div>
+      <div><h3>Shortlist full</h3><p>A fourth unit gets a clear message and a link to the shortlist, not a silent refusal.</p><button type="button" data-jump="full">Show this state</button></div>
+      <div><h3>Reserved while viewing</h3><p>Another company reserves the unit while you read it. The page says "Reserved 2 min ago", disables booking and offers similar units.</p><button type="button" data-jump="reserved">Show this state</button></div>
+      <div><h3>Building under construction</h3><p>Quay is on the map but has no units. It shows its ready date and a way to follow it.</p><button type="button" data-jump="quay">Show this state</button></div>
+      <div><h3>Slot conflict</h3><p>"10:30 was just taken." The form names two free times and books one in a tap.</p><button type="button" data-jump="conflict">Show this state</button></div>
+    </div>
+  </section>
+
+  <section id="components">
+    <div class="sec-head">
+      <span class="num">03 · NEW COMPONENTS</span>
+      <h2>What I added to the Brightyard system</h2>
+      <p>These four did not exist in by.css. Each is built from system tokens and rendered live below. They are used in the prototype above.</p>
+    </div>
+    <div class="nc-grid">
+      <div class="nc">
+        <h3>Isometric campus map</h3>
+        <p>A canvas drawing that reads its colours from the tokens and redraws on theme change. The roof badge carries the count of matching units.</p>
+        <div class="by" data-by="light" id="ncMapBy"><div class="st4">
+          <figure><canvas data-st="default" aria-label="Building, default state"></canvas><figcaption>Default</figcaption></figure>
+          <figure><canvas data-st="hover" aria-label="Building, hover state"></canvas><figcaption>Hover</figcaption></figure>
+          <figure><canvas data-st="selected" aria-label="Building, selected state"></canvas><figcaption>Selected</figcaption></figure>
+          <figure><canvas data-st="muted" aria-label="Building, muted state with no matches"></canvas><figcaption>Muted</figcaption></figure>
+        </div></div>
+      </div>
+      <div class="nc">
+        <h3>Stacking plan bar</h3>
+        <p>One floor, split into units by width in proportion to m². Status is a fill pattern plus a word in the legend, so it never depends on colour.</p>
+        <div class="by" data-by="light"><div class="sp" style="background:var(--surface)">
+          <div class="sp-row" style="grid-template-columns:48px minmax(0,1fr)"><span class="sp-fl">Floor 3</span><div class="sp-bar" id="ncSp"></div></div>
+          <div class="sp-leg"><span><i></i>Available</span><span><i class="l"></i>Leased</span><span><i class="r"></i>Reserved</span><span><i class="s"></i>Shortlist</span><span><i class="m"></i>Matches</span><span><i class="a"></i>AI pick</span></div>
+        </div></div>
+      </div>
+      <div class="nc">
+        <h3>Assumption chip (editable)</h3>
+        <p>A guess the assistant made, shown as a dashed chip. Tap it, change the number, press Enter. It checks the range and the ranking updates.</p>
+        <div class="by" data-by="light"><div class="st-list" id="ncChips"></div></div>
+      </div>
+      <div class="nc">
+        <h3>Comparison "Best" tag</h3>
+        <p>Marks the best value in a row. It is a word and a check icon, with a green tint as a hint only. Ties are tagged on every winner.</p>
+        <div class="by" data-by="light"><div class="cmp-wrap"><table class="cmp" style="min-width:0">
+          <thead><tr><th scope="col"></th><th scope="col"><div class="col-h"><b>C-1.2</b></div></th><th scope="col"><div class="col-h"><b>B-3.2</b></div></th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Monthly total</th><td><div class="cell">€3,696 <span class="best"><svg class="ic"><use href="#i-check"/></svg>Best</span></div></td><td><div class="cell">€4,482</div></td></tr>
+            <tr><th scope="row">Walk to bus</th><td><div class="cell">9 min</div></td><td><div class="cell">6 min <span class="best"><svg class="ic"><use href="#i-check"/></svg>Best</span></div></td></tr>
+          </tbody></table></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="tests">
+    <div class="sec-head">
+      <span class="num">04 · WHAT I WOULD TEST</span>
+      <h2>Three hypotheses</h2>
+      <p>None of these has been tested. They are what I would check first with real prospective tenants.</p>
+    </div>
+    <div class="hyp">
+      <div><b>Hypothesis 1</b><h3>Map first shortens the search</h3><p>Prospects who start from the map open fewer irrelevant units than prospects who start from a list. I would compare units opened per search.</p></div>
+      <div><b>Hypothesis 2</b><h3>Visible assumptions earn trust</h3><p>People who see and edit the desk guess accept the assistant's top pick more often than people who only see a ranked list. I would watch whether they touch the chips.</p></div>
+      <div><b>Hypothesis 3</b><h3>Totals lead to more viewings</h3><p>A monthly total on the card makes a finance reader comfortable enough to book a viewing without asking leasing for a quote first.</p></div>
+    </div>
+  </section>
+
+  <section id="next">
+    <div class="sec-head"><span class="num">MORE WORK</span><h2>Keep going</h2></div>
+    <div class="next-work">
+      <a href="brightyard-portal.html"><b>Portal</b><span>The tenant web portal built on the same system.</span></a>
+      <a href="voice-note.html"><b>Voice note</b><span>From a product owner's voice message to draft flows.</span></a>
+      <a href="ai-states.html"><b>AI states</b><span>Suggestions, confirmations, statuses and loading.</span></a>
+    </div>
+  </section>
+
+  <footer><span>Concept work. Fictional company, sample data.</span><span>Designed and built with Claude Code, November 2026</span></footer>
+</main>
+<script src="../assets/profile.js"></script>
+<script src="../assets/icons.js"></script>
+<script src="../assets/site.js"></script>
+<script>
+(function () {
+"use strict";
+var $ = function (s, r) { return (r || document).querySelector(s); };
+var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+var ic = window.ic || function () { return ""; };
+var app = $("#app");
+function reduced() { return (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) || app.getAttribute("data-motion") === "reduce"; }
+var MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+function num(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
+function eur(n) { return "€" + num(Math.round(n)); }
+function ym(s) { var p = s.split("-"); return MON[+p[1] - 1] + " " + p[0]; }
+function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+function clone(o) { return JSON.parse(JSON.stringify(o)); }
+function plural(n, a, b) { return n + " " + (n === 1 ? a : b); }
+var NOW = "2026-11";
+
+/* ================= DATA: one object, invented ================= */
+var DATA = {
+  today: "2026-11-12",
+  buildings: {
+    A: { name: "Harbor", use: "Offices", floors: 5, plate: 1000, bus: 4 },
+    B: { name: "Linden", use: "Offices", floors: 4, plate: 780, bus: 6 },
+    C: { name: "Foundry", use: "Warehouse and light industrial", floors: 2, plate: 1400, bus: 9 },
+    D: { name: "Atrium", use: "Offices and labs", floors: 6, plate: 1100, bus: 3 },
+    E: { name: "Quay", use: "Under construction", floors: 3, ready: "Q3 2027", building: true }
+  },
+  units: [
+    { id: "A-1.1", type: "Office", area: 420, rent: 12.0, svc: 2.8, st: "leased" },
+    { id: "A-1.2", type: "Office", area: 480, rent: 12.4, svc: 2.8, st: "leased" },
+    { id: "A-2.1", type: "Office", area: 260, rent: 13.8, svc: 3.2, st: "available", from: "2027-02", rooms: 2, park: 6, ev: 2 },
+    { id: "A-2.2", type: "Office", area: 640, rent: 13.2, svc: 3.2, st: "leased" },
+    { id: "A-3.1", type: "Office", area: 900, rent: 14.2, svc: 3.4, st: "leased" },
+    { id: "A-4.1", type: "Office", area: 150, rent: 14.6, svc: 3.4, st: "leased" },
+    { id: "A-4.2", type: "Office", area: 750, rent: 14.0, svc: 3.4, st: "leased" },
+    { id: "A-5.1", type: "Office", area: 280, rent: 15.8, svc: 3.8, st: "available", from: "2027-03", rooms: 2, park: 8, ev: 2, terr: true },
+    { id: "A-5.2", type: "Office", area: 620, rent: 15.6, svc: 3.8, st: "leased" },
+    { id: "B-1.1", type: "Office", area: 160, rent: 11.6, svc: 2.5, st: "leased" },
+    { id: "B-1.2", type: "Office", area: 540, rent: 11.2, svc: 2.5, st: "leased" },
+    { id: "B-2.1", type: "Office", area: 240, rent: 13.2, svc: 3.0, st: "available", from: "2026-11", rooms: 1, park: 5, ev: 1 },
+    { id: "B-2.2", type: "Office", area: 460, rent: 12.9, svc: 3.0, st: "leased" },
+    { id: "B-3.1", type: "Office", area: 430, rent: 13.0, svc: 3.0, st: "leased" },
+    { id: "B-3.2", type: "Office", area: 270, rent: 13.6, svc: 3.0, st: "available", from: "2026-11", rooms: 2, park: 6, ev: 2 },
+    { id: "B-4.1", type: "Office", area: 350, rent: 14.4, svc: 3.2, st: "available", from: "2027-04", rooms: 2, park: 8, ev: 0, terr: true },
+    { id: "B-4.2", type: "Office", area: 350, rent: 14.4, svc: 3.2, st: "leased" },
+    { id: "C-1.1", type: "Warehouse", area: 600, rent: 6.4, svc: 2.6, st: "leased" },
+    { id: "C-1.2", type: "Warehouse", area: 330, rent: 8.0, svc: 3.2, st: "available", from: "2026-11", office: 225, shop: 95, rooms: 2, park: 14, ev: 2, dock: true },
+    { id: "C-1.3", type: "Warehouse", area: 330, rent: 6.8, svc: 2.6, st: "leased" },
+    { id: "C-2.1", type: "Warehouse", area: 420, rent: 7.6, svc: 3.0, st: "available", from: "2027-03", office: 250, shop: 150, rooms: 2, park: 12, ev: 0, dock: true },
+    { id: "C-2.2", type: "Warehouse", area: 840, rent: 6.2, svc: 2.6, st: "leased" },
+    { id: "D-1.1", type: "Lab", area: 180, rent: 18.2, svc: 3.6, st: "leased" },
+    { id: "D-1.2", type: "Lab", area: 300, rent: 17.6, svc: 3.8, st: "available", from: "2026-11", office: 170, shop: 110, rooms: 2, park: 8, ev: 1, dock: true },
+    { id: "D-1.3", type: "Office", area: 510, rent: 14.8, svc: 3.4, st: "leased" },
+    { id: "D-2.1", type: "Office", area: 990, rent: 15.2, svc: 3.5, st: "leased" },
+    { id: "D-3.1", type: "Office", area: 60, rent: 15.0, svc: 3.5, st: "available", from: "2026-11", rooms: 0, park: 1, ev: 0 },
+    { id: "D-3.2", type: "Lab", area: 930, rent: 19.8, svc: 3.9, st: "leased" },
+    { id: "D-4.1", type: "Office", area: 495, rent: 15.4, svc: 3.5, st: "leased" },
+    { id: "D-4.2", type: "Lab", area: 495, rent: 20.5, svc: 3.9, st: "reserved", from: "2027-01", office: 250, shop: 200, rooms: 2, park: 10, ev: 2, dock: true, note: "Reserved until 27 Nov" },
+    { id: "D-5.1", type: "Office", area: 330, rent: 15.9, svc: 3.6, st: "leased" },
+    { id: "D-5.2", type: "Office", area: 660, rent: 15.7, svc: 3.6, st: "leased" },
+    { id: "D-6.1", type: "Office", area: 340, rent: 16.0, svc: 4.0, st: "available", from: "2027-06", rooms: 2, park: 6, ev: 2, terr: true },
+    { id: "D-6.2", type: "Office", area: 650, rent: 16.0, svc: 4.0, st: "leased" }
+  ]
+};
+var UNITS_SRC = JSON.stringify(DATA.units);
+function prep(u) {
+  var p = u.id.split(/[-.]/);
+  u.b = p[0]; u.f = +p[1]; u.n = +p[2];
+  if (u.office == null) u.office = u.type === "Office" ? Math.round(u.area * 0.88) : Math.round(u.area * 0.5);
+  if (u.shop == null) u.shop = 0;
+  ["rooms", "park", "ev"].forEach(function (k) { if (u[k] == null) u[k] = 0; });
+  u.dock = !!u.dock; u.terr = !!u.terr;
+  if (!u.from) u.from = NOW;
+  u.total = Math.round(u.area * (u.rent + u.svc));
+  return u;
+}
+DATA.units.forEach(prep);
+function unit(id) { for (var i = 0; i < DATA.units.length; i++) if (DATA.units[i].id === id) return DATA.units[i]; return null; }
+function bname(b) { return b + " " + DATA.buildings[b].name; }
+function resetData() { DATA.units = JSON.parse(UNITS_SRC).map(prep); }
+
+/* ================= SCORING: deterministic, no randomness ================= */
+var PROMPT = "We're 35 people, hybrid 3 days a week. We need 2 meeting rooms, a small workshop for prototypes with loading access, and parking for about 10 cars. Budget around €9,000 a month, move in by April.";
+/* Read the request into numbers. Missing facts fall back to neutral defaults (no constraint). */
+function parsePrompt(t) {
+  var A = { people: 20, days: null, ratio: 1, sqm: 8.5, workshop: 0, parking: 0, rooms: 0, budget: 0, moveIn: "" }, m;
+  if ((m = /(\d+)\s*(?:people|staff|employees|of us)/i.exec(t))) A.people = +m[1];
+  if ((m = /(\d)\s*days?\s*(?:a|per|each)\s*week/i.exec(t))) { A.days = +m[1]; A.ratio = Math.min(1, Math.round((A.days / 5 + 0.1) * 100) / 100); } /* 3 days = 0.6, plus 0.1 for peak days */
+  if ((m = /(\d+)\s*meeting\s*rooms?/i.exec(t))) A.rooms = +m[1];
+  if (/workshop/i.test(t)) A.workshop = 40;
+  if ((m = /parking for (?:about |around |roughly )?(\d+)/i.exec(t)) || (m = /(\d+)\s*(?:cars|parking)/i.exec(t))) A.parking = +m[1];
+  if ((m = /€\s*([\d,\.]+)/.exec(t))) A.budget = parseFloat(m[1].replace(/,/g, "")) || 0;
+  if ((m = /move[- ]in\s+by\s+([a-z]{3})/i.exec(t))) { var i = MON.map(function (x) { return x.toLowerCase(); }).indexOf(m[1].toLowerCase()); if (i > -1) A.moveIn = "2027-" + (i < 9 ? "0" : "") + (i + 1); }
+  return A;
+}
+var DEF_A = parsePrompt(PROMPT);
+function needs(A) { var d = Math.ceil(A.people * A.ratio - 1e-9); return { desks: d, office: d * A.sqm + A.rooms * 12, shop: A.workshop }; }
+function band(r) { if (r < 0.6) return 0; if (r < 1) return (r - 0.6) / 0.4; if (r <= 1.4) return 1; if (r <= 2.2) return 1 - (r - 1.4) / 0.8; return 0; }
+function desksFit(u, A) { return Math.max(0, Math.floor((u.office - u.rooms * 12) / A.sqm)); }
+/* Weights: office fit 25, workshop 25, budget 20, parking 15, timing 10, meeting rooms 5 = 100 */
+function score(u, A) {
+  var n = needs(A), p = {};
+  p.office = 25 * band(u.office / n.office);
+  p.shop = n.shop > 0 ? 17 * Math.min(1, u.shop / n.shop) + (u.dock ? 8 : 0) : 25;
+  p.budget = !A.budget ? 20 : u.total <= A.budget ? 15 + 5 * (1 - u.total / A.budget) : u.total <= A.budget * 1.1 ? 8 : 0;
+  p.park = A.parking > 0 ? 15 * Math.min(1, u.park / A.parking) : 15;
+  p.time = (!A.moveIn || u.from <= A.moveIn) ? 10 : 0;
+  p.rooms = A.rooms > 0 ? 5 * Math.min(1, u.rooms / A.rooms) : 5;
+  var t = p.office + p.shop + p.budget + p.park + p.time + p.rooms;
+  var r = [], d = desksFit(u, A);
+  r.push(d >= n.desks ? { ok: 1, t: "Fits " + d + " desks (need " + n.desks + ")" } : { ok: 0, t: "Fits " + d + " of " + n.desks + " desks" });
+  if (n.shop > 0) r.push(u.shop >= n.shop ? { ok: 1, t: u.shop + " m² workshop" + (u.dock ? " with loading dock" : "") } : { ok: 0, t: u.shop ? "Workshop " + u.shop + " m², below " + n.shop : "No workshop space" });
+  if (A.parking > 0) r.push(u.park >= A.parking ? { ok: 1, t: u.park + " parking spaces" } : { ok: 0, t: u.park + " of " + A.parking + " parking spaces" });
+  if (A.budget) r.push(u.total <= A.budget ? { ok: 1, t: eur(A.budget - u.total) + " under budget" } : { ok: 0, t: eur(u.total - A.budget) + " over budget" });
+  if (A.moveIn) r.push(u.from <= A.moveIn ? { ok: 1, t: u.from <= NOW ? "Ready now" : "Ready " + ym(u.from) } : { ok: 0, t: "Ready " + ym(u.from) + ", after " + ym(A.moveIn) });
+  if (A.rooms > 0) r.push(u.rooms >= A.rooms ? { ok: 1, t: u.rooms + " meeting rooms" } : { ok: 0, t: u.rooms + " of " + A.rooms + " meeting rooms" });
+  return { id: u.id, total: Math.round(t), parts: p, reasons: r };
+}
+function rank(A, k) {
+  return DATA.units.filter(function (u) { return u.st === "available"; }).map(function (u) { return score(u, A); })
+    .sort(function (a, b) { return b.total - a.total || (a.id < b.id ? -1 : 1); }).slice(0, k || 3);
+}
+function areaHint(people) { var d = Math.ceil(people * DEF_A.ratio - 1e-9); return { desks: d, min: Math.round((d * DEF_A.sqm + 20) / 10) * 10, max: Math.round((d * DEF_A.sqm + 75) / 10) * 10 }; }
+
+
+/* ================= STATE ================= */
+var TYPES = ["Office", "Warehouse", "Lab"];
+var TRUCK = '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 6.5h10v9h-10z"/><path d="M12.5 9.5h4.2l3 3.2v2.8h-7.2"/><circle cx="7" cy="17.5" r="1.8"/><circle cx="16.5" cy="17.5" r="1.8"/></g></svg>';
+var S = {
+  f: { types: ["Office"], min: "230", max: "290", move: "2027-04", rent: "", bld: null },
+  people: "35", orderCheck: true, sort: "best", tab: "browse", view: "browse", unit: null, from: "browse",
+  short: [], hover: null, fOpen: false, fullMsg: null, follow: false, spNote: "", reserved: null,
+  ai: { phase: "idle", text: PROMPT, step: 0, A: null, A0: null, ids: [], prev: null, edit: null, editVal: "", editErr: "", flash: [], msg: "", err: "" },
+  book: null
+};
+var E = null, ER = {};
+var live = null;
+function announce(msg) { var s = $("#sr"); s.textContent = ""; clearTimeout(live); live = setTimeout(function () { s.textContent = msg; }, 60); }
+var toastT = null, toastFn = null;
+function toast(msg, label, fn) {
+  var slot = $("#toastSlot"); toastFn = fn || null; clearTimeout(toastT);
+  slot.innerHTML = '<div class="by-toast"><span>' + esc(msg) + "</span>" + (label ? '<button type="button" data-toast>' + esc(label) + "</button>" : "") + "</div>";
+  toastT = setTimeout(function () { slot.innerHTML = ""; }, 5200);
+}
+
+/* ================= FILTERS ================= */
+function pint(s) { s = String(s).replace(/[,\s]/g, ""); if (s === "") return { v: null }; if (!/^\d+$/.test(s)) return { e: 1 }; return { v: +s }; }
+function eff() {
+  var f = S.f, e = { types: f.types.slice(), min: null, max: null, move: f.move, rent: null, bld: f.bld }, er = {};
+  var a = pint(f.min), b = pint(f.max), r = pint(f.rent), p = pint(S.people);
+  if (a.e) er.min = "Use numbers only, like 240."; else e.min = a.v;
+  if (b.e) er.max = "Use numbers only, like 320."; else e.max = b.v;
+  if (!a.e && !b.e && a.v != null && b.v != null && a.v > b.v) { e.min = null; e.max = null; if (S.orderCheck) er.max = "Minimum is above maximum. Lower the minimum or raise the maximum. The area filter is paused."; }
+  if (r.e) er.rent = "Use numbers only, like 9000."; else if (r.v === 0) er.rent = "Enter an amount above 0."; else e.rent = r.v;
+  if (p.e || (p.v != null && (p.v < 1 || p.v > 500))) er.people = "Enter a team size from 1 to 500.";
+  return { e: e, er: er, people: p.v };
+}
+function passes(u, e, noB) {
+  if (u.st === "leased") return false;
+  if (e.types.length && e.types.indexOf(u.type) < 0) return false;
+  if (e.min != null && u.area < e.min) return false;
+  if (e.max != null && u.area > e.max) return false;
+  if (e.move && u.from > e.move) return false;
+  if (e.rent != null && u.total > e.rent) return false;
+  if (!noB && e.bld && u.b !== e.bld) return false;
+  return true;
+}
+function results() { return DATA.units.filter(function (u) { return passes(u, E, false); }); }
+function counts() { var c = {}; Object.keys(DATA.buildings).forEach(function (k) { c[k] = 0; }); DATA.units.forEach(function (u) { if (passes(u, E, true)) c[u.b]++; }); return c; }
+function curA() { return S.ai.A || DEF_A; }
+function sorted(list) {
+  var A = curA(), sc = {}; list.forEach(function (u) { sc[u.id] = score(u, A).total; });
+  return list.slice().sort(function (a, b) {
+    if ((a.st === "reserved") !== (b.st === "reserved")) return a.st === "reserved" ? 1 : -1;
+    if (S.sort === "price") return a.total - b.total || (a.id < b.id ? -1 : 1);
+    if (S.sort === "area") return a.area - b.area || (a.id < b.id ? -1 : 1);
+    return sc[b.id] - sc[a.id] || (a.id < b.id ? -1 : 1);
+  });
+}
+function chipsList() {
+  var e = E, c = [];
+  if (e.types.length) c.push({ k: "types", t: "Type: " + e.types.join(", ") });
+  if (e.min != null || e.max != null) c.push({ k: "area", t: e.min != null && e.max != null ? e.min + "–" + e.max + " m²" : e.min != null ? "From " + e.min + " m²" : "Up to " + e.max + " m²" });
+  if (e.move) c.push({ k: "move", t: "Move in by " + ym(e.move) });
+  if (e.rent != null) c.push({ k: "rent", t: "Up to " + eur(e.rent) + " / month" });
+  return c;
+}
+/* Suggest the smallest change that brings results back. */
+function suggest() {
+  var base = clone(S.f), tries = [], e = E;
+  if (e.min != null || e.max != null) {
+    var lo = Math.max(10, Math.floor((e.min != null ? e.min * 0.6 : 10) / 10) * 10), hi = e.max != null ? Math.ceil(e.max * 1.5 / 10) * 10 : 9999;
+    tries.push({ t: "Widen the area to " + lo + "–" + hi + " m²", f: function (f) { f.min = String(lo); f.max = e.max != null ? String(hi) : ""; } });
+  }
+  if (e.rent != null) { var rr = Math.ceil(e.rent * 1.5 / 500) * 500; tries.push({ t: "Raise the budget to " + eur(rr), f: function (f) { f.rent = String(rr); } }); }
+  if (e.move && e.move < "2027-12") tries.push({ t: "Move in by Dec 2027", f: function (f) { f.move = "2027-12"; } });
+  if (e.types.length) tries.push({ t: "Include all space types", f: function (f) { f.types = []; } });
+  for (var i = 0; i < tries.length; i++) {
+    var f2 = clone(base); tries[i].f(f2); var save = S.f; S.f = f2; var ee = eff().e; ee.bld = null; var n = DATA.units.filter(function (u) { return passes(u, ee, true); }).length; S.f = save;
+    if (n > 0) return { t: tries[i].t + " to see " + plural(n, "unit", "units"), f2: f2 };
+  }
+  var f3 = clone(base); f3.types = []; f3.min = ""; f3.max = ""; f3.rent = ""; f3.move = ""; f3.bld = null;
+  var nn = DATA.units.filter(function (u) { return u.st !== "leased"; }).length;
+  return { t: "Clear all filters to see " + plural(nn, "unit", "units"), f2: f3 };
+}
+
+/* ================= RENDER: browse ================= */
+function statusBadge(u) {
+  if (u.st === "reserved") return '<span class="by-badge by-badge--warn">' + ic("clock") + "Reserved</span>";
+  if (u.from <= NOW) return '<span class="by-badge by-badge--ok">' + ic("check") + "Available</span>";
+  return '<span class="by-badge by-badge--brand">' + ic("calendar") + "From " + ym(u.from) + "</span>";
+}
+function featHTML(u) {
+  var f = [];
+  if (u.dock) f.push("<span>" + TRUCK + "Loading dock</span>");
+  if (u.terr) f.push("<span>" + ic("sun") + "Terrace</span>");
+  if (u.ev > 0) f.push("<span>" + ic("car") + "EV parking</span>");
+  if (u.park > 0) f.push("<span>" + ic("pin") + plural(u.park, "space", "spaces") + "</span>");
+  return f.join("");
+}
+function cardHTML(u) {
+  var inS = S.short.indexOf(u.id) > -1, ai = S.ai.phase === "applied" ? S.ai.ids.indexOf(u.id) : -1;
+  return '<article class="uc' + (ai > -1 ? " is-ai" : "") + (u.st === "reserved" ? " is-dim" : "") + '" data-card="' + u.id + '">' +
+    '<div class="uc-top"><button class="uc-open" type="button" data-act="open" data-id="' + u.id + '"><b>' + u.id + "</b><span>" + bname(u.b) + " · floor " + u.f + " · " + u.type + "</span></button>" +
+    '<div class="uc-badges">' + (ai > -1 ? '<span class="by-badge by-badge--ai">' + ic("spark") + "AI pick " + (ai + 1) + "</span>" : "") + statusBadge(u) + "</div></div>" +
+    '<div class="uc-stats"><div><small>Area</small><b>' + u.area + " m²</b></div><div><small>Rent /m²</small><b>€" + u.rent.toFixed(1) + "</b></div><div class=\"tot\"><small>Per month</small><b>" + eur(u.total) + "</b></div></div>" +
+    '<div class="uc-foot"><div class="feat">' + featHTML(u) + "</div>" +
+    '<button class="by-btn by-btn--secondary by-btn--sm" type="button" data-act="short" data-id="' + u.id + '" aria-pressed="' + inS + '">' + (inS ? ic("check") + "In shortlist" : ic("plus") + "Shortlist") + "</button></div></article>";
+}
+function renderResults() {
+  var list = sorted(results()), host = $("#results"), b = E.bld;
+  $("#resCount").textContent = b && DATA.buildings[b].building ? "No units yet" : plural(list.length, "unit", "units") + (b ? " in " + bname(b) : " match");
+  if (b && DATA.buildings[b].building) { host.innerHTML = ""; return; }
+  if (!list.length) {
+    var sg = suggest(); S.sug = sg;
+    host.innerHTML = '<div class="empty">' + ic("search", "big") + "<h3>No units match these filters</h3><p>" + esc(sg.t) + ".</p>" +
+      '<button class="by-btn by-btn--primary by-btn--sm" type="button" data-act="fix">' + ic("check") + "Apply this change</button></div>";
+    return;
+  }
+  host.innerHTML = list.map(cardHTML).join("");
+}
+function renderChips() {
+  var c = chipsList(), host = $("#activeChips"), html = "";
+  c.forEach(function (x) { html += '<button class="by-chip fchip" type="button" data-act="rm" data-k="' + x.k + '" aria-label="Remove filter ' + esc(x.t) + '">' + esc(x.t) + ic("x") + "</button>"; });
+  if (E.bld) html += '<button class="by-chip fchip" type="button" data-act="rm" data-k="bld" aria-label="Remove filter Building ' + bname(E.bld) + '">Building ' + bname(E.bld) + ic("x") + "</button>";
+  if (c.length + (E.bld ? 1 : 0) > 0) html += '<button class="by-btn by-btn--ghost by-btn--sm" type="button" data-act="clear">Clear all</button>';
+  host.innerHTML = html;
+  $("#fBtnT").textContent = "Filters (" + c.length + ")";
+}
+function unitLabel(u) {
+  var st = u.st === "leased" ? "Leased" : u.st === "reserved" ? "Reserved" : u.from <= NOW ? "Available" : "Available from " + ym(u.from);
+  return u.id + ", " + u.area + " square metres, " + st;
+}
+function renderStack() {
+  var host = $("#stackHost"), b = E.bld;
+  if (!b) { host.innerHTML = ""; return; }
+  var B = DATA.buildings[b];
+  if (B.building) {
+    host.innerHTML = '<div class="sp"><div class="sp-head"><b>' + bname(b) + '</b><span>Under construction</span><button class="by-btn by-btn--ghost by-btn--sm" type="button" data-act="rm" data-k="bld">Close</button></div>' +
+      '<div class="alert warn">' + ic("calendar") + "<div><b>Ready " + B.ready + "</b>Quay has " + B.floors + " floors planned and no units to book yet. Leasing opens six months before it is ready.</div></div>" +
+      '<button class="by-btn ' + (S.follow ? "by-btn--secondary" : "by-btn--primary") + ' by-btn--sm" type="button" data-act="follow" aria-pressed="' + S.follow + '">' + (S.follow ? ic("check") + "Following Quay" : ic("bell") + "Tell me when units open") + "</button></div>";
+    return;
+  }
+  var h = '<div class="sp"><div class="sp-head"><b>' + bname(b) + "</b><span>" + B.floors + " floors · " + B.use + " · stacking plan</span>" +
+    '<button class="by-btn by-btn--ghost by-btn--sm" type="button" data-act="rm" data-k="bld" aria-label="Close stacking plan">' + ic("x") + "Close</button></div><div class=\"sp-floors\" role=\"group\" aria-label=\"Floors of " + bname(b) + '">';
+  var ids = S.ai.phase === "applied" ? S.ai.ids : [];
+  for (var f = B.floors; f >= 1; f--) {
+    var us = DATA.units.filter(function (u) { return u.b === b && u.f === f; }).sort(function (a, c) { return a.n - c.n; }), sum = 0;
+    h += '<div class="sp-row"><span class="sp-fl" aria-hidden="true">' + f + '</span><div class="sp-bar">';
+    us.forEach(function (u) {
+      sum += u.area;
+      var cls = u.st === "leased" ? "is-leased" : u.st === "reserved" ? "is-res" : "";
+      if (S.short.indexOf(u.id) > -1) cls += " is-short";
+      var match = u.st !== "leased" && passes(u, E, true);
+      if (match) cls += " is-match"; else if (u.st !== "leased") cls += " is-dimmed";
+      if (ids.indexOf(u.id) > -1) cls += " is-ai";
+      var fr = u.area / B.plate, lab = fr >= 0.14 ? u.f + "." + u.n + "<small>" + u.area + " m²</small>" : fr >= 0.07 ? u.f + "." + u.n : "";
+      var tag = u.st === "leased" ? "" : S.short.indexOf(u.id) > -1 ? " ✓" : "";
+      h += '<button type="button" class="sp-u ' + cls + '" style="--w:' + u.area + '" data-act="spu" data-id="' + u.id + '" aria-label="' + unitLabel(u) + (match ? ", matches your filters" : "") + (S.short.indexOf(u.id) > -1 ? ", in your shortlist" : "") + (ids.indexOf(u.id) > -1 ? ", AI pick" : "") + '">' + lab + tag + "</button>";
+    });
+    h += '<span class="sp-u is-core" style="--w:' + (B.plate - sum) + '" aria-hidden="true">' + ((B.plate - sum) / B.plate >= 0.08 ? "Core" : "") + "</span></div></div>";
+  }
+  h += '</div><div class="sp-leg" aria-hidden="true"><span><i></i>Available</span><span><i class="l"></i>Leased</span><span><i class="r"></i>Reserved</span><span><i class="s"></i>Shortlist ✓</span><span><i class="m"></i>Matches</span>' + (ids.length ? '<span><i class="a"></i>AI pick</span>' : "") + '</div><div class="sp-note" id="spNote" role="status" aria-live="polite">' + esc(S.spNote) + '</div><div class="sp-tip" id="spTip" hidden></div></div>';
+  host.innerHTML = h;
+}
+function renderLegend() {
+  var c = counts(), h = "";
+  Object.keys(DATA.buildings).forEach(function (k) {
+    var B = DATA.buildings[k], sel = E.bld === k;
+    h += '<button type="button" class="lg' + (!B.building && !c[k] ? " is-off" : "") + '" data-act="bld" data-b="' + k + '" aria-pressed="' + sel + '" aria-label="Building ' + bname(k) + ", " + (B.building ? "under construction, ready " + B.ready : plural(c[k], "matching unit", "matching units")) + '"><i>' + k + "</i>" + B.name + " <em>" + (B.building ? "Q3 2027" : c[k]) + "</em></button>";
+  });
+  $("#legend").innerHTML = h;
+  var tot = 0; Object.keys(c).forEach(function (k) { tot += c[k]; });
+  $("#mapSub").textContent = plural(tot, "unit", "units") + " match your filters";
+}
+function renderInputsUI() {
+  var er = ER;
+  [["min", "#fMin", "#eMin"], ["max", "#fMax", "#eMax"], ["rent", "#fRent", "#eRent"], ["people", "#fPeople", "#ePeople"]].forEach(function (x) {
+    var inp = $(x[1]), box = $(x[2]), msg = er[x[0]];
+    if (msg) { inp.setAttribute("aria-invalid", "true"); box.hidden = false; box.innerHTML = ic("alert") + "<span>" + esc(msg) + "</span>"; } else { inp.removeAttribute("aria-invalid"); box.hidden = true; box.innerHTML = ""; }
+  });
+  $(".f-err").hidden = !Object.keys(er).length;
+  if (er.max && /Minimum is above/.test(er.max)) $("#fMin").setAttribute("aria-invalid", "true");
+  var h = $("#hHint"), pv = pint(S.people).v;
+  if (er.people || pv == null) h.innerHTML = ic("info") + "<span>Enter a team size to see an area estimate.</span>";
+  else { var a = areaHint(pv); h.innerHTML = ic("info") + "<span>" + pv + " people, hybrid 3 days → about " + a.desks + " desks → " + a.min + "–" + a.max + " m²</span><button class=\"by-btn by-btn--secondary by-btn--sm\" type=\"button\" data-act=\"useRange\">Use range</button>"; }
+  $$("#fTypes .by-chip").forEach(function (b) { b.setAttribute("aria-pressed", String(S.f.types.indexOf(b.dataset.type) > -1)); });
+  $("#sheetOk").textContent = "Show " + plural(results().length, "result", "results");
+}
+function syncInputs() {
+  $("#fMin").value = S.f.min; $("#fMax").value = S.f.max; $("#fRent").value = S.f.rent; $("#fPeople").value = S.people; $("#fMove").value = S.f.move;
+}
+function renderTabs() {
+  var inDrill = ["unit", "compare", "book"].indexOf(S.view) > -1;
+  $("#vTabs").hidden = inDrill; $("#vBrowse").hidden = inDrill || S.tab !== "browse"; $("#vAsk").hidden = inDrill || S.tab !== "ask"; $("#vDrill").hidden = !inDrill;
+  $$("#vTabs [data-v]").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.v === S.tab)); });
+  $$("[data-s]").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.s === S.sort)); });
+  $("#shortCnt").textContent = S.short.length;
+  $("#shortBtn").setAttribute("aria-label", "Shortlist, " + plural(S.short.length, "unit", "units") + ". Open comparison");
+}
+function renderAll() {
+  var v = eff(); E = v.e; ER = v.er;
+  renderInputsUI(); renderChips(); renderStack(); renderResults(); renderLegend(); renderTabs();
+  if (S.view === "unit") renderUnit(); else if (S.view === "compare") renderCompare(); else if (S.view === "book") renderBook();
+  if (S.tab === "ask" && S.view !== "unit") renderAI();
+  mapDraw();
+}
+
+/* ================= UNIT DETAIL ================= */
+function planSVG(u) {
+  var VW = 320, ar = 1.7, Wm = Math.sqrt(u.area * ar), Hm = u.area / Wm, VH = Math.round(VW * Hm / Wm), X = VW, Y = VH;
+  function R(cls, x, y, w, h, l, l2) {
+    var c = '<rect class="' + cls + '" x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + w.toFixed(1) + '" height="' + h.toFixed(1) + '" rx="2"/>';
+    if (l) c += '<text x="' + (x + w / 2).toFixed(1) + '" y="' + (y + h / 2 - (l2 ? 5 : 0)).toFixed(1) + '">' + (w < 46 ? l.split(" ")[0] : l) + "</text>" + (l2 && w >= 46 ? '<text class="fp-t2" x="' + (x + w / 2).toFixed(1) + '" y="' + (y + h / 2 + 7).toFixed(1) + '">' + l2 + "</text>" : "");
+    return c;
+  }
+  var s = '<svg viewBox="0 0 ' + VW + " " + (VH + 6) + '" role="img" aria-label="Schematic floor plan of ' + u.id + ', ' + u.area + ' square metres"><defs><pattern id="fpHatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="var(--warn-soft)"/><line class="fp-hatch" x1="0" y1="0" x2="0" y2="6"/></pattern></defs><g transform="translate(0 3)">';
+  s += R("fp-open", 0, 0, X, Y, "Open space", Math.round(u.office - u.rooms * 12) + " m²");
+  var cw = Math.max(28, X * 0.1);
+  s += R("fp-core", 0, Y * 0.5, cw, Y * 0.5, "Core") + '<path d="M' + (cw / 2 - 5) + " " + (Y * 0.5 + 8) + "h10v10h-10zM" + (cw / 2 - 5) + " " + (Y * 0.5 + 8) + "l10 10M" + (cw / 2 + 5) + " " + (Y * 0.5 + 8) + 'l-10 10" fill="none" stroke="var(--ink-3)" stroke-width="1"/>';
+  var mh = Math.min(0.34, Math.max(0.16, 14 / u.area / 0.2)) * Y, mw = X * 0.2;
+  for (var i = 0; i < u.rooms; i++) s += R("fp-room", cw + 4 + i * (mw + 4), 0, mw, mh, "Meeting " + (i + 1), "12 m²");
+  s += R("fp-room", X * 0.78, 0, X * 0.22, Math.min(Y * 0.3, mh), "Kitchen");
+  if (u.shop > 0) {
+    var sw = Math.min(0.5, 0.2 + u.shop / u.area * 0.9) * X; s += R("fp-shop", X - sw, Y * 0.5, sw, Y * 0.5, "Workshop", u.shop + " m²");
+    if (u.dock) s += '<path class="fp-door" d="M' + (X - 1) + " " + (Y * 0.62) + "V" + (Y * 0.9) + '"/><text class="fp-t2" x="' + (X - 22) + '" y="' + (Y * 0.5 + 9) + '">Dock</text>';
+  } else s += R("fp-room", X * 0.84, Y * 0.7, X * 0.16, Y * 0.3, "Store");
+  s += '<rect class="fp-wall" x="0" y="0" width="' + X + '" height="' + Y + '"/>';
+  for (var wx = cw + 10; wx < X - 20; wx += 26) s += '<path class="fp-win" d="M' + wx + ' 0h14"/>';
+  s += "</g></svg>";
+  return s;
+}
+function statHTML(l, v, e, w) { return '<div class="stat' + (w ? " wide" : "") + '"><small>' + l + "</small><b>" + v + "</b>" + (e ? "<em>" + e + "</em>" : "") + "</div>"; }
+function similar(u) {
+  return DATA.units.filter(function (x) { return x.st === "available" && x.id !== u.id; }).sort(function (a, b) { return Math.abs(a.area - u.area) - Math.abs(b.area - u.area) || (a.id < b.id ? -1 : 1); }).slice(0, 2);
+}
+function renderUnit() {
+  var u = unit(S.unit), B = DATA.buildings[u.b], inS = S.short.indexOf(u.id) > -1, res = u.st === "reserved";
+  $("#drillT").textContent = u.id + " · " + bname(u.b) + ", floor " + u.f;
+  $("#backT").textContent = S.from === "compare" ? "Compare" : S.from === "ask" ? "Assistant" : "Results";
+  var A = DEF_A, h = "";
+  if (res) h += '<div class="alert warn" role="status">' + ic("clock") + "<div><b>" + esc(u.note || "Reserved") + "</b>Another company is ahead of you for " + u.id + ". Booking is off. Similar units:<div class=\"actions\">" + similar(u).map(function (x) { return '<button class="by-chip" type="button" data-act="open" data-id="' + x.id + '">' + x.id + " · " + x.area + " m²</button>"; }).join("") + "</div></div></div>";
+  h += '<div class="chips-row">' + statusBadge(u) + '<span class="by-badge">' + u.type + "</span>" + (S.ai.phase === "applied" && S.ai.ids.indexOf(u.id) > -1 ? '<span class="by-badge by-badge--ai">' + ic("spark") + "AI pick</span>" : "") + "</div>";
+  h += '<div class="fp">' + planSVG(u) + "<small>Schematic plan generated from the unit's data. Not a survey.</small></div>";
+  h += '<div class="stats">' + statHTML("Area", u.area + " m²") + statHTML("Desks that fit", desksFit(u, A), "at " + A.sqm + " m² each, after meeting rooms") +
+    statHTML("Rent", "€" + u.rent.toFixed(1), "per m² per month") + statHTML("Service charge", "€" + u.svc.toFixed(1), "per m² per month") +
+    statHTML("Monthly total", eur(u.total), u.area + " × (" + u.rent.toFixed(1) + " + " + u.svc.toFixed(1) + ")", true) +
+    statHTML("Parking spaces", u.park) + statHTML("EV chargers nearby", u.ev) + statHTML("Walk to bus stop", B.bus + " min") + statHTML("Available from", u.from <= NOW ? "Now" : ym(u.from)) + "</div>";
+  h += '<div class="feat">' + featHTML(u) + "</div>";
+  h += '<div class="actions"><button class="by-btn by-btn--secondary" type="button" data-act="short" data-id="' + u.id + '" aria-pressed="' + inS + '"' + (res ? " disabled" : "") + ">" + (inS ? ic("check") + "In shortlist. Remove" : ic("plus") + "Add to shortlist") + '</button><button class="by-btn by-btn--primary" type="button" data-act="book" data-id="' + u.id + '"' + (res ? ' disabled aria-describedby="rsv"' : "") + ">" + ic("calendar") + "Book a viewing</button></div>";
+  if (res) h += '<div class="by-help" id="rsv">Booking opens again if the reservation falls through.</div>';
+  h += '<div class="by-help is-error" id="fullMsg" role="alert"' + (S.fullMsg ? "" : " hidden") + ">" + ic("alert") + "<span>" + esc(S.fullMsg || "") + ' <button class="by-btn by-btn--ghost by-btn--sm" type="button" data-act="compare" style="min-height:24px;padding:0 6px;text-decoration:underline">Open shortlist</button></span></div>';
+  $("#drillBody").innerHTML = h;
+}
+
+/* ================= SHORTLIST + COMPARE ================= */
+function toggleShort(id) {
+  var i = S.short.indexOf(id), u = unit(id);
+  if (i > -1) { S.short.splice(i, 1); S.fullMsg = null; toast("Removed " + id + " from your shortlist.", "Undo", function () { S.short.push(id); renderAll(); }); }
+  else if (u.st === "reserved") { toast(id + " is reserved and cannot be shortlisted.", null); return; }
+  else if (S.short.length >= 3) { S.fullMsg = "Your shortlist is full (3 units). Remove one to add " + id + "."; announce(S.fullMsg); if (S.view !== "unit") toast(S.fullMsg, "Open shortlist", function () { openCompare(); }); }
+  else { S.short.push(id); S.fullMsg = null; toast("Added " + id + " to your shortlist (" + S.short.length + " of 3).", S.short.length > 1 ? "Compare" : null, openCompare); }
+  keepFocus(renderAll);
+}
+function keepFocus(fn) {
+  var a = document.activeElement, act = a && a.dataset ? a.dataset.act : null, id = a && a.dataset ? a.dataset.id : null;
+  fn();
+  if (act && id) { var n = $('#app [data-act="' + act + '"][data-id="' + id + '"]'); if (n) n.focus(); }
+}
+var ROWS = [
+  { k: "Area", v: function (u) { return u.area; }, f: function (u) { return u.area + " m²"; }, best: "max" },
+  { k: "Desks", v: function (u) { return desksFit(u, DEF_A); }, f: function (u) { return desksFit(u, DEF_A); }, best: "max" },
+  { k: "Monthly total", v: function (u) { return u.total; }, f: function (u) { return eur(u.total); }, best: "min" },
+  { k: "€ per desk", v: function (u) { return u.total / Math.max(1, desksFit(u, DEF_A)); }, f: function (u) { return eur(u.total / Math.max(1, desksFit(u, DEF_A))); }, best: "min" },
+  { k: "Available from", v: function (u) { return u.from; }, f: function (u) { return u.from <= NOW ? "Now" : ym(u.from); }, best: "min" },
+  { k: "Loading access", v: function (u) { return u.dock ? 1 : 0; }, f: function (u) { return u.dock ? "Yes" : "No"; }, best: "max" },
+  { k: "Parking", v: function (u) { return u.park; }, f: function (u) { return plural(u.park, "space", "spaces"); }, best: "max" },
+  { k: "Walk to bus", v: function (u) { return DATA.buildings[u.b].bus; }, f: function (u) { return DATA.buildings[u.b].bus + " min"; }, best: "min" }
+];
+function renderCompare() {
+  var us = S.short.map(unit).filter(Boolean);
+  $("#drillT").textContent = "Compare shortlist"; $("#backT").textContent = "Results";
+  if (!us.length) { $("#drillBody").innerHTML = '<div class="empty">' + ic("layers", "big") + "<h3>Nothing to compare yet</h3><p>Add up to 3 units with the Shortlist button. They line up here side by side.</p><button class=\"by-btn by-btn--primary by-btn--sm\" type=\"button\" data-act=\"back\">Back to results</button></div>"; return; }
+  var h = '<div class="cmp-wrap" tabindex="0" role="region" aria-label="Comparison table, scrolls sideways"><table class="cmp"><thead><tr><th scope="col"><span class="sr">Measure</span></th>';
+  us.forEach(function (u) { h += '<th scope="col"><div class="col-h"><b>' + u.id + "</b><span>" + bname(u.b) + " · floor " + u.f + "</span>" + (u.st === "reserved" ? '<span class="by-badge by-badge--warn">' + ic("clock") + "Reserved</span>" : "") + '<button class="by-btn by-btn--ghost by-iconbtn" type="button" data-act="short" data-id="' + u.id + '" aria-label="Remove ' + u.id + ' from shortlist">' + ic("x") + "</button></div></th>"; });
+  h += "</tr></thead><tbody>";
+  ROWS.forEach(function (r) {
+    var vals = us.map(r.v), best = null;
+    if (us.length > 1) { var mn = vals.reduce(function (a, b) { return b < a ? b : a; }), mx = vals.reduce(function (a, b) { return b > a ? b : a; }); if (mn !== mx) best = r.best === "min" ? mn : mx; }
+    h += '<tr><th scope="row">' + r.k + "</th>";
+    us.forEach(function (u, i) { h += '<td><div class="cell">' + r.f(u) + (best != null && vals[i] === best ? ' <span class="best">' + ic("check") + "Best</span>" : "") + "</div></td>"; });
+    h += "</tr>";
+  });
+  h += '<tr><th scope="row">Next</th>' + us.map(function (u) { return '<td><div class="actions"><button class="by-btn by-btn--secondary by-btn--sm" type="button" data-act="open" data-id="' + u.id + '" data-from="compare">Open</button><button class="by-btn by-btn--primary by-btn--sm" type="button" data-act="book" data-id="' + u.id + '"' + (u.st === "reserved" ? " disabled" : "") + ">Book viewing</button></div></td>"; }).join("") + "</tr></tbody></table></div>";
+  if (us.length === 1) h += '<div class="by-help">' + ic("info") + "<span>Add one more unit to see which is best on each row.</span></div>";
+  else h += '<div class="by-help">' + ic("info") + "<span>\"Best\" marks the lowest or highest value that helps you. Desks use 8.5 m² each, after meeting rooms.</span></div>";
+  $("#drillBody").innerHTML = h;
+}
+function openCompare() { S.view = "compare"; S.fullMsg = null; renderAll(); focusDrill(); }
+function focusDrill() { setTimeout(function () { var t = $("#drillT"); t.tabIndex = -1; t.focus(); }, 30); }
+function openUnit(id, from) { S.unit = id; S.from = from || (S.view === "compare" ? "compare" : S.tab === "ask" ? "ask" : "browse"); S.view = "unit"; S.fullMsg = null; renderAll(); focusDrill(); }
+function goBack() {
+  var was = S.view, id = S.unit;
+  if (was === "book") { S.view = "unit"; renderAll(); focusDrill(); return; }
+  S.view = S.from === "compare" && was === "unit" ? "compare" : "browse"; if (S.from === "ask" && was === "unit") { S.tab = "ask"; S.view = "browse"; }
+  renderAll();
+  var n = id && $('[data-act="open"][data-id="' + id + '"]'); if (n && !n.closest("#vDrill")) n.focus();
+}
+
+/* ================= BOOKING ================= */
+var TIMES = ["09:00", "10:30", "11:00", "14:00", "16:00"], TAKEN = { "2026-11-13": ["09:00", "10:30"] }, JUST_TAKEN = { "2026-11-17": ["10:30"] };
+function workdays() {
+  var d = new Date(Date.UTC(2026, 10, 12)), out = [], N = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  while (out.length < 5) { d = new Date(d.getTime() + 864e5); var w = d.getUTCDay(); if (w === 0 || w === 6) continue; out.push({ key: d.getUTCFullYear() + "-" + (d.getUTCMonth() + 1) + "-" + d.getUTCDate(), iso: d.toISOString().slice(0, 10), label: N[w] + " " + d.getUTCDate() + " " + MON[d.getUTCMonth()] }); }
+  return out;
+}
+var DAYS = workdays();
+function dayLabel(iso) { for (var i = 0; i < DAYS.length; i++) if (DAYS[i].iso === iso) return DAYS[i].label; return iso; }
+function newBook(id) { return { id: id, name: "", company: "", email: "", date: DAYS[2].iso, time: "", errs: {}, state: "form", alt: [], taken: "" }; }
+function openBook(id) { S.unit = id; S.book = newBook(id); S.view = "book"; renderAll(); focusDrill(); }
+function renderBook() {
+  var b = S.book, u = unit(b.id); $("#backT").textContent = "Unit"; $("#drillT").textContent = "Book a viewing · " + u.id;
+  var h = "";
+  if (b.state === "done") {
+    h = '<div class="done" role="status"><span class="tick">' + ic("check") + "</span><h3 class=\"t-h2\">Viewing booked</h3><div class=\"sum\">Viewing for " + u.id + " on " + dayLabel(b.date) + " at " + b.time + " with Brightyard leasing<span>" + bname(u.b) + ", floor " + u.f + ". Meet at the reception of building " + u.b + ".</span></div><p class=\"t-small\">We sent a confirmation to " + esc(b.email) + ". Reply to it to change the time.</p><div class=\"actions\"><button class=\"by-btn by-btn--primary\" type=\"button\" data-act=\"backAll\">Back to results</button><button class=\"by-btn by-btn--secondary\" type=\"button\" data-act=\"again\">Book another time</button></div></div>";
+    $("#drillBody").innerHTML = h; return;
+  }
+  var e = b.errs, loading = b.state === "loading";
+  function fld(id, label, type, val, ac) { return '<div class="by-field"><label class="by-label" for="' + id + '">' + label + '</label><input class="by-input" id="' + id + '" type="' + type + '" value="' + esc(val) + '" autocomplete="' + ac + '"' + (e[id] ? ' aria-invalid="true"' : "") + ' aria-describedby="' + id + 'E"' + (loading ? " disabled" : "") + '><div class="by-help is-error" id="' + id + 'E"' + (e[id] ? "" : " hidden") + ">" + ic("alert") + "<span>" + esc(e[id] || "") + "</span></div></div>"; }
+  h += '<div class="sum">' + u.id + " · " + u.area + " m² · " + eur(u.total) + " a month<span>" + bname(u.b) + ", floor " + u.f + "</span></div>";
+  if (b.state === "conflict") h += '<div class="alert bad" role="alert">' + ic("alert") + "<div><b>" + b.taken + " was just taken.</b>" + b.alt.join(" or ") + " " + (b.alt.length === 1 ? "is" : "are") + " free on " + dayLabel(b.date) + ". Tap one to book it.<div class=\"actions\">" + b.alt.map(function (t) { return '<button class="by-btn by-btn--primary by-btn--sm" type="button" data-act="altTime" data-t="' + t + '">Book ' + t + "</button>"; }).join("") + "</div></div></div>";
+  h += '<form class="bk" id="bkForm" novalidate>' + '<button class="by-btn by-btn--ghost by-btn--sm" type="button" data-act="sample" style="justify-self:start">Fill sample details (demo)</button>' +
+    fld("bkName", "Your name", "text", b.name, "name") + fld("bkCompany", "Company", "text", b.company, "organization") + fld("bkEmail", "Work email", "email", b.email, "email");
+  h += '<fieldset><legend>Date</legend><div class="f-row">' + DAYS.map(function (d) { return '<button class="by-chip" type="button" data-act="date" data-d="' + d.iso + '" aria-pressed="' + (b.date === d.iso) + '"' + (loading ? " disabled" : "") + ">" + d.label + "</button>"; }).join("") + '</div><div class="by-help is-error" id="bkDateE"' + (e.date ? "" : " hidden") + ">" + ic("alert") + "<span>" + esc(e.date || "") + "</span></div></fieldset>";
+  h += '<fieldset><legend>Time</legend><div class="f-row">' + TIMES.map(function (t) { var tk = (TAKEN[b.date] || []).indexOf(t) > -1; return '<button class="by-chip" type="button" data-act="time" data-t="' + t + '" aria-pressed="' + (b.time === t) + '"' + (tk || loading ? " disabled" : "") + (tk ? ' title="Taken"' : "") + ">" + t + "</button>"; }).join("") + '</div><div class="by-help is-error" id="bkTimeE"' + (e.time ? "" : " hidden") + ">" + ic("alert") + "<span>" + esc(e.time || "") + "</span></div></fieldset>";
+  h += '<button class="by-btn by-btn--primary by-btn--lg by-btn--block' + (loading ? " is-loading" : "") + '" type="submit" id="bkGo">Book viewing</button></form>';
+  var ae = document.activeElement, keep = ae && ae.id && $("#drillBody").contains(ae) ? ae.id : null;
+  $("#drillBody").innerHTML = h;
+  if (keep) { var n = $("#" + keep); if (n) { n.focus(); try { n.setSelectionRange(n.value.length, n.value.length); } catch (x) { } } }
+}
+function bookReadFields() { var b = S.book; if ($("#bkName")) { b.name = $("#bkName").value; b.company = $("#bkCompany").value; b.email = $("#bkEmail").value; } }
+function bookValidate() {
+  var b = S.book, e = {};
+  if (!b.name.trim()) e.bkName = "Enter your name so leasing knows who to expect.";
+  if (!b.company.trim()) e.bkCompany = "Enter your company name.";
+  if (!b.email.trim()) e.bkEmail = "Enter your work email."; else if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(b.email.trim())) e.bkEmail = "Enter a full email address, like name@company.example.";
+  if (!b.date) e.date = "Pick a date.";
+  if (!b.time) e.time = "Pick a time.";
+  b.errs = e; return e;
+}
+function bookSubmit(forceTime) {
+  var b = S.book; bookReadFields(); if (forceTime) b.time = forceTime;
+  var e = bookValidate(), keys = Object.keys(e);
+  if (keys.length) { b.state = "form"; renderBook(); var f = keys[0] === "date" ? $('[data-act="date"]') : keys[0] === "time" ? $('[data-act="time"]:not(:disabled)') : $("#" + keys[0]); if (f) f.focus(); announce("Check the form: " + keys.length + (keys.length === 1 ? " field needs" : " fields need") + " attention."); return; }
+  b.state = "loading"; b.errs = {}; renderBook();
+  setTimeout(function () {
+    var jt = JUST_TAKEN[b.date];
+    if (jt && jt.indexOf(b.time) > -1) {
+      b.taken = b.time; b.alt = TIMES.filter(function (t) { return t > b.time && (TAKEN[b.date] || []).indexOf(t) < 0 && (JUST_TAKEN[b.date] || []).indexOf(t) < 0; }).slice(0, 2);
+      b.state = "conflict"; b.time = ""; renderBook(); announce(b.taken + " was just taken. " + b.alt.join(" or ") + " are free."); return;
+    }
+    b.state = "done"; renderBook(); announce("Viewing booked for " + dayLabel(b.date) + " at " + b.time + ".");
+    var d = $("#drillBody .tick"); if (d) { var s = $("#drillBody .done h3"); s.tabIndex = -1; s.focus(); }
+  }, 900);
+}
+
+/* ================= ASSISTANT ================= */
+var AIDEF = {
+  ratio: { name: "Hybrid ratio", pre: "Hybrid ratio ", post: "", min: 0.3, max: 1, msg: "Use a ratio from 0.3 to 1." },
+  sqm: { name: "m² per desk", pre: "", post: " m² per desk", min: 5, max: 15, msg: "Use 5 to 15 m² per desk." },
+  workshop: { name: "Workshop m²", pre: "Workshop ≥ ", post: " m²", min: 0, max: 200, msg: "Use 0 to 200 m². 0 means no workshop." },
+  parking: { name: "Parking spaces", pre: "Parking ", post: "", min: 0, max: 60, int: true, msg: "Use a whole number from 0 to 60." }
+};
+var AIKEYS = ["ratio", "sqm", "workshop", "parking"];
+/* state: default | hover | editing | locked. edited is derived from val !== orig. */
+function chipHTML(k, val, st, orig, err) {
+  var d = AIDEF[k], ed = orig != null && val !== orig;
+  if (st === "editing") {
+    return '<span class="as-chip is-editing' + (err ? " is-error" : "") + '"><label for="asIn">' + d.name + '</label><input id="asIn" inputmode="decimal" value="' + esc(val) + '"' + (err ? ' aria-invalid="true" aria-describedby="asErr"' : "") + '><button class="by-btn by-btn--primary by-iconbtn" type="button" data-act="asSave" aria-label="Save ' + d.name + '">' + ic("check") + '</button><button class="by-btn by-btn--ghost by-iconbtn" type="button" data-act="asCancel" aria-label="Cancel">' + ic("x") + "</button></span>";
+  }
+  if (st === "locked") return '<span class="as-chip locked">' + d.pre + "<b>" + val + "</b>" + d.post + "</span>";
+  return '<span class="as-chip' + (ed ? " is-edited" : "") + (st === "hover" ? " is-hover" : "") + '"><button type="button" data-act="edit" data-k="' + k + '" aria-label="Edit ' + d.name.toLowerCase() + ", now " + val + (ed ? ", edited from " + orig : "") + '">' + d.pre + "<b>" + val + "</b>" + d.post + ic("sliders") + "</button></span>";
+}
+function aiStepsHTML() {
+  var n = DATA.units.filter(function (u) { return u.st === "available"; }).length, names = ["Read your needs", "Check " + n + " available units", "Score fit", "Prepare 3 options"];
+  return '<div class="by-card"><span class="by-ai-tag">' + ic("spark") + 'Working</span><ol class="ai-steps" style="margin-top:12px">' + names.map(function (t, i) {
+    var c = i < S.ai.step ? "is-done" : i === S.ai.step ? "is-run" : "";
+    return '<li class="' + c + '"><span class="st">' + (c === "is-done" ? ic("check") : c === "is-run" ? '<span class="by-spin"></span>' : "") + "</span>" + t + "</li>";
+  }).join("") + "</ol></div>";
+}
+function summaryLine(A) {
+  var p = [A.people + " people"]; if (A.days) p.push("hybrid " + A.days + " days a week"); if (A.rooms) p.push(A.rooms + " meeting rooms"); if (A.workshop) p.push("workshop with loading access"); if (A.parking) p.push("parking for " + A.parking); if (A.budget) p.push("budget " + eur(A.budget)); if (A.moveIn) p.push("move in by " + ym(A.moveIn));
+  return p.join(" · ");
+}
+function aiProposalHTML() {
+  var ai = S.ai, A = ai.A, R = rank(A), n = needs(A);
+  var h = '<div class="by-ai"><span class="by-ai-tag">' + ic("spark") + "Proposal · nothing applied yet</span><b class=\"by-ai__title\">" + (R.length ? R.length + " units look like a fit" : "No available unit fits") + '</b><p class="t-small">I read: ' + esc(summaryLine(A)) + ".</p>";
+  h += '<ol class="ai-list">' + R.map(function (r, i) {
+    var u = unit(r.id), warns = r.reasons.filter(function (x) { return !x.ok; }), oks = r.reasons.filter(function (x) { return x.ok; }), show = warns.concat(oks).slice(0, Math.max(4, warns.length));
+    return '<li class="ai-item' + (ai.flash.indexOf(r.id) > -1 ? " flash" : "") + '"><div class="ai-item-top"><span class="rank">' + (i + 1) + '</span><div><b class="id">' + u.id + '</b><div class="sub">' + bname(u.b) + " · floor " + u.f + " · " + u.area + " m²</div></div><div class=\"tot\">" + eur(u.total) + "<small>per month</small></div></div>" +
+      '<div class="fit"><div class="by-progress" style="--p:' + r.total + '%"><i></i></div><span>Fit ' + r.total + "/100</span></div>" +
+      '<div class="by-why">' + show.map(function (x) { return x.ok ? "<span>" + ic("check") + esc(x.t) + "</span>" : '<span class="warn">' + ic("alert") + esc(x.t) + "</span>"; }).join("") + "</div>" +
+      '<div class="actions"><button class="by-btn by-btn--secondary by-btn--sm" type="button" data-act="open" data-id="' + u.id + '" data-from="ask">View unit</button></div></li>';
+  }).join("") + "</ol>";
+  h += '<div class="assume"><b>What I assumed</b><div class="as-row">' + AIKEYS.map(function (k) { return chipHTML(k, A[k], ai.edit === k ? "editing" : "default", ai.A0[k], ai.editErr); }).join("") + "</div>" +
+    (ai.editErr ? '<div class="by-help is-error" id="asErr">' + ic("alert") + "<span>" + esc(ai.editErr) + "</span></div>" : '<div class="by-help">' + ic("info") + "<span>About " + n.desks + " desks and " + Math.round(n.office) + " m² of office space. Change a chip and the ranking updates.</span></div>") + "</div>";
+  h += '<details class="ai-how"><summary>How I scored</summary><ul><li>Office space fits the desks and meeting rooms: 25</li><li>Workshop space and loading access: 25</li><li>Monthly total against budget: 20</li><li>Parking spaces: 15</li><li>Ready by your move-in month: 10</li><li>Meeting rooms: 5</li></ul><p>Same inputs always give the same ranking. Only available units are scored.</p></details>';
+  h += '<div class="actions"><button class="by-btn by-btn--ai" type="button" data-act="apply">' + ic("check") + 'Apply to search</button><button class="by-btn by-btn--ghost" type="button" data-act="notquite">Not quite</button></div></div>';
+  return h;
+}
+function aiAppliedHTML() {
+  var ai = S.ai, f = S.f, e = E;
+  return '<div class="by-ai is-committed"><span class="by-badge by-badge--ok" style="justify-self:start">' + ic("check") + 'Applied to your search</span><b class="by-ai__title">' + plural(ai.ids.length, "unit", "units") + " highlighted</b>" +
+    '<dl class="by-dl"><dt>Space types</dt><dd>' + (f.types.join(", ") || "All") + "</dd><dt>Area</dt><dd>" + (f.min || "Any") + "–" + (f.max || "Any") + " m²</dd><dt>Move in by</dt><dd>" + (f.move ? ym(f.move) : "Any date") + "</dd><dt>Max rent</dt><dd>" + (f.rent ? eur(+f.rent) + " / month" : "No limit") + "</dd><dt>Picks</dt><dd>" + ai.ids.join(", ") + "</dd></dl>" +
+    '<div class="by-why">' + AIKEYS.map(function (k) { return chipHTML(k, ai.A[k], "locked"); }).join("") + "</div>" +
+    '<div class="actions"><button class="by-btn by-btn--primary" type="button" data-act="showres">Show on map and results</button><button class="by-btn by-btn--secondary" type="button" data-act="undo">' + ic("undo") + "Undo</button></div></div>";
+}
+function aiClarifyHTML() {
+  return '<div class="by-ai"><span class="by-ai-tag">' + ic("spark") + 'Question</span><b class="by-ai__title">What should I change?</b><p class="t-small">Pick one and I will score again. Nothing is applied.</p><div class="try-ask">' +
+    [["fewer", "Fewer desks (ratio 0.6)"], ["shop", "Smaller workshop (25 m²)"], ["park", "Less parking (6)"], ["budget", "Tighter budget (€7,000)"]].map(function (c) { return '<button class="by-chip" type="button" data-act="clar" data-c="' + c[0] + '">' + c[1] + "</button>"; }).join("") +
+    '</div><div class="actions"><button class="by-btn by-btn--ghost by-btn--sm" type="button" data-act="clarCancel">Back to the proposal</button></div></div>';
+}
+function renderAI() {
+  var ai = S.ai, host = $("#aiOut"), ae = document.activeElement, hadEdit = ae && ae.id === "asIn";
+  $("#aiGo").classList.toggle("is-loading", ai.phase === "working"); $("#aiGo").disabled = ai.phase === "working";
+  if (ai.phase === "idle") host.innerHTML = "";
+  else if (ai.phase === "working") host.innerHTML = aiStepsHTML();
+  else if (ai.phase === "proposal") host.innerHTML = aiProposalHTML();
+  else if (ai.phase === "applied") host.innerHTML = aiAppliedHTML();
+  else host.innerHTML = aiClarifyHTML();
+  if (ai.msg && ai.phase === "proposal") host.insertAdjacentHTML("afterbegin", '<div class="alert ok" role="status" style="margin-bottom:10px">' + ic("refresh") + "<div>" + esc(ai.msg) + "</div></div>");
+  if (ai.edit) { var i = $("#asIn"); if (i && !hadEdit) { i.focus(); i.select(); } else if (i && hadEdit) { i.focus(); } }
+}
+function aiRun() {
+  var ai = S.ai, t = $("#aiText").value.trim();
+  if (!t) { $("#aiHelp").classList.add("is-error"); $("#aiHelp").innerHTML = ic("alert") + "<span>Describe what you need in a sentence or two.</span>"; $("#aiText").setAttribute("aria-invalid", "true"); $("#aiText").focus(); return; }
+  $("#aiText").removeAttribute("aria-invalid"); $("#aiHelp").classList.remove("is-error"); $("#aiHelp").innerHTML = ic("info") + "<span>The assistant only proposes. Nothing changes in your search until you apply it.</span>";
+  if (ai.phase === "applied") aiUndo(true);
+  ai.text = t; ai.phase = "working"; ai.step = 0; ai.edit = null; ai.editErr = ""; ai.msg = ""; ai.flash = []; renderAI(); announce("Working on your request.");
+  var gap = reduced() ? 120 : 520;
+  (function next() {
+    setTimeout(function () {
+      ai.step++;
+      if (ai.step < 4) { renderAI(); next(); return; }
+      ai.A = parsePrompt(t); ai.A0 = clone(ai.A); ai.phase = "proposal"; var R = rank(ai.A); renderAI();
+      announce(R.length ? "3 options ready. Top pick " + R[0].id + ", fit " + R[0].total + " out of 100. Nothing is applied yet." : "No available unit fits.");
+    }, gap);
+  })();
+}
+function aiCommit() {
+  var ai = S.ai, k = ai.edit, d = AIDEF[k], inp = $("#asIn"), raw = inp ? inp.value.replace(",", ".").trim() : "", v = parseFloat(raw);
+  ai.editVal = raw;
+  if (raw === "" || isNaN(v) || !/^\d*\.?\d+$/.test(raw) || v < d.min || v > d.max || (d.int && v % 1 !== 0)) { ai.editErr = d.msg; renderAI(); return; }
+  var before = rank(ai.A), bt = {}; before.forEach(function (r) { bt[r.id] = r.total; });
+  ai.A[k] = v; ai.edit = null; ai.editErr = ""; var after = rank(ai.A);
+  ai.flash = after.filter(function (r, i) { return !before[i] || before[i].id !== r.id || bt[r.id] !== r.total; }).map(function (r) { return r.id; });
+  ai.msg = "Re-scored with " + d.name.toLowerCase() + " " + v + ". Top pick is " + after[0].id + ".";
+  renderAI(); announce(ai.msg);
+  var b = $('[data-act="edit"][data-k="' + k + '"]'); if (b) b.focus();
+}
+function aiApply() {
+  var ai = S.ai, R = rank(ai.A), us = R.map(function (r) { return unit(r.id); });
+  ai.prev = clone(S.f); ai.ids = R.map(function (r) { return r.id; });
+  var ty = TYPES.filter(function (t) { return us.some(function (u) { return u.type === t; }); });
+  var mn = Math.min.apply(null, us.map(function (u) { return u.area; })), mx = Math.max.apply(null, us.map(function (u) { return u.area; }));
+  S.f = { types: ty, min: String(Math.floor(mn / 10) * 10), max: String(Math.ceil(mx / 10) * 10), move: ai.A.moveIn, rent: ai.A.budget ? String(ai.A.budget) : "", bld: null };
+  S.sort = "best"; ai.phase = "applied"; ai.msg = ""; S.orderCheck = true; syncInputs(); setTargets(); renderAll();
+  announce("Applied to your search. " + ai.ids.join(", ") + " are highlighted on the map and in the stacking plan.");
+}
+function aiUndo(silent) {
+  var ai = S.ai; if (ai.prev) S.f = ai.prev; ai.ids = []; ai.phase = "proposal"; ai.msg = ""; syncInputs(); setTargets(); renderAll(); if (!silent) announce("Undone. Your earlier filters are back.");
+}
+function aiClar(c) {
+  var A = S.ai.A, before = rank(A), bt = {}; before.forEach(function (r) { bt[r.id] = r.total; });
+  if (c === "fewer") A.ratio = 0.6; if (c === "shop") A.workshop = 25; if (c === "park") A.parking = 6; if (c === "budget") A.budget = 7000;
+  var after = rank(A); S.ai.flash = after.filter(function (r, i) { return !before[i] || before[i].id !== r.id || bt[r.id] !== r.total; }).map(function (r) { return r.id; });
+  S.ai.msg = "Re-scored. Top pick is " + after[0].id + "."; S.ai.phase = "proposal"; renderAI(); announce(S.ai.msg);
+}
+
+/* ================= ISOMETRIC MAP ================= */
+function palette(scope) {
+  var pr = document.createElement("span"); pr.style.cssText = "position:absolute;visibility:hidden;pointer-events:none"; scope.appendChild(pr);
+  var P = {}; ["bg", "surface", "surface-2", "surface-3", "line", "line-2", "ink", "ink-2", "ink-3", "brand", "brand-ink", "on-brand", "ai", "ok", "navy"].forEach(function (n) { pr.style.color = "var(--" + n + ")"; P[n] = getComputedStyle(pr).color; });
+  var cs = getComputedStyle(scope); P.dark = scope.getAttribute("data-by") === "dark"; P.font = cs.getPropertyValue("--font") || "sans-serif"; P.ms = parseFloat(cs.getPropertyValue("--d3")) || 0;
+  scope.removeChild(pr); return P;
+}
+var MAPCFG = {
+  W: 16, D: 12,
+  b: [
+    { id: "A", x: 1, y: 1, w: 4.6, d: 3.4, fl: 5, fh: 0.62, kind: "office" },
+    { id: "B", x: 7, y: 1, w: 4, d: 3.4, fl: 4, fh: 0.62, kind: "office" },
+    { id: "C", x: 1, y: 6.6, w: 6, d: 3.8, fl: 2, fh: 1, kind: "ind" },
+    { id: "D", x: 8.6, y: 6.6, w: 3.6, d: 3.4, fl: 6, fh: 0.62, kind: "lab" },
+    { id: "E", x: 12.6, y: 1, w: 2.8, d: 3.4, fl: 3, fh: 0.6, kind: "wire" }
+  ],
+  paths: [[1, 5, 14.6, 0.7], [5.9, 0.5, 0.8, 4.5], [7.3, 5.7, 1, 5.8], [3, 4.4, 0.7, 0.6], [8.4, 4.4, 0.7, 0.6], [3.5, 10.4, 0.8, 1], [10.2, 10, 0.8, 1]],
+  pad: [12.9, 6.4, 2.5, 4.4],
+  trees: [[0.5, 0.7, 0], [6.3, 0.5, 1], [11.7, 0.7, 0], [15.7, 0.7, 1], [0.5, 5.9, 1], [8.9, 5.8, 0], [12.6, 5.9, 1], [15.7, 5.9, 0], [0.6, 11.2, 1], [8, 11.4, 0], [12.9, 11.3, 1], [15.6, 11.2, 0]],
+  cars: [[0, 0, 0], [0, 2, 1], [0, 3, 2], [1, 1, 3], [1, 4, 0], [1, 5, 1]]
+};
+MAPCFG.b.forEach(function (b) { b.name = DATA.buildings[b.id].name; });
+function hull(pts) {
+  pts = pts.slice().sort(function (a, b) { return a[0] - b[0] || a[1] - b[1]; });
+  function cr(o, a, b) { return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]); }
+  var lo = [], up = [], i;
+  for (i = 0; i < pts.length; i++) { while (lo.length > 1 && cr(lo[lo.length - 2], lo[lo.length - 1], pts[i]) <= 0) lo.pop(); lo.push(pts[i]); }
+  for (i = pts.length - 1; i >= 0; i--) { while (up.length > 1 && cr(up[up.length - 2], up[up.length - 1], pts[i]) <= 0) up.pop(); up.push(pts[i]); }
+  lo.pop(); up.pop(); return lo.concat(up);
+}
+function drawScene(cv, cfg) {
+  var w = cv.clientWidth, h = cv.clientHeight; if (!w || !h) return null;
+  var dpr = window.devicePixelRatio || 1, pw = Math.round(w * dpr), ph = Math.round(h * dpr);
+  if (cv.width !== pw || cv.height !== ph) { cv.width = pw; cv.height = ph; }
+  var ctx = cv.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, w, h);
+  var P = cfg.pal, W = cfg.W, D = cfg.D, ZK = 1.1, T = 0.4, dark = P.dark;
+  var top = 0; cfg.b.forEach(function (b) { top = Math.min(top, (b.x + b.y) * 0.5 - (b.fl * b.fh + 0.8) * ZK); });
+  var minx = -D, maxx = W, miny = top, maxy = (W + D) * 0.5 + T * ZK, pad = cfg.padding || { l: 14, r: 14, t: 40, b: 40 };
+  var S = Math.min((w - pad.l - pad.r) / (maxx - minx), (h - pad.t - pad.b) / (maxy - miny));
+  var ox = pad.l + (w - pad.l - pad.r - (maxx - minx) * S) / 2 - minx * S, oy = pad.t + (h - pad.t - pad.b - (maxy - miny) * S) / 2 - miny * S;
+  function pr(x, y, z) { return [ox + (x - y) * S, oy + (x + y) * 0.5 * S - z * ZK * S]; }
+  function path(pts) { ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]); for (var i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]); ctx.closePath(); }
+  function fill(pts, col, a) { var ga = ctx.globalAlpha; if (a != null) ctx.globalAlpha = ga * a; ctx.fillStyle = col; path(pts); ctx.fill(); ctx.globalAlpha = ga; }
+  function stroke(pts, col, lw, a, dash) { var ga = ctx.globalAlpha; if (a != null) ctx.globalAlpha = ga * a; ctx.strokeStyle = col; ctx.lineWidth = lw; ctx.setLineDash(dash || []); ctx.lineJoin = "round"; path(pts); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = ga; }
+  function rectGround(r, z) { return [pr(r[0], r[1], z || 0), pr(r[0] + r[2], r[1], z || 0), pr(r[0] + r[2], r[1] + r[3], z || 0), pr(r[0], r[1] + r[3], z || 0)]; }
+  function shadow(pts, a) {
+    ctx.save(); ctx.shadowColor = "rgba(0,0,0," + a + ")"; ctx.shadowBlur = 9 * dpr; ctx.shadowOffsetX = 5000; ctx.translate(-5000 / dpr, 0); ctx.fillStyle = "#000"; path(pts); ctx.fill(); ctx.restore();
+  }
+  var topC = dark ? P["surface-3"] : P.surface, leftC = P["surface-2"], rightC = dark ? P.surface : P["surface-3"];
+
+  /* ground slab */
+  fill([pr(0, D, 0), pr(W, D, 0), pr(W, D, -T), pr(0, D, -T)], P["line-2"]); fill([pr(0, D, 0), pr(W, D, 0), pr(W, D, -T), pr(0, D, -T)], "#000", dark ? 0.25 : 0.04);
+  fill([pr(W, D, 0), pr(W, 0, 0), pr(W, 0, -T), pr(W, D, -T)], P["line-2"]); fill([pr(W, D, 0), pr(W, 0, 0), pr(W, 0, -T), pr(W, D, -T)], "#000", dark ? 0.4 : 0.14);
+  var gnd = [pr(0, 0, 0), pr(W, 0, 0), pr(W, D, 0), pr(0, D, 0)];
+  fill(gnd, P["surface-2"]); fill(gnd, P.ok, dark ? 0.07 : 0.06);
+  ctx.strokeStyle = P.line; ctx.lineWidth = 1; ctx.globalAlpha = dark ? 0.7 : 0.55; ctx.beginPath();
+  for (var i = 1; i < W; i++) { var a = pr(i, 0, 0), b2 = pr(i, D, 0); ctx.moveTo(a[0], a[1]); ctx.lineTo(b2[0], b2[1]); }
+  for (var j = 1; j < D; j++) { var c = pr(0, j, 0), d2 = pr(W, j, 0); ctx.moveTo(c[0], c[1]); ctx.lineTo(d2[0], d2[1]); }
+  ctx.stroke(); ctx.globalAlpha = 1; stroke(gnd, P["line-2"], 1);
+  (cfg.paths || []).forEach(function (r) { var q = rectGround(r); fill(q, P.surface, dark ? 0.55 : 0.95); stroke(q, P.line, 1, 0.8); });
+  var items = [];
+  if (cfg.pad) {
+    var pd = cfg.pad, pq = rectGround(pd); fill(pq, P["surface-3"]); stroke(pq, P["line-2"], 1);
+    ctx.strokeStyle = P["line-2"]; ctx.lineWidth = 1; ctx.beginPath();
+    for (var s = 0; s < 6; s++) { var yy = pd[1] + 0.2 + s * 0.62, l1 = pr(pd[0], yy, 0), l2 = pr(pd[0] + 0.95, yy, 0), r1 = pr(pd[0] + 1.55, yy, 0), r2 = pr(pd[0] + 2.5, yy, 0); ctx.moveTo(l1[0], l1[1]); ctx.lineTo(l2[0], l2[1]); ctx.moveTo(r1[0], r1[1]); ctx.lineTo(r2[0], r2[1]); }
+    ctx.stroke();
+    var carCols = [P["ink-3"], P["brand-ink"], P.surface, P["ink-2"]];
+    (cfg.cars || []).forEach(function (cr2) { var cx = cr2[0] === 0 ? pd[0] + 0.1 : pd[0] + 1.65, cy = pd[1] + 0.2 + cr2[1] * 0.62 + 0.08; items.push({ dep: cx + cy + 0.65, car: [cx, cy, 0.75, 0.46, carCols[cr2[2]]] }); });
+    var pc = pr(pd[0] + pd[2] / 2, pd[1] + pd[3] + 0.05, 0);
+    ctx.fillStyle = P["ink-3"]; ctx.font = "700 11px " + P.font; ctx.textAlign = "center"; ctx.textBaseline = "top"; ctx.fillText("Parking", pc[0], pc[1] + 4);
+  }
+  (cfg.trees || []).forEach(function (t) { items.push({ dep: t[0] + t[1], tree: t }); });
+  cfg.b.forEach(function (b) { items.push({ dep: b.x + b.w / 2 + b.y + b.d / 2, b: b }); });
+  items.sort(function (p, q) { return p.dep - q.dep; });
+
+  function drawTree(t) {
+    var bs = pr(t[0], t[1], 0), g = ctx.globalAlpha;
+    ctx.fillStyle = "rgba(0,0,0," + (dark ? 0.3 : 0.13) + ")"; ctx.beginPath(); ctx.ellipse(bs[0] + S * 0.28, bs[1] + S * 0.06, S * 0.42, S * 0.17, 0, 0, 7); ctx.fill();
+    var tp = pr(t[0], t[1], 0.5); ctx.strokeStyle = P["ink-3"]; ctx.lineWidth = Math.max(2, S * 0.08); ctx.beginPath(); ctx.moveTo(bs[0], bs[1]); ctx.lineTo(tp[0], tp[1]); ctx.stroke();
+    if (t[2] === 0) { var cp = pr(t[0], t[1], 1.05); ctx.fillStyle = P.ok; ctx.globalAlpha = dark ? 0.5 : 0.55; ctx.beginPath(); ctx.arc(cp[0], cp[1], S * 0.44, 0, 7); ctx.fill(); ctx.globalAlpha = dark ? 0.35 : 0.4; ctx.beginPath(); ctx.arc(cp[0] - S * 0.12, cp[1] - S * 0.14, S * 0.27, 0, 7); ctx.fill(); }
+    else { var a1 = pr(t[0], t[1], 1.7), b1 = [bs[0] - S * 0.36, bs[1] - S * 0.3 * ZK * 1.1], c1 = [bs[0] + S * 0.36, bs[1] - S * 0.3 * ZK * 1.1]; ctx.fillStyle = P.ok; ctx.globalAlpha = dark ? 0.5 : 0.55; path([a1, c1, b1]); ctx.fill(); ctx.globalAlpha = dark ? 0.3 : 0.35; path([a1, [bs[0] + 1, bs[1] - S * 0.3], b1]); ctx.fill(); }
+    ctx.globalAlpha = g;
+  }
+  function drawCar(c) {
+    var x = c[0], y = c[1], bw = c[2], bd = c[3], hh = 0.17;
+    var A = pr(x, y + bd, 0), B = pr(x + bw, y + bd, 0), C = pr(x + bw, y, 0), A2 = pr(x, y + bd, hh), B2 = pr(x + bw, y + bd, hh), C2 = pr(x + bw, y, hh), D2 = pr(x, y, hh);
+    fill([A, B, B2, A2], c[4]); fill([A, B, B2, A2], "#000", 0.14); fill([B, C, C2, B2], c[4]); fill([B, C, C2, B2], "#000", 0.28); fill([D2, C2, B2, A2], c[4]);
+    var g = pr(x + bw * 0.55, y + bd / 2, hh + 0.08); fill([pr(x + bw * 0.3, y + 0.06, hh), pr(x + bw * 0.8, y + 0.06, hh), pr(x + bw * 0.8, y + bd - 0.06, hh), pr(x + bw * 0.3, y + bd - 0.06, hh)], "#000", 0.18);
+  }
+  var hits = [];
+  function drawB(b) {
+    var st = (cfg.state && cfg.state[b.id]) || {}, H = b.fl * b.fh, L = (st.lift || 0) * 0.5, x = b.x, y = b.y, w2 = b.w, d = b.d, a = st.alpha == null ? 1 : st.alpha, wire = b.kind === "wire";
+    var sh = H * 0.5 * (1 + (st.lift || 0) * 0.4);
+    var fp = [[x, y], [x + w2, y], [x + w2, y + d], [x, y + d], [x + sh, y + sh * 0.35], [x + w2 + sh, y + sh * 0.35], [x + w2 + sh, y + d + sh * 0.35], [x + sh, y + d + sh * 0.35]];
+    ctx.globalAlpha = a * (wire ? 0.5 : 1); shadow(hull(fp).map(function (p) { return pr(p[0], p[1], 0); }), (dark ? 0.5 : 0.2) + (st.lift || 0) * 0.08); ctx.globalAlpha = a;
+    if (st.lift > 0.02) { var gr = [pr(x - 0.2, y - 0.2, 0), pr(x + w2 + 0.2, y - 0.2, 0), pr(x + w2 + 0.2, y + d + 0.2, 0), pr(x - 0.2, y + d + 0.2, 0)]; stroke(gr, P.brand, 2, st.lift, [5, 4]); }
+    var A = pr(x, y + d, L), B = pr(x + w2, y + d, L), C = pr(x + w2, y, L), A2 = pr(x, y + d, L + H), B2 = pr(x + w2, y + d, L + H), C2 = pr(x + w2, y, L + H), D2 = pr(x, y, L + H);
+    var left = [A, B, B2, A2], right = [B, C, C2, B2], roof = [D2, C2, B2, A2];
+    function face(f, col, bot, topY) {
+      fill(f, col, wire ? 0.3 : 1);
+      if (!wire) { var g = ctx.createLinearGradient(0, topY, 0, bot); g.addColorStop(0, "rgba(255,255,255," + (dark ? 0.05 : 0.28) + ")"); g.addColorStop(1, "rgba(0,0,0," + (dark ? 0.2 : 0.08) + ")"); var ga = ctx.globalAlpha; ctx.fillStyle = g; path(f); ctx.fill(); ctx.globalAlpha = ga; }
+    }
+    face(left, leftC, A[1], A2[1]); face(right, rightC, B[1], B2[1]); fill(roof, topC, wire ? 0.3 : 1);
+    function lerp(p, q, t) { return [p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t]; }
+    function fq(bl, br, tr, tl, u0, u1, v0, v1) { var p = lerp(bl, br, u0), q = lerp(bl, br, u1), pt = lerp(tl, tr, u0), qt = lerp(tl, tr, u1); return [lerp(p, pt, v0), lerp(q, qt, v0), lerp(q, qt, v1), lerp(p, pt, v1)]; }
+    if (wire) {
+      [left, right, roof].forEach(function (f) {
+        ctx.save(); path(f); ctx.clip(); ctx.strokeStyle = P["ink-3"]; ctx.lineWidth = 1; ctx.globalAlpha = a * 0.55; ctx.beginPath();
+        var bb = [Math.min.apply(null, f.map(function (p) { return p[0]; })), Math.max.apply(null, f.map(function (p) { return p[0]; })), Math.min.apply(null, f.map(function (p) { return p[1]; })), Math.max.apply(null, f.map(function (p) { return p[1]; }))];
+        for (var k = bb[0] - (bb[3] - bb[2]); k < bb[1]; k += 7) { ctx.moveTo(k, bb[3]); ctx.lineTo(k + (bb[3] - bb[2]), bb[2]); }
+        ctx.stroke(); ctx.restore();
+      });
+      for (var fl = 1; fl < b.fl; fl++) { var v = fl / b.fl; stroke([lerp(A, A2, v), lerp(B, B2, v)].concat([lerp(B, B2, v), lerp(C, C2, v)]), P["ink-2"], 1, 0.5, [3, 3]); }
+      [left, right, roof].forEach(function (f) { stroke(f, P["ink-2"], 1.3, 0.9, [5, 3]); });
+    } else {
+      /* windows */
+      var ga0 = ctx.globalAlpha, wa = dark ? 0.6 : 0.5;
+      function windows(bl, br, tr, tl, len, isLeft) {
+        if (b.kind === "ind") {
+          if (isLeft) { for (var q = 0; q < 4; q++) { var dq = fq(bl, br, tr, tl, 0.07 + q * 0.23, 0.07 + q * 0.23 + 0.17, 0, 0.36); fill(dq, P["ink-3"], 0.5); stroke(dq, P["ink-2"], 1, 0.4); var m1 = fq(bl, br, tr, tl, 0.07 + q * 0.23, 0.07 + q * 0.23 + 0.17, 0.12, 0.12); stroke([m1[0], m1[1]], "#fff", 1, 0.5); var m2 = fq(bl, br, tr, tl, 0.07 + q * 0.23, 0.07 + q * 0.23 + 0.17, 0.24, 0.24); stroke([m2[0], m2[1]], "#fff", 1, 0.5); } }
+          var n = isLeft ? 9 : 6; for (var i2 = 0; i2 < n; i2++) fill(fq(bl, br, tr, tl, (i2 + 0.15) / n, (i2 + 0.85) / n, 0.62, 0.8), P.brand, wa);
+          return;
+        }
+        var F = b.fl, n2 = Math.round(len / (b.kind === "lab" ? 0.42 : 0.72));
+        for (var f = 0; f < F; f++) for (var c2 = 0; c2 < n2; c2++) {
+          var u0 = (c2 + (b.kind === "lab" ? 0.08 : 0.2)) / n2, u1 = (c2 + (b.kind === "lab" ? 0.92 : 0.8)) / n2, v0 = (f + (b.kind === "lab" ? 0.2 : 0.3)) / F, v1 = (f + (b.kind === "lab" ? 0.8 : 0.7)) / F;
+          if (isLeft && f === 0 && u0 > 0.38 && u1 < 0.66) continue;
+          fill(fq(bl, br, tr, tl, u0, u1, v0, v1), P.brand, wa);
+        }
+        if (isLeft) { var dr = fq(bl, br, tr, tl, 0.42, 0.58, 0, 0.8 / F); fill(dr, P["ink-2"], 0.8); }
+      }
+      windows(A, B, B2, A2, w2, true); windows(B, C, C2, B2, d, false); ctx.globalAlpha = ga0;
+      stroke(left, P["line-2"], 1, 0.9); stroke(right, P["line-2"], 1, 0.9); stroke(roof, P["line-2"], 1, 0.9);
+      var cx0 = x + w2 / 2, cy0 = y + d / 2, ins = [[x + w2 * 0.07, y + d * 0.09], [x + w2 * 0.93, y + d * 0.09], [x + w2 * 0.93, y + d * 0.91], [x + w2 * 0.07, y + d * 0.91]].map(function (p) { return pr(p[0], p[1], L + H); });
+      fill(ins, dark ? "#000" : "#fff", dark ? 0.15 : 0.45); stroke(ins, P["line-2"], 1, 0.7);
+      if (b.kind === "lab") { var sk = [[x + w2 * 0.3, y + d * 0.28], [x + w2 * 0.7, y + d * 0.28], [x + w2 * 0.7, y + d * 0.72], [x + w2 * 0.3, y + d * 0.72]].map(function (p) { return pr(p[0], p[1], L + H); }); fill(sk, P.brand, 0.45); stroke(sk, P["brand-ink"], 1, 0.7); }
+      else if (b.kind === "office") { var px = x + w2 * 0.62, py = y + d * 0.22, pz = L + H, pw = 0.8, pd2 = 0.6, ph = 0.2; var pa = pr(px, py + pd2, pz), pb = pr(px + pw, py + pd2, pz), pc = pr(px + pw, py, pz), pa2 = pr(px, py + pd2, pz + ph), pb2 = pr(px + pw, py + pd2, pz + ph), pc2 = pr(px + pw, py, pz + ph), pd3 = pr(px, py, pz + ph); fill([pa, pb, pb2, pa2], leftC); fill([pb, pc, pc2, pb2], rightC); fill([pd3, pc2, pb2, pa2], topC); stroke([pd3, pc2, pb2, pa2], P["line-2"], 1, 0.8); stroke([pa, pb, pb2, pa2], P["line-2"], 1, 0.6); stroke([pb, pc, pc2, pb2], P["line-2"], 1, 0.6); }
+    }
+    var hex = [A, B, C, C2, D2, A2];
+    if (st.hover) { fill(left, P.brand, 0.13); fill(right, P.brand, 0.13); fill(roof, P.brand, 0.18); stroke(hex, P.brand, 2, 1); }
+    if (st.sel) stroke(hex, P.brand, 2.5, 1);
+    /* badge */
+    var cp = pr(x + w2 / 2, y + d / 2, L + H), txt = b.id + " · " + (wire ? "Q3 2027" : String(st.count == null ? 0 : st.count)), zero = !wire && !st.count;
+    ctx.font = "800 12px " + P.font; var tw = ctx.measureText(txt).width, bw = Math.max(26, tw + 16), bx = cp[0] - bw / 2, by = cp[1] - 12;
+    function pill(px, py, pw2, ph2) { ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(px, py, pw2, ph2, ph2 / 2); else ctx.rect(px, py, pw2, ph2); }
+    ctx.save(); ctx.globalAlpha = a; ctx.shadowColor = "rgba(0,0,0,.25)"; ctx.shadowBlur = 5; ctx.shadowOffsetY = 2;
+    ctx.fillStyle = wire ? P.surface : zero ? P.surface : P.brand; pill(bx, by, bw, 22); ctx.fill(); ctx.restore();
+    ctx.globalAlpha = a; ctx.strokeStyle = zero || wire ? P["ink-3"] : P.brand; ctx.lineWidth = 1; ctx.setLineDash(wire ? [3, 2] : []); pill(bx, by, bw, 22); ctx.stroke(); ctx.setLineDash([]);
+    if (st.ai) { ctx.strokeStyle = P.ai; ctx.lineWidth = 2; pill(bx - 3, by - 3, bw + 6, 28); ctx.stroke(); }
+    ctx.fillStyle = zero || wire ? P["ink-2"] : P["on-brand"]; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(txt, cp[0], by + 11.5);
+    /* label */
+    if (cfg.labels) { var lp = pr(x + w2, y + d, 0); ctx.font = "700 12px " + P.font; ctx.textBaseline = "top"; var lt = b.id + " " + b.name; ctx.lineWidth = 4; ctx.strokeStyle = P["surface-2"]; ctx.lineJoin = "round"; ctx.strokeText(lt, lp[0], lp[1] + 5); ctx.fillStyle = P["ink-2"]; ctx.fillText(lt, lp[0], lp[1] + 5); }
+    ctx.globalAlpha = 1;
+    hits.push({ id: b.id, poly: hex.concat([cp]), dep: b.x + b.w / 2 + b.y + b.d / 2, badge: [bx, by, bw, 22] });
+  }
+  items.forEach(function (it) { if (it.tree) { ctx.globalAlpha = 1; drawTree(it.tree); } else if (it.car) drawCar(it.car); else drawB(it.b); });
+  ctx.globalAlpha = 1;
+  if (cfg.compass) {
+    var cx = w - 38, cy = h - 38, ux = 0.894, uy = -0.447, px2 = -uy, py2 = ux;
+    ctx.fillStyle = P.surface; ctx.globalAlpha = 0.92; ctx.beginPath(); ctx.arc(cx, cy, 17, 0, 7); ctx.fill(); ctx.globalAlpha = 1; ctx.strokeStyle = P["line-2"]; ctx.lineWidth = 1; ctx.stroke();
+    ctx.fillStyle = P.ink; path([[cx + ux * 12, cy + uy * 12], [cx - ux * 5 + px2 * 4.5, cy - uy * 5 + py2 * 4.5], [cx - ux * 5 - px2 * 4.5, cy - uy * 5 - py2 * 4.5]]); ctx.fill();
+    ctx.fillStyle = P["ink-2"]; ctx.font = "800 11px " + P.font; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("N", cx + ux * 25, cy + uy * 25 - 1);
+  }
+  return hits;
+}
+var MP = null, HITS = [], LIFT = {}, ANIM = {}, rafId = 0, cv = $("#map");
+function refreshPalette() { MP = palette(app); }
+function mapState() {
+  var c = counts(), st = {}, any = !!(E && E.bld), ids = S.ai.phase === "applied" ? S.ai.ids : [];
+  Object.keys(DATA.buildings).forEach(function (k) {
+    var B = DATA.buildings[k], sel = E && E.bld === k, a = 1;
+    if (any && !sel) a = 0.5; else if (!B.building && !c[k]) a = 0.62;
+    st[k] = { count: c[k], alpha: a, hover: S.hover === k && !sel, sel: sel, lift: LIFT[k] || 0, ai: ids.some(function (id) { return unit(id).b === k; }) };
+  });
+  return st;
+}
+function frame(ts) {
+  rafId = 0; var busy = false;
+  Object.keys(ANIM).forEach(function (k) { var a = ANIM[k], t = MP.ms ? Math.min(1, (ts - a.t0) / MP.ms) : 1; LIFT[k] = a.from + (a.to - a.from) * (1 - Math.pow(1 - t, 3)); if (t < 1) busy = true; else delete ANIM[k]; });
+  if (!MP) refreshPalette();
+  var cfg = Object.assign({}, MAPCFG, { pal: MP, state: mapState(), labels: false, compass: true, padding: app.clientWidth < 560 ? { l: 6, r: 6, t: 34, b: 38 } : { l: 14, r: 14, t: 56, b: 52 } });
+  HITS = drawScene(cv, cfg) || [];
+  if (busy) kick();
+}
+function kick() { if (!rafId) rafId = requestAnimationFrame(frame); }
+function mapDraw() { kick(); }
+function setTargets() {
+  Object.keys(DATA.buildings).forEach(function (k) {
+    var to = E && E.bld === k ? 1 : 0; if (LIFT[k] == null) LIFT[k] = 0;
+    if (reduced() || !MP || !MP.ms) { LIFT[k] = to; delete ANIM[k]; }
+    else if ((ANIM[k] ? ANIM[k].to : LIFT[k]) !== to) ANIM[k] = { from: LIFT[k], to: to, t0: performance.now() };
+  });
+  kick();
+}
+function inPoly(p, poly) { var c = false; for (var i = 0, j = poly.length - 1; i < poly.length; j = i++) { var a = poly[i], b = poly[j]; if ((a[1] > p[1]) !== (b[1] > p[1]) && p[0] < (b[0] - a[0]) * (p[1] - a[1]) / (b[1] - a[1]) + a[0]) c = !c; } return c; }
+function hitAt(x, y) {
+  var hs = HITS.slice().sort(function (a, b) { return b.dep - a.dep; });
+  for (var i = 0; i < hs.length; i++) { var h = hs[i], bd = h.badge; if (inPoly([x, y], h.poly.slice(0, 6)) || (x >= bd[0] && x <= bd[0] + bd[2] && y >= bd[1] && y <= bd[1] + bd[3])) return h; }
+  return null;
+}
+function setHover(id, x, y) {
+  var tip = $("#mapTip");
+  if (S.hover !== id) { S.hover = id; kick(); $$(".lg").forEach(function (b) { b.classList.toggle("is-hover", b.dataset.b === id); }); }
+  if (!id) { tip.hidden = true; cv.style.cursor = "default"; return; }
+  cv.style.cursor = "pointer";
+  var c = counts(), B = DATA.buildings[id];
+  tip.innerHTML = "<b>" + bname(id) + "</b><span>" + (B.building ? "Under construction, ready " + B.ready : plural(c[id], "matching unit", "matching units")) + "</span>"; tip.hidden = false;
+  if (x != null) { var W = $("#mapWrap").clientWidth, tw = tip.offsetWidth; tip.style.left = Math.max(6, Math.min(W - tw - 6, x + 14)) + "px"; tip.style.top = Math.max(6, y - 48) + "px"; }
+  else { var hh = HITS.filter(function (q) { return q.id === id; })[0]; if (hh) { tip.style.left = Math.max(6, hh.badge[0]) + "px"; tip.style.top = Math.max(6, hh.badge[1] - 50) + "px"; } }
+}
+function selectBuilding(id) {
+  S.f.bld = S.f.bld === id ? null : id; S.view = "browse"; S.tab = "browse"; S.spNote = "";
+  renderAll(); setTargets();
+  var c = counts(); announce(S.f.bld ? bname(id) + " selected. " + (DATA.buildings[id].building ? "Under construction." : plural(c[id], "matching unit", "matching units") + ". Stacking plan shown below the filters.") : "Selection cleared.");
+}
+cv.addEventListener("pointermove", function (e) { if (e.pointerType === "touch") return; var r = cv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top, h = hitAt(x, y); setHover(h ? h.id : null, x, y); });
+cv.addEventListener("pointerleave", function () { setHover(null); });
+cv.addEventListener("click", function (e) { var r = cv.getBoundingClientRect(), h = hitAt(e.clientX - r.left, e.clientY - r.top); if (h) selectBuilding(h.id); });
+
+/* ================= SAMPLE CANVASES (new components section) ================= */
+function drawSamples() {
+  var scope = $("#ncMapBy"); if (!scope) return; var pal = palette(scope);
+  $$("canvas[data-st]", scope).forEach(function (c) {
+    var k = c.dataset.st, st = { count: k === "muted" ? 0 : 3, alpha: k === "muted" ? 0.62 : 1, hover: k === "hover", sel: k === "selected", lift: k === "selected" ? 1 : 0 };
+    drawScene(c, { pal: pal, W: 6, D: 5, b: [{ id: "B", x: 1.3, y: 0.9, w: 3.4, d: 2.8, fl: 4, fh: 0.62, kind: "office" }], state: { B: st }, padding: { l: 8, r: 8, t: 34, b: 12 } });
+  });
+}
+function renderNC() {
+  var sp = $("#ncSp");
+  if (sp) sp.innerHTML = [[260, "", "3.1", "260 m²"], [90, "is-leased", "", ""], [140, "is-res", "3.3", "140"], [180, "is-short", "3.4 ✓", "180"], [120, "is-match", "3.5", "120"], [120, "is-ai", "3.6", "120"]].map(function (x) { return '<div class="sp-u ' + x[1] + '" style="--w:' + x[0] + '">' + x[2] + (x[3] ? "<small>" + x[3] + "</small>" : "") + "</div>"; }).join("");
+  var nc = $("#ncChips");
+  if (nc) nc.innerHTML = [["Default", chipHTML("ratio", 0.7, "default", 0.7)], ["Hover", chipHTML("sqm", 8.5, "hover", 8.5)], ["Editing", chipHTML("workshop", 40, "editing", 40)], ["Edited (was 0.7)", chipHTML("ratio", 0.8, "default", 0.7)], ["Error (outside 0.3 to 1)", chipHTML("ratio", 0.2, "editing", 0.7, "x") + '<div class="by-help is-error">' + ic("alert") + "<span>Use a ratio from 0.3 to 1.</span></div>"]]
+    .map(function (x) { return "<div><small>" + x[0] + '</small><div class="as-row">' + x[1] + "</div></div>"; }).join("").replace(/id="asIn"/g, "").replace(/for="asIn"/g, "");
+}
+
+/* ================= EVENTS ================= */
+function setTheme(t) { app.setAttribute("data-by", t); $$("[data-th]").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.th === t)); }); refreshPalette(); kick(); }
+function openSheet(o) {
+  S.fOpen = o; var f = $("#filters"), narrow = window.matchMedia("(max-width: 880px)").matches;
+  f.classList.toggle("is-open", o && narrow); $("#sheetBd").classList.toggle("is-open", o && narrow); $("#fBtn").setAttribute("aria-expanded", String(o && narrow));
+  if (o && narrow) { f.setAttribute("role", "dialog"); f.setAttribute("aria-modal", "true"); f.setAttribute("aria-labelledby", "sheetT"); setTimeout(function () { $("#sheetX").focus(); }, 30); } else { f.removeAttribute("role"); f.removeAttribute("aria-modal"); f.removeAttribute("aria-labelledby"); if (narrow) $("#fBtn").focus(); }
+}
+function scrollApp() { var r = reduced(); app.scrollIntoView({ behavior: r ? "auto" : "smooth", block: "start" }); }
+function readFilter(clearOrder) { S.f.min = $("#fMin").value; S.f.max = $("#fMax").value; S.f.rent = $("#fRent").value; S.people = $("#fPeople").value; S.f.move = $("#fMove").value; if (clearOrder) S.orderCheck = false; renderAll(); setTargets(); }
+["#fMin", "#fMax"].forEach(function (id) { $(id).addEventListener("input", function () { readFilter(true); }); $(id).addEventListener("change", function () { S.orderCheck = true; readFilter(false); }); });
+$("#fRent").addEventListener("input", function () { readFilter(false); }); $("#fPeople").addEventListener("input", function () { readFilter(false); }); $("#fMove").addEventListener("change", function () { readFilter(false); });
+$("#filters").addEventListener("submit", function (e) { e.preventDefault(); });
+$("#fBtn").addEventListener("click", function () { openSheet(true); });
+$("#sheetX").addEventListener("click", function () { openSheet(false); }); $("#sheetOk").addEventListener("click", function () { openSheet(false); }); $("#sheetBd").addEventListener("click", function () { openSheet(false); });
+app.addEventListener("keydown", function (e) {
+  if (e.key === "Escape" && S.fOpen) { openSheet(false); return; }
+  if (e.target.id === "asIn") { if (e.key === "Enter") { e.preventDefault(); aiCommit(); } else if (e.key === "Escape") { var k = S.ai.edit; S.ai.edit = null; S.ai.editErr = ""; renderAI(); var b = $('[data-act="edit"][data-k="' + k + '"]'); if (b) b.focus(); } }
+});
+app.addEventListener("input", function (e) {
+  var t = e.target; if (!t.closest("#bkForm")) return;
+  if (S.book && t.id && /^bk(Name|Company|Email)$/.test(t.id)) { bookReadFields(); if (S.book.errs[t.id]) { delete S.book.errs[t.id]; t.removeAttribute("aria-invalid"); var m = $("#" + t.id + "E"); if (m) { m.hidden = true; } } }
+});
+app.addEventListener("submit", function (e) { e.preventDefault(); if (e.target.id === "bkForm") bookSubmit(); });
+$("#fTypes").addEventListener("click", function (e) { var b = e.target.closest("[data-type]"); if (!b) return; var i = S.f.types.indexOf(b.dataset.type); if (i > -1) S.f.types.splice(i, 1); else S.f.types.push(b.dataset.type); renderAll(); setTargets(); });
+$$("[data-th]").forEach(function (b) { b.addEventListener("click", function () { setTheme(b.dataset.th); }); });
+$("#aiGo").addEventListener("click", aiRun);
+$("#resetBtn").addEventListener("click", function () { resetAll(); toast("Demo reset to its starting state.", null); });
+var HOVTIP = null;
+app.addEventListener("mouseover", function (e) { var u = e.target.closest(".sp-u[data-id]"); if (u) spTip(u); });
+app.addEventListener("focusin", function (e) { var u = e.target.closest(".sp-u[data-id]"); if (u) spTip(u); });
+app.addEventListener("mouseout", function (e) { if (e.target.closest(".sp-u[data-id]")) { var t = $("#spTip"); if (t) t.hidden = true; } });
+app.addEventListener("focusout", function (e) { if (e.target.closest(".sp-u[data-id]")) { var t = $("#spTip"); if (t) t.hidden = true; } });
+function spTip(el) {
+  var t = $("#spTip"), sp = el.closest(".sp"); if (!t) return; var u = unit(el.dataset.id);
+  t.textContent = u.id + " · " + u.area + " m² · " + (u.st === "leased" ? "Leased" : u.st === "reserved" ? "Reserved" : u.from <= NOW ? "Available" : "Available from " + ym(u.from)) + (u.st !== "leased" ? " · " + eur(u.total) + " / month" : ""); t.hidden = false;
+  var r = el.getBoundingClientRect(), pr0 = sp.getBoundingClientRect(); t.style.left = Math.max(4, Math.min(pr0.width - t.offsetWidth - 4, r.left - pr0.left + r.width / 2 - t.offsetWidth / 2)) + "px"; t.style.top = (r.top - pr0.top - t.offsetHeight - 6) + "px";
+}
+app.addEventListener("click", function (e) {
+  var el = e.target.closest("[data-act],[data-toast]"); if (!el) return;
+  if (el.hasAttribute("data-toast")) { var fn = toastFn; $("#toastSlot").innerHTML = ""; if (fn) fn(); return; }
+  var a = el.dataset.act, id = el.dataset.id;
+  switch (a) {
+    case "tab": S.tab = el.dataset.v; S.view = "browse"; renderAll(); break;
+    case "sort": S.sort = el.dataset.s; renderAll(); break;
+    case "rm": { var k = el.dataset.k; if (k === "types") S.f.types = []; else if (k === "area") { S.f.min = ""; S.f.max = ""; } else if (k === "move") S.f.move = ""; else if (k === "rent") S.f.rent = ""; else if (k === "bld") S.f.bld = null; S.orderCheck = true; syncInputs(); renderAll(); setTargets(); announce("Filter removed."); break; }
+    case "clear": S.f = { types: [], min: "", max: "", move: "", rent: "", bld: null }; S.orderCheck = true; syncInputs(); renderAll(); setTargets(); announce("All filters cleared."); break;
+    case "useRange": { var h = areaHint(pint(S.people).v); S.f.min = String(h.min); S.f.max = String(h.max); S.orderCheck = true; syncInputs(); renderAll(); setTargets(); break; }
+    case "fix": if (S.sug) { S.f = S.sug.f2; S.orderCheck = true; syncInputs(); renderAll(); setTargets(); announce("Filters changed. " + $("#resCount").textContent + "."); } break;
+    case "bld": selectBuilding(el.dataset.b); break;
+    case "open": openUnit(id, el.dataset.from); break;
+    case "spu": { var u = unit(id); if (u.st === "leased") { S.spNote = u.id + " is leased. Pick a unit marked Available or Reserved."; var n = $("#spNote"); if (n) n.textContent = S.spNote; } else openUnit(id); break; }
+    case "short": toggleShort(id); break;
+    case "compare": openCompare(); break;
+    case "back": goBack(); break;
+    case "backAll": S.view = "browse"; S.book = null; renderAll(); break;
+    case "book": openBook(id); break;
+    case "sample": bookReadFields(); S.book.name = "Jonas Vitols"; S.book.company = "Northlight Robotics"; S.book.email = "jonas@northlight.example"; S.book.errs = {}; renderBook(); break;
+    case "date": bookReadFields(); S.book.date = el.dataset.d; if ((TAKEN[S.book.date] || []).indexOf(S.book.time) > -1) S.book.time = ""; delete S.book.errs.date; S.book.state = "form"; renderBook(); break;
+    case "time": bookReadFields(); S.book.time = el.dataset.t; delete S.book.errs.time; if (S.book.state === "conflict") S.book.state = "form"; renderBook(); break;
+    case "altTime": bookReadFields(); S.book.state = "form"; bookSubmit(el.dataset.t); break;
+    case "again": S.book = newBook(S.book.id); renderBook(); focusDrill(); break;
+    case "follow": S.follow = !S.follow; renderStack(); announce(S.follow ? "You will hear when Quay opens." : "Not following Quay."); { var fb = $('[data-act="follow"]'); if (fb) fb.focus(); } break;
+    case "edit": S.ai.edit = el.dataset.k; S.ai.editVal = String(S.ai.A[S.ai.edit]); S.ai.editErr = ""; S.ai.msg = ""; renderAI(); break;
+    case "asSave": aiCommit(); break;
+    case "asCancel": { var kk = S.ai.edit; S.ai.edit = null; S.ai.editErr = ""; renderAI(); var bb = $('[data-act="edit"][data-k="' + kk + '"]'); if (bb) bb.focus(); break; }
+    case "apply": aiApply(); break;
+    case "undo": aiUndo(); break;
+    case "notquite": S.ai.phase = "clarify"; S.ai.edit = null; renderAI(); break;
+    case "clarCancel": S.ai.phase = "proposal"; renderAI(); break;
+    case "clar": aiClar(el.dataset.c); break;
+    case "showres": S.tab = "browse"; S.view = "browse"; renderAll(); break;
+  }
+});
+$$("#legend").forEach(function (lg) {
+  lg.addEventListener("mouseover", function (e) { var b = e.target.closest("[data-b]"); if (b) setHover(b.dataset.b); });
+  lg.addEventListener("focusin", function (e) { var b = e.target.closest("[data-b]"); if (b) setHover(b.dataset.b); });
+  lg.addEventListener("mouseout", function () { setHover(null); }); lg.addEventListener("focusout", function () { setHover(null); });
+});
+
+/* ================= JUMPS ================= */
+function resetAll() {
+  resetData(); S.f = { types: ["Office"], min: "230", max: "290", move: "2027-04", rent: "", bld: null }; S.people = "35"; S.orderCheck = true; S.sort = "best"; S.tab = "browse"; S.view = "browse"; S.short = []; S.unit = null; S.fullMsg = null; S.follow = false; S.spNote = ""; S.book = null;
+  S.ai = { phase: "idle", text: PROMPT, step: 0, A: null, A0: null, ids: [], prev: null, edit: null, editVal: "", editErr: "", flash: [], msg: "", err: "" };
+  $("#aiText").value = PROMPT; $("#toastSlot").innerHTML = ""; syncInputs(); renderAll(); setTargets();
+}
+var JUMPS = {
+  bldD: function () { resetAll(); S.f.types = []; S.f.min = ""; S.f.max = ""; S.f.move = ""; syncInputs(); selectBuilding("D"); },
+  ai: function () { resetAll(); S.tab = "ask"; renderAll(); aiRun(); },
+  compare: function () { resetAll(); S.short = ["C-2.1", "C-1.2", "D-1.2"]; openCompare(); },
+  book: function () { resetAll(); openBook("B-3.2"); },
+  nomatch: function () { resetAll(); S.f = { types: ["Lab"], min: "100", max: "200", move: "2027-01", rent: "", bld: null }; syncInputs(); renderAll(); setTargets(); },
+  filtererr: function () { resetAll(); S.f.min = "300"; S.f.max = "200"; syncInputs(); renderAll(); setTargets(); },
+  full: function () { resetAll(); S.short = ["C-2.1", "C-1.2", "D-1.2"]; openUnit("B-3.2", "browse"); toggleShort("B-3.2"); },
+  reserved: function () { resetAll(); openUnit("B-3.2", "browse"); setTimeout(function () { var u = unit("B-3.2"); u.st = "reserved"; u.note = "Reserved 2 min ago"; renderAll(); announce("B-3.2 was reserved 2 minutes ago."); }, reduced() ? 100 : 1100); },
+  quay: function () { resetAll(); selectBuilding("E"); },
+  conflict: function () { resetAll(); openBook("B-3.2"); var b = S.book; b.name = "Jonas Vitols"; b.company = "Northlight Robotics"; b.email = "jonas@northlight.example"; b.date = "2026-11-17"; b.time = "10:30"; renderBook(); setTimeout(function () { bookSubmit(); }, 700); }
+};
+$$("[data-jump]").forEach(function (b) { b.addEventListener("click", function () { JUMPS[b.dataset.jump](); scrollApp(); }); });
+
+/* ================= INIT ================= */
+(function init() {
+  var sel = $("#fMove"), o = '<option value="">Any date</option>';
+  for (var i = 0; i < 12; i++) o += '<option value="2027-' + (i < 9 ? "0" : "") + (i + 1) + '">' + MON[i] + " 2027</option>";
+  sel.innerHTML = o; $("#aiText").value = PROMPT;
+  refreshPalette(); syncInputs(); renderAll(); setTargets(); renderNC(); drawSamples();
+  if (window.ResizeObserver) { new ResizeObserver(function () { kick(); drawSamples(); }).observe($("#mapWrap")); } else window.addEventListener("resize", function () { kick(); drawSamples(); });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { refreshPalette(); kick(); drawSamples(); });
+  var mq = window.matchMedia("(max-width: 880px)"); (mq.addEventListener || mq.addListener).call(mq, "change", function () { openSheet(false); });
+})();
+
+})();
+
+</script>
+</body>
+</html>

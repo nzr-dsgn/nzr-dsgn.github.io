@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Shop-Chain Revenue Bot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="../assets/site.css">
+<style>
+
+/* ---------- one accent per bot (light + dark). A page sets --accent from its own --bN ---------- */
+:root { --b1:#C42463; --b1s:#fce3ed; --b1i:#ffffff; --b2:#6A35D8; --b2s:#ece4ff; --b2i:#ffffff; --b3:#0A7468; --b3s:#d9f2ed; --b3i:#ffffff; --b4:#A94B06; --b4s:#fdebd0; --b4i:#ffffff; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --b1:#FF8DB3; --b1s:#3c1428; --b1i:#2a0a17; --b2:#B99CFF; --b2s:#2a1f58; --b2i:#1a0b3a; --b3:#4FD3C2; --b3s:#0f3430; --b3i:#05211d; --b4:#F5A524; --b4s:#3a2a0a; --b4i:#241600; }
+}
+:root[data-theme="dark"] { --b1:#FF8DB3; --b1s:#3c1428; --b1i:#2a0a17; --b2:#B99CFF; --b2s:#2a1f58; --b2i:#1a0b3a; --b3:#4FD3C2; --b3s:#0f3430; --b3i:#05211d; --b4:#F5A524; --b4s:#3a2a0a; --b4i:#241600; }
+body.p-b1, .bc.b1 { --accent: var(--b1); --accent-soft: var(--b1s); --accent-ink: var(--b1i); }
+body.p-b2, .bc.b2 { --accent: var(--b2); --accent-soft: var(--b2s); --accent-ink: var(--b2i); }
+body.p-b3, .bc.b3 { --accent: var(--b3); --accent-soft: var(--b3s); --accent-ink: var(--b3i); }
+body.p-b4, .bc.b4 { --accent: var(--b4); --accent-soft: var(--b4s); --accent-ink: var(--b4i); }
+.mono-ava { width: 64px; height: 64px; flex: none; border-radius: 18px; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font: 800 32px/1 var(--display); box-shadow: 0 0 0 4px var(--accent-soft); }
+
+/* ---------- page-level helpers ---------- */
+.meta div { align-content: start; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.ic { width: 18px; height: 18px; flex: none; }
+.four { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 16px; }
+.four .box { gap: 10px; }
+.four .box h3 { font-size: 19px; }
+.four .box p { font-size: 14.5px; color: var(--ink-2); }
+.four .box p b { color: var(--ink); font-weight: 600; }
+.four .box a { font: 600 13.5px var(--text); margin-top: 4px; }
+.stage { display: grid; grid-template-columns: minmax(0, 360px) minmax(0, 1fr); gap: 32px 40px; align-items: start; }
+.stage > * { min-width: 0; }
+.stack { display: grid; gap: 20px; align-content: start; min-width: 0; }
+.duo { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 360px)); gap: 28px 32px; align-items: start; }
+.duo > * { min-width: 0; }
+.cap { font-size: 14px; color: var(--ink-2); max-width: 60ch; }
+.cap b { color: var(--ink); }
+.small { font-size: 14.5px; color: var(--ink-2); }
+.small b { color: var(--ink); font-weight: 600; }
+.note-line { font: 500 12px/1.5 var(--mono); color: var(--ink-2); }
+@media (max-width: 860px) { .stage { grid-template-columns: minmax(0, 1fr); } }
+/* ---------- Telegram-like phone (new component: chat bubble + inline keyboard) ---------- */
+.tg { width: 100%; max-width: 360px; height: 580px; display: grid; grid-template-rows: auto minmax(0, 1fr) auto auto; background: var(--surface); border: 1px solid var(--rule); border-radius: 28px; box-shadow: var(--shadow); overflow: hidden; }
+.tg-head { display: flex; gap: 12px; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--rule); background: var(--surface); min-width: 0; }
+.tg-head > div { min-width: 0; display: grid; }
+.tg-head b { font: 700 15px/1.2 var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tg-head small { font: 500 11.5px var(--mono); color: var(--ink-2); }
+.tg-ava { width: 36px; height: 36px; flex: none; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font: 700 15px var(--display); }
+.tg-body { overflow-y: auto; overscroll-behavior: contain; padding: 14px 12px; display: flex; flex-direction: column; gap: 8px; background: var(--surface-2); scroll-behavior: auto; }
+.tg-body:focus-visible { outline-offset: -3px; }
+.tg-msg { max-width: 88%; font: 400 14px/1.45 var(--text); padding: 9px 12px; border-radius: 14px; overflow-wrap: anywhere; word-break: break-word; }
+.tg-msg.in { align-self: flex-start; background: var(--surface); border: 1px solid var(--rule); border-bottom-left-radius: 4px; }
+.tg-msg.out { align-self: flex-end; background: var(--accent); color: var(--accent-ink); border-bottom-right-radius: 4px; }
+.tg-msg b { font-weight: 600; }
+.tg-msg code { font: 500 12.5px var(--mono); }
+.tg-msg.pill { align-self: center; max-width: 94%; text-align: center; background: transparent; padding: 4px 8px; font: 500 11px/1.4 var(--mono); letter-spacing: .04em; text-transform: uppercase; color: var(--ink-2); }
+.tg-msg.card { align-self: center; max-width: 96%; width: 96%; border: 1px dashed var(--rule); border-radius: 12px; background: var(--surface); }
+.tg-msg.card .who { font: 600 12px var(--mono); color: var(--ink-2); margin-bottom: 4px; display: block; letter-spacing: .04em; text-transform: uppercase; }
+.tg-msg.typing { display: flex; gap: 4px; padding: 12px 14px; }
+.tg-msg.typing i { width: 6px; height: 6px; border-radius: 50%; background: var(--ink-2); animation: tgdot 1s infinite ease-in-out; }
+.tg-msg.typing i:nth-child(2) { animation-delay: .15s; } .tg-msg.typing i:nth-child(3) { animation-delay: .3s; }
+@keyframes tgdot { 0%, 80%, 100% { opacity: .25; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-3px); } }
+.tg-msg.is-new { animation: tgin 180ms cubic-bezier(.2, 0, 0, 1); }
+@keyframes tgin { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.tg-kb { display: grid; gap: 4px; align-self: stretch; margin-top: -2px; }
+.tg-kb .r { display: flex; gap: 4px; }
+.tg-btn { flex: 1 1 0; min-width: 0; min-height: 38px; padding: 8px 10px; border: 0; border-radius: 10px; background: var(--accent-soft); color: var(--accent); font: 600 13px/1.25 var(--text); text-align: center; overflow-wrap: anywhere; transition: background 100ms, transform 100ms, opacity 180ms; display: flex; align-items: center; justify-content: center; }
+.tg-btn:hover:not(:disabled) { background: var(--accent); color: var(--accent-ink); }
+.tg-btn:active:not(:disabled) { transform: scale(.98); }
+.tg-btn:disabled { cursor: default; }
+.tg-btn.is-picked { background: var(--accent); color: var(--accent-ink); }
+.tg-btn.is-spent:not(.is-picked) { opacity: .45; }
+.tg-btn.is-inert { opacity: .55; cursor: not-allowed; }
+.tg-chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 12px 0; background: var(--surface); border-top: 1px solid var(--rule); min-height: 8px; }
+.tg-chips:empty { display: none; }
+.tg-chips button { border: 1px dashed var(--accent); background: transparent; color: var(--accent); border-radius: 999px; padding: 5px 11px; font: 500 12.5px var(--mono); }
+.tg-chips button:hover { background: var(--accent-soft); }
+.tg-form { display: flex; gap: 8px; padding: 10px 12px 12px; background: var(--surface); }
+.tg-chips:empty + .tg-form { border-top: 1px solid var(--rule); }
+.tg-form input { flex: 1; min-width: 0; font: 400 14px var(--text); color: var(--ink); background: var(--surface-2); border: 1px solid var(--rule); border-radius: 999px; padding: 9px 14px; }
+.tg-form input:disabled { opacity: .6; }
+.tg-form input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.tg-send { width: 40px; height: 40px; flex: none; border: 0; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; }
+.tg-send:disabled { opacity: .4; cursor: default; }
+.tg-static { display: grid; gap: 4px; max-width: 360px; background: var(--surface-2); border: 1px solid var(--rule); border-radius: 20px; padding: 12px; }
+.tg-static .tg-btn { cursor: default; }
+/* demo control bar: the narrator, not the bot (new component) */
+.ctl { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; max-width: 360px; }
+.ctl button { border: 1px dashed var(--ink-2); background: transparent; color: var(--ink); border-radius: 8px; padding: 8px 12px; font: 600 12.5px var(--text); display: inline-flex; gap: 6px; align-items: center; transition: border-color 100ms, background 100ms; }
+.ctl button:hover { border-color: var(--accent); background: var(--accent-soft); }
+.ctl button .ic { width: 14px; height: 14px; }
+.ctl .hint { flex-basis: 100%; font: 500 11.5px/1.4 var(--mono); color: var(--ink-2); letter-spacing: .03em; }
+/* phone-shaped screenshot frame */
+.pshots { display: flex; flex-wrap: wrap; gap: 28px 24px; align-items: flex-start; }
+.pshot { width: min(100%, 270px); display: grid; gap: 12px; }
+.pshot > div { background: var(--surface); border: 1px solid var(--rule); border-radius: 32px; padding: 7px; box-shadow: var(--shadow); }
+.pshot img { border-radius: 26px; border: 0; box-shadow: none; width: 100%; height: auto; display: block; background: var(--surface-2); aspect-ratio: 780 / 1688; }
+.pshot figcaption { font-size: 13.5px; }
+.pshots .side { flex: 1 1 240px; display: grid; gap: 14px; align-content: start; max-width: 46ch; }
+/* new component sheet */
+.comp { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 16px; }
+.comp .box { align-content: start; }
+.comp .box h3 { font-size: 17px; }
+.comp .demo { display: grid; gap: 8px; justify-items: start; }
+.comp .states { font: 500 12px/1.5 var(--mono); color: var(--ink-2); }
+.pipe-mini { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
+.pipe-mini .pn { margin: 0; } .pipe-mini .pn::before, .pipe-mini .pn::after { display: none; }
+
+/* ---------- bot switcher ---------- */
+.bs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-top: 20px; }
+.bs a { display: flex; align-items: center; gap: 8px; min-width: 0; padding: 11px 12px; border: 1px solid var(--rule); border-radius: 10px; background: var(--surface); color: var(--ink-2); text-decoration: none; font: 600 13.5px/1.2 var(--text); transition: border-color 100ms, background 100ms; }
+.bs a:hover { border-color: var(--ink-2); color: var(--ink); }
+.bs a > i { width: 10px; height: 10px; border-radius: 50%; flex: none; background: var(--c); }
+.bs a > b { font: 600 11px var(--mono); color: var(--ink-2); flex: none; }
+.bs a > span { min-width: 0; overflow-wrap: anywhere; }
+.bs a[aria-current="page"] { color: var(--ink); background: var(--surface-2); border-color: var(--c); box-shadow: inset 0 -3px 0 var(--c); font-weight: 700; }
+.bs .c1 { --c: var(--b1); } .bs .c2 { --c: var(--b2); } .bs .c3 { --c: var(--b3); } .bs .c4 { --c: var(--b4); }
+@media (max-width: 720px) { .bs { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.case-hero.bot { padding-block-start: 40px; }
+.bot-id { display: flex; gap: 16px; align-items: center; min-width: 0; }
+.bot-id > div { display: grid; gap: 4px; min-width: 0; }
+.bot-id .label b { color: var(--accent); font-weight: 600; }
+.bot-id a { font: 500 13px var(--text); }
+.who { font-size: 16.5px; max-width: 62ch; border-left: 3px solid var(--accent); padding: 2px 0 2px 14px; color: var(--ink); }
+.who b { font: 600 11.5px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--accent); margin-right: 6px; }
+.case-hero.bot h1 { font-size: clamp(36px, 6.2vw, 72px); }
+
+/* security checklist (new component) */
+.sl { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 14px; }
+.sl > div { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 4px 12px; background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 16px 18px; align-content: start; min-width: 0; }
+.sl > div > i { width: 28px; height: 28px; border-radius: 8px; background: var(--ok-soft); color: var(--ok); display: grid; place-items: center; font-style: normal; grid-row: span 2; }
+.sl .ic { width: 16px; height: 16px; }
+.sl b { font: 600 15px/1.35 var(--text); }
+.sl p { font-size: 14px; color: var(--ink-2); grid-column: 2; }
+.todo { border-style: dashed; }
+.todo li::before { content: "\2192"; background: var(--warn-soft); color: var(--warn); }
+.nextbot { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 24px; align-items: center; padding: 22px 24px; border: 1px solid var(--rule); border-left: 8px solid var(--nc); border-radius: 12px; background: var(--surface); text-decoration: none; color: var(--ink); margin-top: 84px; }
+.nextbot:hover { border-color: var(--nc); }
+.nextbot > div { display: grid; gap: 4px; min-width: 0; }
+.nextbot b { font: 700 24px var(--display); letter-spacing: -.02em; }
+.nextbot span { font-size: 14.5px; color: var(--ink-2); }
+.nextbot em { font: 600 14px var(--text); font-style: normal; color: var(--ink); background: var(--nc); color: var(--nci); padding: 10px 16px; border-radius: 8px; white-space: nowrap; }
+.nextbot.n1 { --nc: var(--b1); --nci: var(--b1i); } .nextbot.n2 { --nc: var(--b2); --nci: var(--b2i); } .nextbot.n3 { --nc: var(--b3); --nci: var(--b3i); } .nextbot.n4 { --nc: var(--b4); --nci: var(--b4i); }
+.allbots { margin-top: 14px; font-size: 14px; }
+@media (max-width: 560px) { .nextbot { grid-template-columns: minmax(0, 1fr); } .nextbot em { justify-self: start; } }
+
+</style>
+</head>
+<body class="p-b4">
+<header class="bar">
+  <div class="wrap">
+    <a class="brand" href="../index.html"><i aria-hidden="true"></i><span id="brandName">Your Name</span></a>
+    <nav aria-label="Work">
+      <a href="../index.html#work">All work</a>
+      <a href="telegram-bots.html" aria-current="page">Bots</a>
+      <a href="security.html">Security</a>
+      <a href="plectra.html">Plectra</a>
+      <a href="brightyard-portal.html">Portal</a>
+      <a href="brightyard-mobile.html">Mobile</a>
+      <a href="brightyard-system.html">System</a>
+      <a href="voice-note.html">Voice note</a>
+      <a href="ai-states.html">AI states</a>
+      <a href="space-finder.html">Space finder</a>
+    </nav>
+    <button class="toggle" id="themeBtn" type="button" aria-label="Switch colour theme">Theme: auto</button>
+  </div>
+</header>
+
+<main class="wrap">
+  <nav class="bs" aria-label="The four bots">
+    <a class="c1" href="bot-salon.html"><i aria-hidden="true"></i><b>1</b><span>Salon</span></a>
+    <a class="c2" href="bot-shop.html"><i aria-hidden="true"></i><b>2</b><span>Aura Wear</span></a>
+    <a class="c3" href="bot-fabric.html"><i aria-hidden="true"></i><b>3</b><span>Fabric stock</span></a>
+    <a class="c4" href="bot-revenue.html" aria-current="page"><i aria-hidden="true"></i><b>4</b><span>Revenue</span></a>
+  </nav>
+  <div class="case-hero bot">
+    <div class="bot-id"><span class="mono-ava" aria-hidden="true">R</span><div><span class="label">Bot <b>4 of 4</b></span><a href="telegram-bots.html">All four bots</a></div></div>
+    <div class="row"><span class="kind shipped">Shipped</span><span class="kind">Telegram</span><span class="kind">Mini App</span></div>
+    <h1>Shop-Chain Revenue Bot</h1>
+    <p class="sub">A seller closes a shift in about 20 seconds. The owner sees one number per day, and a likely typo gets a question before it becomes a report.</p>
+    <p class="who"><b>For</b>A chain of shops: sellers who close a shift at the end of the day, and an owner who wants to know who has reported.</p>
+    <dl class="meta">
+      <div><dt class="label">Role</dt><dd>Product and conversation design, dashboard Mini App UI, built and deployed with Claude Code</dd></div>
+      <div><dt class="label">Stack</dt><dd>Python, aiogram 3, aiohttp, SQLite, Excel export, Docker</dd></div>
+      <div><dt class="label">Status</dt><dd>Shipped, ran on my server in October 2026</dd></div>
+      <div><dt class="label">Scale</dt><dd>About 1,400 lines of Python, 10 tests, 1 Mini App dashboard</dd></div>
+    </dl>
+    <p class="honest"><b>Honest note</b><span>This is a working product built with Claude Code and run on a Linux server in October 2026. Every demo and screenshot on this page uses invented data. Real customer data stays in the bot.</span></p>
+  </div>
+  <section id="chat" style="padding-top:56px">
+    <div class="sec-head">
+      <span class="num">01 · SELLER AND OWNER</span>
+      <h2>Close a shift in about 20 seconds</h2>
+      <p>Cash, terminal, check, send, and an optional photo of the Z-report. Type your own amounts: "8,4к", "8 450,50" and "8450" all work. The right phone is what the owner receives.</p>
+    </div>
+    <div class="duo">
+      <div class="stack">
+        <div class="tg" id="tgRev" role="group" aria-label="Seller shift chat demo">
+          <div class="tg-head"><span class="tg-ava" aria-hidden="true">О</span><div><b>Виручка</b><small>продавець · demo</small></div></div>
+          <div class="tg-body" role="log" aria-live="polite" aria-label="Chat messages" tabindex="0"></div>
+          <div class="tg-chips" aria-label="Suggested messages"></div>
+          <form class="tg-form"><label class="sr" for="revIn">Message</label><input id="revIn" type="text" autocomplete="off" placeholder="Повідомлення" disabled><button class="tg-send" type="submit" aria-label="Send message" disabled><svg class="ic" aria-hidden="true"><use href="#i-send"/></svg></button></form>
+        </div>
+        <div class="ctl" id="ctlRev" role="group" aria-label="Demo controls">
+          <button type="button" data-act="restart"><svg class="ic" aria-hidden="true"><use href="#i-refresh"/></svg>Restart</button>
+          <span class="hint">Tip: try 123000 as the terminal amount.</span>
+        </div>
+      </div>
+      <div class="stack">
+        <div class="tg" id="tgOwner" role="group" aria-label="Owner notifications">
+          <div class="tg-head"><span class="tg-ava" aria-hidden="true">В</span><div><b>Власник</b><small>сповіщення · demo</small></div></div>
+          <div class="tg-body" role="log" aria-live="polite" aria-label="Owner messages" tabindex="0"></div>
+          <div class="tg-chips" style="display:none"></div>
+          <div class="tg-form" style="justify-content:center"><span class="note-line" style="padding:8px">The seller's chat on the left feeds this one.</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="three">
+      <div><span class="label">Parsing</span><h3>People type money in odd ways</h3><p>"8 450,50", "12.500,50" and "8,4к" become amounts. Anything else gets "Не зрозумів суму" with an example.</p></div>
+      <div><span class="label">Safety net</span><h3>A likely typo gets a question</h3><p>If the total is far from the store's usual day, the bot asks "Все правильно?" before sending. Edits afterwards keep "було → стало" for the owner.</p></div>
+      <div><span class="label">Business day</span><h3>Late shifts count for yesterday</h3><p>A shift closed before 05:00 belongs to the previous day. The owner sees who has not reported yet, with a week-on-week comparison, and gets a reminder at 21:00.</p></div>
+    </div>
+    <div class="pshots">
+      <figure class="pshot"><div><img src="../shots/bots/revenue-overview-light.png" width="780" height="1688" loading="lazy" alt="Revenue Mini App in light theme: month total with comparison, average per day, card share, and a list of six stores showing which have reported today."></div><figcaption><b>Dashboard, light.</b> A shop that has not reported shows an hourglass, not a zero.</figcaption></figure>
+      <figure class="pshot"><div><img src="../shots/bots/revenue-overview-dark.png" width="780" height="1688" loading="lazy" alt="The same revenue dashboard in dark theme."></div><figcaption><b>Dashboard, dark.</b> Same tokens, status still carries an icon and a word.</figcaption></figure>
+      <div class="side">
+        <p class="small">The owner also gets a monthly Excel file with formulas. The Mini App checks Telegram's signed <b>initData</b> (HMAC) before it shows anything. 10 tests cover parsing, reports and the check. Demo mode gives each user a test chain of 4 shops.</p>
+        <p><a class="cta" href="bots/revenue-demo.html#light">Open the dashboard demo</a></p>
+        <p class="note-line">Demo data: invented shops and amounts.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="security">
+    <div class="sec-head">
+      <span class="num">SECURITY IN THIS BOT</span>
+      <h2>What keeps this bot safe</h2>
+      <p>Checked in the code on 12 November 2026. Each line says what the guard is and what goes wrong without it.</p>
+    </div>
+    <div class="sl">
+      <div><i aria-hidden="true"><svg class="ic"><use href="#i-check"/></svg></i><b>Mini App sign-in is checked with HMAC</b><p>The bot verifies Telegram's signed data as the Telegram docs describe, and checks <code>auth_date</code> so an old signature cannot be replayed. Without this, anyone could open the owner dashboard with a made-up id.</p></div>
+      <div><i aria-hidden="true"><svg class="ic"><use href="#i-check"/></svg></i><b>Owner-only views check the owner ids</b><p>Totals for every shop are for the owner. A seller who finds the link still gets nothing.</p></div>
+      <div><i aria-hidden="true"><svg class="ic"><use href="#i-check"/></svg></i><b>Parameterised SQL</b><p>Amounts and names go into queries as values, never as query text.</p></div>
+      <div><i aria-hidden="true"><svg class="ic"><use href="#i-check"/></svg></i><b>Edits keep history, "було → стало"</b><p>A changed number is never silent. The owner can see what a figure was and what it became.</p></div>
+      <div><i aria-hidden="true"><svg class="ic"><use href="#i-check"/></svg></i><b>A suspicious amount asks for confirmation</b><p>A total far from the shop's usual day, such as an extra zero, gets "Все правильно?" before it is sent. A typo stops at the seller instead of reaching the report.</p></div>
+      <div><i aria-hidden="true"><svg class="ic"><use href="#i-check"/></svg></i><b>Runs in Docker as a non-root user, with 10 tests</b><p>If the process were ever taken over, it would not have root rights. The tests cover parsing, reports and the sign-in check.</p></div>
+    </div>
+    <div class="box todo"><h3>Still to harden in this bot</h3><ul class="check">
+      <li><span>The revenue bot is in git, but only locally. Next: one private remote for all four bots with checks on every push.</span></li>
+    </ul></div>
+    <p class="small">Server-wide measures and the full audit are in <a href="security.html">How I keep all four safe</a>.</p>
+  </section>
+  <section id="components">
+    <div class="sec-head">
+      <span class="num">NEW COMPONENTS</span>
+      <h2>Built for this page</h2>
+      <p>The chat style is a small kit on the portfolio tokens. Brightyard is not used here.</p>
+    </div>
+    <div class="comp">
+      <div class="box"><h3>Chat bubble</h3><p class="small">Carries a bot or user message. Keeps long Ukrainian words inside the bubble.</p>
+        <div class="demo"><div class="tg-msg in">Підтвердіть, будь ласка, що прийдете 👇</div><div class="tg-msg out">✅ Буду</div><div class="tg-msg in typing" aria-label="Typing"><i></i><i></i><i></i></div></div>
+        <p class="states">STATES: bot, user, typing, centre pill</p></div>
+      <div class="box"><h3>Inline keyboard</h3><p class="small">Buttons under a bubble. After a tap, the picked one fills and the others dim, so history reads clearly.</p>
+        <div class="demo" style="width:100%"><div class="tg-kb" style="width:100%"><div class="r"><div class="tg-btn">Default</div><div class="tg-btn is-picked">Picked</div><div class="tg-btn is-spent">Spent</div></div></div></div>
+        <p class="states">STATES: default, hover, picked, spent, inert</p></div>
+      <div class="box"><h3>Demo control</h3><p class="small">A dashed button that jumps the chat in time. The dash says it is the narrator, not the bot.</p>
+        <div class="demo"><div class="ctl"><button type="button" tabindex="-1"><svg class="ic" aria-hidden="true"><use href="#i-moon"/></svg>Next evening</button></div></div>
+        <p class="states">STATES: default, hover, focus</p></div>
+    </div>
+  </section>
+  <a class="nextbot n1" href="bot-salon.html"><div><span class="label">Back to bot 1 · Bot 1 of 4</span><b>Salon Booking Bot</b><span>Booking, reminders and reviews for a beauty salon.</span></div><em>Open Salon →</em></a>
+  <p class="allbots"><a href="telegram-bots.html">All four bots</a> · <a href="security.html">How I keep them safe</a></p>
+  <footer><span>Working products. Demos use invented data.</span><span>Built with Claude Code, October–November 2026</span></footer>
+</main>
+<script src="../assets/profile.js"></script>
+<script src="../assets/icons.js"></script>
+<script src="../assets/site.js"></script>
+<script>
+(function () {
+  "use strict";
+  var reduceMq = window.matchMedia ? matchMedia("(prefers-reduced-motion: reduce)") : { matches: false };
+  function wait(ms) { return new Promise(function (r) { setTimeout(r, reduceMq.matches ? 0 : ms); }); }
+
+  /* ---------- tiny chat engine ---------- */
+  function Chat(root, nodes) {
+    var body = root.querySelector(".tg-body"), chips = root.querySelector(".tg-chips"), form = root.querySelector(".tg-form");
+    var input = form.querySelector("input"), send = form.querySelector(".tg-send");
+    var busy = false, token = 0, pending = null;
+    var api = { S: {}, nodes: nodes, onSend: null };
+
+    function toBottom() { body.scrollTop = body.scrollHeight; }
+    function bubble(cls, html, fresh) {
+      var d = document.createElement("div");
+      d.className = "tg-msg " + cls + (fresh && !reduceMq.matches ? " is-new" : "");
+      d.innerHTML = html; body.appendChild(d); toBottom(); return d;
+    }
+    function lockKeyboards() {
+      body.querySelectorAll(".tg-kb .tg-btn").forEach(function (b) { b.disabled = true; b.classList.add("is-spent"); });
+    }
+    function addKb(rows, instant) {
+      var kb = document.createElement("div"); kb.className = "tg-kb";
+      rows.forEach(function (row) {
+        var r = document.createElement("div"); r.className = "r";
+        row.forEach(function (b) {
+          var el = document.createElement("button"); el.type = "button"; el.className = "tg-btn"; el.textContent = b.t;
+          if (b.inert) { el.classList.add("is-inert"); el.disabled = true; el.title = "Not wired in this demo"; }
+          else el.addEventListener("click", function () { if (busy) return; pick(kb, el, b); });
+          r.appendChild(el);
+        });
+        kb.appendChild(r);
+      });
+      body.appendChild(kb); toBottom();
+    }
+    function pick(kb, el, b) {
+      kb.querySelectorAll(".tg-btn").forEach(function (x) { x.disabled = true; x.classList.add("is-spent"); });
+      el.classList.add("is-picked");
+      run(function () { return userThen(b.say || b.t, b); });
+    }
+    function userThen(text, b) {
+      bubble("out", esc(text), true);
+      var next = typeof b.fn === "function" ? b.fn() : b.go;
+      return next ? go(next) : Promise.resolve();
+    }
+    function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+    function run(fn) { var my = token; busy = true; setInput(null); return Promise.resolve().then(fn).then(function () { if (my === token) busy = false; }, function (e) { busy = false; throw e; }); }
+
+    function setInput(cfg) {
+      chips.innerHTML = ""; pending = cfg;
+      input.disabled = send.disabled = !cfg; input.value = "";
+      input.placeholder = "Повідомлення";
+      if (!cfg) return;
+      (cfg.chips || []).forEach(function (c) {
+        var b = document.createElement("button"); b.type = "button"; b.textContent = c;
+        b.addEventListener("click", function () { submit(c); }); chips.appendChild(b);
+      });
+    }
+    function submit(text) {
+      text = String(text || "").trim(); if (!text || !pending || busy) return;
+      var cfg = pending;
+      run(function () {
+        bubble("out", esc(text), true);
+        var r = cfg.on(text, api);
+        return typeof r === "string" ? go(r) : say(r.say, false).then(function () { setInput(r.input || null); });
+      });
+    }
+    form.addEventListener("submit", function (e) { e.preventDefault(); submit(input.value); });
+
+    function say(items, instant) {
+      var my = token, p = Promise.resolve();
+      items.forEach(function (it) {
+        p = p.then(function () {
+          if (my !== token) return;
+          if (it.pill) { bubble("pill", it.pill, !instant); return instant ? null : wait(250); }
+          if (it.card) { bubble("card", it.card, !instant); return instant ? null : wait(250); }
+          var t = null;
+          if (!instant) { t = bubble("in typing", "<i></i><i></i><i></i>"); return wait(it.delay || 520).then(function () { if (t.parentNode) t.parentNode.removeChild(t); return show(it, false); }); }
+          return show(it, true);
+        });
+      });
+      return p;
+    }
+    function show(it, instant) {
+      if (it.then) it.then();
+      bubble("in", it.b, !instant);
+      if (it.kb) addKb(it.kb);
+      if (it.after) it.after();
+    }
+    function go(id, instant) {
+      var n = nodes[id]; n = typeof n === "function" ? n(api.S) : n;
+      return say(n.say, !!instant).then(function () { setInput(n.input || null); });
+    }
+    api.go = go;
+    api.jump = function (id) { if (busy) return; lockKeyboards(); run(function () { return go(id); }); };
+    api.restart = function () { token++; busy = false; body.innerHTML = ""; api.S = {}; setInput(null); return go("start", true); };
+    api.root = root;
+    return api;
+  }
+
+  var U = " ";
+  function fmt(v) {
+    var c = Math.round(v * 100), w = Math.floor(c / 100), f = c % 100;
+    var s = String(w).replace(/\B(?=(\d{3})+(?!\d))/g, U);
+    return f ? s + "," + (f < 10 ? "0" : "") + f : s;
+  }
+  function uah(v) { return fmt(v) + U + "₴"; }
+  function parseAmount(text) {
+    if (text == null) return null;
+    var s = String(text).trim().toLowerCase().replace(/₴/g, "").replace(/грн/g, "").replace(/uah/g, "").replace(/[  ]/g, " ").trim();
+    var mult = 1, m = /(тис\.?|к|k)$/.exec(s);
+    if (m) { mult = 1000; s = s.slice(0, m.index).trim(); }
+    s = s.replace(/ /g, "");
+    if (/^\d{1,3}(\.\d{3})+(,\d{1,2})?$/.test(s)) s = s.replace(/\./g, "").replace(",", "."); else s = s.replace(",", ".");
+    if (!/^\d+(\.\d{1,2})?$/.test(s)) return null;
+    var v = Math.round(parseFloat(s) * mult * 100) / 100;
+    return v < 0 || v > 1e7 ? null : v;
+  }
+
+  /* ================= REVENUE ================= */
+  var STORE = "Точка на Подолі · Контрактова", AVG = 14000, NET_BEFORE = 9258;
+  var ownerBody = document.querySelector("#tgOwner .tg-body");
+  function ownerMsg(html, fresh) {
+    var d = document.createElement("div"); d.className = "tg-msg in" + (fresh && !reduceMq.matches ? " is-new" : ""); d.innerHTML = html; ownerBody.appendChild(d); ownerBody.scrollTop = ownerBody.scrollHeight;
+  }
+  function ownerReset() {
+    ownerBody.innerHTML = "";
+    ownerMsg("🏪 <b>Точка на Оболоні · Героїв Дніпра</b> здав зміну · Марта К., 19:58<br>Готівка 3" + U + "900 · термінал 5" + U + "358<br>Разом: " + uah(NET_BEFORE) + "<br><br>По мережі сьогодні: " + uah(NET_BEFORE) + "<br>Ще не здали: Точка на Подолі, Точка на Лівому березі");
+  }
+  var rev = Chat(document.getElementById("tgRev"), {
+    start: { say: [
+      { b: "👋 Наприкінці зміни натисніть «💰 Закрити зміну» і внесіть готівку та термінал.", kb: [[{ t: "💰 Закрити зміну", go: "cash" }]] }] },
+    cash: { say: [{ b: "🏪 " + STORE + " · 12 листопада<br><br>Скільки ГОТІВКИ в касі за зміну?<br>(просто число, напр. 8450 або 8 450,50)" }],
+      input: { chips: ["8,4к", "8 450,50", "багато"], on: function (t, c) {
+        var v = parseAmount(t);
+        if (v === null) return { say: [{ b: "Не зрозумів суму 🙏 Напишіть числом, напр. 8450 або 8 450,50" }], input: c.nodes.cash.input };
+        c.S.cash = v;
+        return { say: [{ b: "Готівка: " + uah(v) + " ✓<br><br>Скільки пройшло через ТЕРМІНАЛ (карткою)?" }], input: c.nodes.term.input };
+      } } },
+    term: { say: [],
+      input: { chips: ["12300", "123000"], on: function (t, c) {
+        var v = parseAmount(t);
+        if (v === null) return { say: [{ b: "Не зрозумів суму 🙏 Напишіть числом, напр. 12300" }], input: c.nodes.term.input };
+        c.S.term = v; var total = c.S.cash + v;
+        var warn = (total > AVG * 2.5 || total < AVG * 0.3) ? "<br><br>⚠️ Зазвичай у цьому магазині ≈" + uah(AVG) + " за день. Все правильно?" : "";
+        return { say: [{ b: "Перевірте:<br>🏪 " + STORE + "<br>Готівка: " + fmt(c.S.cash) + "<br>Термінал: " + fmt(v) + "<br>Разом: <b>" + uah(total) + "</b>" + warn,
+          kb: [[{ t: "✅ Надіслати", go: "sent" }, { t: "✏️ Ввести заново", go: "cash" }]] }] };
+      } } },
+    sent: function (S) {
+      var total = S.cash + S.term;
+      return { say: [
+        { b: "✅ Зміну здано: " + uah(total) + ". Дякую!<br><br>Якщо є Z-звіт з каси — надішліть його фото (за бажанням).", kb: [[{ t: "Без фото →", go: "bye" }]],
+          then: function () {
+            ownerMsg("🏪 <b>" + STORE + "</b> здав зміну · Олена, 20:41<br>Готівка " + fmt(S.cash) + " · термінал " + fmt(S.term) + "<br>Разом: " + uah(total) + "<br><br>По мережі сьогодні: " + uah(NET_BEFORE + total) + "<br>Ще не здали: Точка на Лівому березі", true);
+          } }] };
+    },
+    bye: { say: [{ b: "Гарного вечора!" }, { pill: "Зміна закрита. Натисніть Restart, щоб спробувати ще" }] }
+  });
+  document.getElementById("ctlRev").addEventListener("click", function (e) {
+    var b = e.target.closest("button"); if (b && b.dataset.act === "restart") { ownerReset(); rev.restart(); }
+  });
+  ownerReset(); rev.restart();
+})();
+</script>
+</body>
+</html>

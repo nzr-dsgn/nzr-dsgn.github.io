@@ -1,0 +1,803 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Brightyard Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="../assets/by.css">
+<style>
+.try { display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: center; }
+.try .label { margin-right: 4px; }
+.try button { border: 1px solid var(--rule); background: var(--surface); border-radius: 999px; padding: 8px 14px; font: 500 13.5px/1 var(--text); color: var(--ink); }
+.try button:hover { border-color: var(--accent); }
+.try button b { font: 600 11px var(--mono); color: var(--accent); margin-right: 6px; }
+
+/* browser frame */
+.stage { container: stage / inline-size; }
+.browser { border: 1px solid var(--rule); border-radius: 14px; overflow: hidden; box-shadow: var(--shadow); background: var(--surface); }
+.browser-bar { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: var(--surface-2); border-bottom: 1px solid var(--rule); }
+.browser-bar .dots { display: flex; gap: 6px; flex: none; }
+.browser-bar .dots i { width: 10px; height: 10px; border-radius: 50%; background: var(--rule); display: block; }
+.browser-bar .url { flex: 1; text-align: center; font: 500 12px var(--mono); color: var(--ink-2); background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; padding: 4px 10px; max-width: 380px; margin-inline: auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.browser-bar .tools { display: flex; gap: 6px; flex: none; }
+.browser-bar .tools button { border: 1px solid var(--rule); background: var(--surface); border-radius: 6px; padding: 4px 9px; font: 500 11.5px var(--mono); color: var(--ink-2); }
+.browser-bar .tools button:hover { border-color: var(--accent); color: var(--ink); }
+
+/* the app */
+.app { position: relative; display: grid; grid-template-columns: 230px minmax(0, 1fr); height: 740px; overflow: hidden; }
+.app-side { background: var(--navy); color: var(--on-navy); padding: 18px 14px; display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+.logo { display: flex; align-items: center; gap: 10px; font: 800 18px var(--font); letter-spacing: -0.02em; padding: 2px 8px; }
+.logo i { width: 26px; height: 26px; border-radius: 8px; background: var(--brand); display: grid; place-items: center; color: var(--on-brand); }
+.logo i svg { width: 16px; height: 16px; }
+.nav { display: grid; gap: 2px; }
+.nav a { display: flex; align-items: center; gap: 12px; padding: 10px; border-radius: 9px; color: var(--on-navy-2); text-decoration: none; font: 600 14px var(--font); position: relative; }
+.nav a:hover { background: color-mix(in oklch, var(--on-navy) 8%, transparent); color: var(--on-navy); }
+.nav a[aria-current="page"] { background: color-mix(in oklch, var(--on-navy) 12%, transparent); color: var(--on-navy); }
+.nav a[aria-current="page"]::before { content: ""; position: absolute; left: -14px; top: 9px; bottom: 9px; width: 3px; border-radius: 0 3px 3px 0; background: var(--brand); }
+.unit { margin-top: auto; display: grid; gap: 2px; padding: 12px; border-radius: 12px; background: color-mix(in oklch, var(--on-navy) 8%, transparent); }
+.unit b { font: 700 14px var(--font); } .unit span { font: 500 12.5px var(--font); color: var(--on-navy-2); }
+.app-main { display: flex; flex-direction: column; min-width: 0; min-height: 0; background: var(--bg); }
+.app-top { height: 62px; flex: none; display: flex; align-items: center; gap: 12px; padding: 0 22px; background: var(--surface); border-bottom: 1px solid var(--line); }
+.ask { flex: 1; max-width: 460px; display: flex; align-items: center; gap: 10px; height: 40px; padding: 0 8px 0 12px; border-radius: var(--r); border: 1px solid var(--line-2); background: var(--surface-2); color: var(--ink-3); text-align: left; font: 500 14px var(--font); transition: border-color var(--d2) var(--ease), background var(--d2) var(--ease); }
+.ask:hover { border-color: var(--ai-line); background: var(--ai-soft); color: var(--ink-2); }
+.ask .by-spark { width: 18px; height: 18px; }
+.ask .by-kbd { margin-left: auto; }
+.app-top .sp { flex: 1; }
+.app-scroll { overflow: auto; padding: 26px 28px 44px; display: grid; gap: 24px; align-content: start; min-height: 0; flex: 1; }
+.hello h2 { font: 800 28px/1.1 var(--font); letter-spacing: -0.025em; }
+.hello p { color: var(--ink-2); margin-top: 6px; font-weight: 500; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(168px, 1fr)); gap: 14px; }
+.kpi { display: grid; gap: 4px; padding: 16px; }
+.kpi .top { display: flex; justify-content: space-between; align-items: center; color: var(--ink-3); }
+.kpi .top span { font: 650 13px var(--font); color: var(--ink-2); }
+.kpi .top .ic { width: 20px; height: 20px; color: var(--brand-ink); }
+.kpi .big { font: 800 32px/1.1 var(--font); letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+.kpi .sub { font: 500 13px var(--font); color: var(--ink-3); }
+.kpi .big.bump { animation: by-pop var(--d3) var(--ease-out); }
+.cols { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+.panel-h { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+.panel-h h3 { font: 750 17px var(--font); }
+.tl { list-style: none; margin: 0; padding: 0; display: grid; }
+.tl-i { display: grid; grid-template-columns: 52px 14px minmax(0, 1fr) auto; gap: 12px; align-items: start; padding: 12px 8px; border-radius: 10px; position: relative; }
+.tl-i time { font: 600 13px var(--mono); color: var(--ink-2); padding-top: 1px; }
+.tl-i .dot { width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--line-2); background: var(--surface); margin-top: 6px; position: relative; z-index: 1; }
+.tl-i::after { content: ""; position: absolute; left: 73px; top: 28px; bottom: -14px; width: 2px; background: var(--line); }
+.tl-i:last-child::after { display: none; }
+.tl-i b { display: block; font: 700 14.5px var(--font); }
+.tl-i span.m { font: 500 13px var(--font); color: var(--ink-3); }
+.tl-i.is-past { opacity: .62; }
+.tl-i.is-past .dot { background: var(--ok); border-color: var(--ok); }
+.tl-i.is-next .dot { background: var(--brand); border-color: var(--brand); animation: by-pulse 1.8s ease-out infinite; }
+.tl-i.is-new { animation: by-flash 2.2s var(--ease) 1; }
+.tl-now { display: flex; align-items: center; gap: 10px; padding: 2px 8px; font: 700 11px var(--mono); letter-spacing: .06em; color: var(--brand-ink); text-transform: uppercase; }
+.tl-now::after { content: ""; flex: 1; height: 2px; background: var(--brand); border-radius: 1px; }
+.stack { display: grid; gap: 14px; align-content: start; }
+.sug .head { display: flex; align-items: center; justify-content: space-between; margin-top: -4px; }
+.sug details { font: 500 13px var(--font); color: var(--ink-2); }
+.sug summary { cursor: pointer; width: max-content; color: var(--ai); font-weight: 650; }
+.sug details p { margin-top: 6px; }
+.sug.is-leaving { opacity: 0; transform: translateX(14px); transition: opacity var(--d3) var(--ease-in), transform var(--d3) var(--ease-in); }
+.req .by-stepper { margin-top: 10px; }
+.req-i { padding: 12px 0; border-top: 1px solid var(--line); }
+.req-i:first-of-type { border-top: 0; }
+.req-i b { font: 700 14.5px var(--font); }
+.req-i .m { font: 500 13px var(--font); color: var(--ink-3); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 2px; }
+.empty-line { font: 500 14px var(--font); color: var(--ink-3); padding: 8px 0; }
+
+/* drawer */
+.drawer { position: absolute; top: 0; right: 0; bottom: 0; width: min(430px, 100%); background: var(--surface); border-left: 1px solid var(--line); box-shadow: var(--shadow-3); display: flex; flex-direction: column; z-index: 30; transform: translateX(105%); visibility: hidden; transition: transform var(--d4) var(--ease-out), visibility 0s linear var(--d4); }
+.app.drawer-open .drawer { transform: none; visibility: visible; transition: transform var(--d4) var(--ease-out), visibility 0s; }
+.scrim { position: absolute; inset: 0; background: oklch(0.2 0.04 255 / .32); opacity: 0; pointer-events: none; transition: opacity var(--d3) var(--ease); z-index: 25; }
+.app.drawer-open .scrim { opacity: 1; pointer-events: auto; }
+.dr-head { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--line); }
+.dr-head .mark { width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center; background: var(--ai-soft); color: var(--ai); }
+.dr-head b { font: 750 15.5px var(--font); display: block; line-height: 1.2; }
+.dr-head .by-badge { margin-left: 2px; }
+.dr-head .sp { flex: 1; }
+.dr-body { flex: 1; overflow: auto; padding: 16px; display: grid; gap: 12px; align-content: start; min-height: 0; }
+.dr-foot { padding: 12px 16px 14px; border-top: 1px solid var(--line); display: grid; gap: 10px; background: var(--surface); }
+.dr-foot form { display: flex; gap: 8px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips .by-chip { height: 32px; font-size: 13px; }
+.empty { display: grid; gap: 10px; padding: 18px 4px; }
+.empty .mark { width: 44px; height: 44px; border-radius: 14px; background: var(--ai-soft); color: var(--ai); display: grid; place-items: center; }
+.empty .mark svg { width: 22px; height: 22px; }
+.msg { display: flex; gap: 8px; animation: by-pop var(--d3) var(--ease-out); }
+.msg--user { justify-content: flex-end; }
+.msg--card { display: block; }
+.msg .av { width: 26px; height: 26px; border-radius: 9px; background: var(--ai-soft); color: var(--ai); display: grid; place-items: center; flex: none; margin-top: 2px; }
+.msg .av svg { width: 15px; height: 15px; }
+.by-bub { max-width: 88%; padding: 10px 14px; border-radius: 16px; font: 500 14.5px/1.45 var(--font); }
+.by-bub--user { background: var(--navy); color: var(--on-navy); border-bottom-right-radius: 6px; }
+.by-bub--ai { background: var(--surface-2); border-bottom-left-radius: 6px; }
+.by-think { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 8px; }
+.by-think li { display: flex; align-items: center; gap: 10px; font: 500 13.5px var(--font); color: var(--ink-3); }
+.by-think li .st { width: 16px; height: 16px; display: grid; place-items: center; flex: none; }
+.by-think li .st .ic { width: 16px; height: 16px; }
+.by-think li.is-run { color: var(--ink); }
+.by-think li.is-done { color: var(--ink-2); }
+.by-think li.is-done .st { color: var(--ok); }
+.by-think li:not(.is-run):not(.is-done) .st::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--line-2); }
+.sumline { display: flex; align-items: center; gap: 8px; font: 500 13px var(--font); color: var(--ink-3); padding: 2px 2px 0; }
+.sumline .ic { width: 15px; height: 15px; color: var(--ok); }
+.alts { display: grid; gap: 6px; }
+.alt { display: grid; grid-template-columns: 18px minmax(0, 1fr) auto; gap: 10px; align-items: center; text-align: left; padding: 9px 12px; border-radius: var(--r); border: 1px solid var(--line-2); background: var(--surface); transition: border-color var(--d2) var(--ease), background var(--d2) var(--ease); }
+.alt:hover:not(:disabled) { border-color: var(--ai-line); }
+.alt .rad { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--line-2); display: grid; place-items: center; }
+.alt[aria-checked="true"] { border-color: var(--ai); background: var(--surface); box-shadow: 0 0 0 3px var(--ai-soft); }
+.alt[aria-checked="true"] .rad { border-color: var(--ai); }
+.alt[aria-checked="true"] .rad::after { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--ai); }
+.alt b { font: 700 14px var(--font); display: block; }
+.alt small { font: 500 12.5px var(--font); color: var(--ink-3); }
+.alt:disabled { opacity: .5; cursor: not-allowed; }
+.undo-line { display: flex; align-items: center; gap: 10px; font: 500 13px var(--font); color: var(--ink-3); }
+.undo-line .by-btn { margin-left: auto; }
+.ring { width: 20px; height: 20px; border-radius: 50%; background: conic-gradient(var(--ai) calc(var(--t, 1) * 360deg), var(--surface-3) 0); display: grid; place-items: center; flex: none; }
+.ring::after { content: ""; width: 14px; height: 14px; border-radius: 50%; background: var(--surface); }
+.toasts { position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%); display: grid; gap: 8px; z-index: 40; width: min(420px, calc(100% - 28px)); }
+.toasts .by-toast { animation: by-pop var(--d3) var(--ease-out); }
+.row-between { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+
+@container stage (max-width: 880px) {
+  .app { grid-template-columns: 64px minmax(0, 1fr); height: 700px; }
+  .app-side { padding: 16px 8px; align-items: center; }
+  .app-side .logo span, .nav a span, .unit { display: none; }
+  .nav a { justify-content: center; } .nav a[aria-current="page"]::before { left: -8px; }
+  .cols { grid-template-columns: minmax(0, 1fr); }
+  .app-scroll { padding: 20px 18px 40px; }
+  .ask .by-kbd { display: none; }
+}
+@container stage (max-width: 520px) { .app-top .by-avatar, .app-top .bell { display: none; } .tl-i { grid-template-columns: 46px 12px minmax(0, 1fr) auto; } .tl-i::after { left: 66px; } }
+
+/* narrative */
+.voice { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 18px; align-items: start; background: var(--surface); border: 1px solid var(--rule); border-radius: 14px; padding: 20px; }
+.voice .play { width: 48px; height: 48px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; }
+.voice .play svg { width: 20px; height: 20px; }
+.wave { display: flex; align-items: center; gap: 3px; height: 34px; margin: 6px 0 12px; }
+.wave i { width: 3px; border-radius: 2px; background: var(--rule); display: block; }
+.wave i.on { background: var(--accent); }
+.voice blockquote { margin: 0; font-size: 16px; line-height: 1.65; color: var(--ink); }
+.voice blockquote em { font-style: normal; background: var(--accent-soft); padding: 0 3px; border-radius: 3px; }
+.voice .src { font: 500 12px var(--mono); color: var(--ink-2); margin-top: 12px; display: block; }
+.mocks { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 22px; }
+.mock-wrap { display: grid; gap: 12px; align-content: start; min-width: 0; }
+.mock { aspect-ratio: 16 / 10; border-radius: 12px; border: 1px solid var(--rule); background: var(--surface-2); position: relative; overflow: hidden; display: grid; grid-template-columns: 22% 1fr; }
+.mock.pick { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
+.mk-side { background: var(--ink); opacity: .85; margin: 6px 0 6px 6px; border-radius: 6px; }
+.mk-main { padding: 8px; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; align-content: start; }
+.mk-main i { display: block; height: 20px; background: var(--surface); border-radius: 4px; border: 1px solid var(--rule); }
+.mk-main i.w { grid-column: 1 / -1; height: 52px; }
+.mk-main i.ai { background: var(--accent-soft); border: 1.5px dashed var(--accent); }
+.mk-drawer { position: absolute; top: 6px; right: 6px; bottom: 6px; width: 34%; border-radius: 8px; background: var(--surface); border: 1.5px solid var(--accent); display: grid; gap: 5px; padding: 8px; align-content: start; }
+.mk-drawer i { display: block; height: 8px; border-radius: 3px; background: var(--surface-2); }
+.mk-drawer i.u { margin-left: 30%; background: var(--ink); opacity: .8; }
+.mk-drawer i.a { width: 70%; background: var(--accent-soft); }
+.mk-bubble { position: absolute; right: 10px; bottom: 10px; width: 30px; height: 30px; border-radius: 50%; background: var(--accent); box-shadow: 0 4px 10px rgba(0,0,0,.25); }
+.mk-bubble::after { content: ""; position: absolute; inset: 10px; border-radius: 2px; background: var(--accent-ink); opacity: .9; }
+.mock-wrap h3 { font-size: 19px; }
+.mock-wrap p { font-size: 14.5px; color: var(--ink-2); }
+.pc { display: grid; gap: 8px; font-size: 14px; color: var(--ink-2); }
+.pc div { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 8px; }
+.pc .p { color: var(--ok); font-weight: 800; } .pc .c { color: var(--crit); font-weight: 800; }
+
+.rules5 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 330px), 1fr)); gap: 22px; }
+.rule { background: var(--surface); border: 1px solid var(--rule); border-radius: 14px; padding: 20px; display: grid; gap: 14px; align-content: start; min-width: 0; }
+.rule h3 { font-size: 20px; }
+.rule > p { font-size: 15px; color: var(--ink-2); }
+.rule .by { border-radius: 12px; padding: 14px; display: grid; gap: 10px; }
+.states { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 16px; }
+.st { display: grid; gap: 10px; align-content: start; min-width: 0; }
+.st .by { border-radius: 12px; padding: 14px; display: grid; gap: 10px; min-height: 190px; align-content: start; border: 1px solid var(--rule); }
+.st h4 { font: 700 15px var(--text); letter-spacing: 0; }
+.st p.d { font-size: 13.5px; color: var(--ink-2); }
+.hyp { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 16px; }
+.hyp .box b { font: 600 11.5px var(--mono); color: var(--accent); letter-spacing: .06em; }
+.hyp .box p { font-size: 15px; }
+.hyp .box small { color: var(--ink-2); font-size: 13.5px; }
+@media (max-width: 560px) { .voice { grid-template-columns: minmax(0, 1fr); } }
+</style>
+</head>
+<body>
+<header class="bar">
+  <div class="wrap">
+    <a class="brand" href="../index.html"><i aria-hidden="true"></i><span id="brandName">Your Name</span></a>
+    <nav aria-label="Work">
+      <a href="../index.html#work">All work</a>
+      <a href="telegram-bots.html">Bots</a>
+      <a href="security.html">Security</a>
+      <a href="plectra.html">Plectra</a>
+      <a href="brightyard-portal.html" aria-current="page">Portal</a>
+      <a href="brightyard-mobile.html">Mobile</a>
+      <a href="brightyard-system.html">System</a>
+      <a href="voice-note.html">Voice note</a>
+      <a href="ai-states.html">AI states</a>
+      <a href="space-finder.html">Space finder</a>
+    </nav>
+    <button class="toggle" id="themeBtn" type="button" aria-label="Switch colour theme">Theme: auto</button>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="case-hero">
+    <div class="row"><span class="kind concept">Concept</span><span class="kind">Web app</span><span class="kind">AI assistant</span></div>
+    <h1>Brightyard Portal</h1>
+    <p class="sub">A tenant portal for a business park. Its AI concierge proposes, the tenant decides.</p>
+    <dl class="meta">
+      <div><dt class="label">Role</dt><dd>Product design, UX, UI, prototype in code</dd></div>
+      <div><dt class="label">Tools</dt><dd>Claude Code, HTML, CSS, JavaScript</dd></div>
+      <div><dt class="label">Scope</dt><dd>Dashboard, assistant, 4 flows, 8 states</dd></div>
+      <div><dt class="label">Status</dt><dd>Concept with sample data. Not tested with users.</dd></div>
+    </dl>
+    <p class="honest"><b>Note</b><span>Self-initiated concept for a fictional company. The product owner's brief on this page is an example I wrote for the exercise.</span></p>
+  </div>
+
+  <div class="try" aria-label="Scenarios" style="margin-top:34px">
+    <span class="label">Try it</span>
+    <button type="button" data-run="room"><b>1</b>Book a room</button>
+    <button type="button" data-run="visitor"><b>2</b>Add a visitor</button>
+    <button type="button" data-run="request"><b>3</b>Report a problem</button>
+    <button type="button" data-run="parking"><b>4</b>Book parking</button>
+    <button type="button" id="resetBtn">Reset</button>
+  </div>
+
+  <div class="stage" style="margin-top:16px">
+    <div class="browser">
+      <div class="browser-bar">
+        <div class="dots" aria-hidden="true"><i></i><i></i><i></i></div>
+        <div class="url">portal.brightyard.example</div>
+        <div class="tools"><button type="button" id="byTheme">Light</button></div>
+      </div>
+
+      <div class="app by" id="app" data-by="light">
+        <aside class="app-side">
+          <div class="logo"><i><svg class="ic"><use href="#i-building"/></svg></i><span>Brightyard</span></div>
+          <nav class="nav" aria-label="Main">
+            <a href="#" aria-current="page" data-noop><svg class="ic"><use href="#i-grid"/></svg><span>Overview</span></a>
+            <a href="#" data-noop><svg class="ic"><use href="#i-calendar"/></svg><span>Bookings</span></a>
+            <a href="#" data-noop><svg class="ic"><use href="#i-car"/></svg><span>Parking</span></a>
+            <a href="#" data-noop><svg class="ic"><use href="#i-userplus"/></svg><span>Visitors</span></a>
+            <a href="#" data-noop><svg class="ic"><use href="#i-wrench"/></svg><span>Requests</span></a>
+            <a href="#" data-noop><svg class="ic"><use href="#i-receipt"/></svg><span>Invoices</span></a>
+          </nav>
+          <div class="unit"><b>Orbit Labs</b><span>Unit 4.12 · Building B</span></div>
+        </aside>
+
+        <div class="app-main">
+          <header class="app-top">
+            <button class="ask" id="askBtn" type="button" aria-haspopup="dialog" aria-controls="drawer">
+              <svg class="ic by-spark"><use href="#i-spark"/></svg>
+              <span>Ask Brightyard to book, add or report…</span>
+              <span class="by-kbd" id="kbd">Ctrl K</span>
+            </button>
+            <span class="sp"></span>
+            <button class="by-btn by-btn--ghost by-iconbtn bell" type="button" aria-label="Notifications"><svg class="ic"><use href="#i-bell"/></svg></button>
+            <span class="by-avatar" aria-hidden="true">EB</span>
+          </header>
+
+          <div class="app-scroll">
+            <div class="hello">
+              <h2 id="hello">Good morning, Elena</h2>
+              <p id="today">Orbit Labs · Unit 4.12</p>
+            </div>
+            <div class="kpis" id="kpis"></div>
+            <div class="cols">
+              <section class="by-card" aria-labelledby="todayH">
+                <div class="panel-h"><h3 id="todayH">Today</h3><span class="by-badge by-badge--brand" id="todayCount"></span></div>
+                <ol class="tl" id="timeline"></ol>
+              </section>
+              <div class="stack">
+                <section class="stack" id="sugs" aria-label="Suggestions"></section>
+                <section class="by-card req" aria-labelledby="reqH">
+                  <div class="panel-h"><h3 id="reqH">Open requests</h3></div>
+                  <div id="reqs"></div>
+                </section>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="scrim" id="scrim"></div>
+        <aside class="drawer" id="drawer" role="dialog" aria-modal="false" aria-label="Brightyard AI assistant">
+          <div class="dr-head">
+            <span class="mark"><svg class="ic"><use href="#i-spark"/></svg></span>
+            <div><b>Brightyard AI</b></div><span class="by-badge by-badge--ai">Beta</span>
+            <span class="sp"></span>
+            <button class="by-btn by-btn--ghost by-btn--sm" id="clearBtn" type="button">Clear</button>
+            <button class="by-btn by-btn--ghost by-iconbtn" id="closeBtn" type="button" aria-label="Close assistant"><svg class="ic"><use href="#i-x"/></svg></button>
+          </div>
+          <div class="dr-body" id="thread" aria-live="polite"></div>
+          <div class="dr-foot">
+            <div class="chips" id="chips"></div>
+            <form id="askForm" autocomplete="off">
+              <label class="sr" for="askIn" style="position:absolute;left:-9999px">Ask the assistant</label>
+              <input class="by-input" id="askIn" placeholder="Ask for something…" maxlength="120">
+              <button class="by-btn by-btn--primary by-iconbtn" type="submit" aria-label="Send"><svg class="ic"><use href="#i-send"/></svg></button>
+            </form>
+            <p class="t-small">AI can make mistakes. Nothing changes until you confirm.</p>
+          </div>
+        </aside>
+        <div class="toasts" id="toasts" aria-live="polite"></div>
+      </div>
+    </div>
+    <p class="t-small" style="margin-top:10px;color:var(--ink-2);font-size:13.5px">All names and data in the prototype are sample data. The assistant is scripted: it shows the interaction design, not a language model.</p>
+  </div>
+
+  <section id="brief">
+    <div class="sec-head">
+      <span class="num">THE BRIEF</span>
+      <h2>Start with a voice note, end with a decision</h2>
+      <p>Product owners often brief by voice. I turn the message into goals, rules and questions before drawing anything.</p>
+    </div>
+    <div class="voice">
+      <div class="play" aria-hidden="true"><svg class="ic"><use href="#i-mic"/></svg></div>
+      <div>
+        <div class="wave" id="wave" aria-hidden="true"></div>
+        <blockquote>"For the tenant portal, the main thing is people waste time on small stuff: booking a room, adding a visitor, parking. I want an assistant they can just <em>tell what they need</em>. But I don't want it doing things on its own. <em>People must always confirm.</em> It should work on phones too. And facilities requests, like 'it's cold on the fourth floor'. Can you show me a couple of options for how the assistant shows up?"</blockquote>
+        <span class="src">Voice note · 0:42 · transcript written by me as an example brief</span>
+      </div>
+    </div>
+    <div class="three">
+      <div><span class="label">Goals</span><h3>Save time on small tasks</h3><p>Rooms, visitors, parking and facilities requests, each in a few taps, on web and on a phone.</p></div>
+      <div><span class="label">Rules I extracted</span><h3>The tenant always decides</h3><p>No action without a visible confirmation. Every change is previewed first and can be undone.</p></div>
+      <div><span class="label">Questions I would ask</span><h3>Before it goes further</h3><p>Who pays for a booking that costs money? What happens when facilities is offline? Which languages must it understand?</p></div>
+    </div>
+  </section>
+
+  <section id="directions">
+    <div class="sec-head">
+      <span class="num">THREE DIRECTIONS</span>
+      <h2>How should the assistant show up?</h2>
+      <p>I asked the agent for three layouts of the same dashboard and compared them by what the tenant is doing at that moment.</p>
+    </div>
+    <div class="mocks">
+      <div class="mock-wrap">
+        <div class="mock pick" aria-label="Direction A: command bar and drawer"><div class="mk-side"></div><div class="mk-main"><i class="w"></i><i></i><i></i><i class="ai"></i><i class="ai"></i></div><div class="mk-drawer"><i class="u"></i><i class="a"></i><i class="a"></i><i></i></div></div>
+        <div><span class="label" style="color:var(--accent)">A · Command bar and drawer · chosen</span><h3 style="margin-top:6px">One entry point, results stay visible</h3></div>
+        <div class="pc"><div><span class="p">+</span><span>The dashboard stays on screen, so the tenant sees the booking land.</span></div><div><span class="p">+</span><span>The same entry point works with a keyboard shortcut.</span></div><div><span class="c">−</span><span>Less discoverable than a visible button, so the bar says what to ask.</span></div></div>
+      </div>
+      <div class="mock-wrap">
+        <div class="mock" aria-label="Direction B: floating bubble"><div class="mk-side"></div><div class="mk-main"><i class="w"></i><i></i><i></i><i></i><i></i></div><div class="mk-bubble"></div></div>
+        <div><span class="label">B · Floating chat bubble</span><h3 style="margin-top:6px">Familiar, but it invites open chat</h3></div>
+        <div class="pc"><div><span class="p">+</span><span>Everyone knows the pattern.</span></div><div><span class="c">−</span><span>Covers content on a phone and promises answers the assistant can't give.</span></div><div><span class="c">−</span><span>Hides what is changing behind a chat window.</span></div></div>
+      </div>
+      <div class="mock-wrap">
+        <div class="mock" aria-label="Direction C: suggestions only"><div class="mk-side"></div><div class="mk-main"><i class="w"></i><i class="ai"></i><i class="ai"></i><i></i><i></i></div></div>
+        <div><span class="label">C · Suggestions only</span><h3 style="margin-top:6px">Quiet and safe, but passive</h3></div>
+        <div class="pc"><div><span class="p">+</span><span>No empty chat box to fill, nothing to misunderstand.</span></div><div><span class="c">−</span><span>The tenant can't ask for what they need right now.</span></div><div><span class="p">+</span><span>Worth keeping as a card next to A.</span></div></div>
+      </div>
+    </div>
+    <p class="note" style="font-size:15.5px;max-width:70ch;color:var(--ink-2)"><b style="color:var(--ink)">Decision:</b> A, plus C's suggestions as a dashboard card. The tenant can ask, and the product can also notice. Both paths end in the same confirmation.</p>
+  </section>
+
+  <section id="rules">
+    <div class="sec-head">
+      <span class="num">THE RULES</span>
+      <h2>Five rules the assistant follows</h2>
+      <p>These rules are part of the design system, so every future AI feature inherits them.</p>
+    </div>
+    <div class="rules5">
+      <div class="rule">
+        <h3>Dashed means proposal, solid means done</h3>
+        <p>A violet dashed outline marks something the AI suggests. Once the tenant confirms, the card turns solid. The state is readable at a glance.</p>
+        <div class="by" data-by="light">
+          <div class="by-ai"><span class="by-ai-tag"><svg class="ic"><use href="#i-spark"/></svg> Proposal</span><b class="by-ai__title">Book Room B2</b></div>
+          <div class="by-ai is-committed"><span class="by-badge by-badge--ok"><svg class="ic"><use href="#i-check"/></svg> Done</span><b class="by-ai__title">Room B2 booked</b></div>
+        </div>
+      </div>
+      <div class="rule">
+        <h3>Show the evidence</h3>
+        <p>Every proposal says why. Three short reasons give the tenant something to agree or disagree with, instead of a verdict from nowhere.</p>
+        <div class="by" data-by="light">
+          <div class="by-why"><span><svg class="ic"><use href="#i-check"/></svg>Fits 8 people</span><span><svg class="ic"><use href="#i-check"/></svg>Same building</span><span><svg class="ic"><use href="#i-check"/></svg>Free for the whole hour</span></div>
+          <p class="t-small">Based on your calendar only. No other tenant's data was used.</p>
+        </div>
+      </div>
+      <div class="rule">
+        <h3>Preview the change</h3>
+        <p>Before anything is booked or sent, the card lists what will change and what will not.</p>
+        <div class="by" data-by="light">
+          <dl class="by-dl"><dt>When</dt><dd>Today · 14:00–15:00</dd><dt>Where</dt><dd>Room B2 · floor 2</dd><dt>Invites</dt><dd>Not sent</dd></dl>
+        </div>
+      </div>
+      <div class="rule">
+        <h3>Undo stays within reach</h3>
+        <p>After confirming, an undo control stays visible with a countdown ring. No hidden menus, no support ticket.</p>
+        <div class="by" data-by="light">
+          <div class="undo-line"><span class="ring" style="--t:.7"></span><span>Room B2 booked. Undo for a few more seconds.</span><button class="by-btn by-btn--secondary by-btn--sm" type="button"><svg class="ic"><use href="#i-undo"/></svg>Undo</button></div>
+        </div>
+      </div>
+      <div class="rule">
+        <h3>Failure says what happened to the data</h3>
+        <p>The first thing an error tells the tenant is whether anything was changed. Then it offers a way forward.</p>
+        <div class="by" data-by="light">
+          <div class="by-ai is-error"><span class="by-badge by-badge--bad"><svg class="ic"><use href="#i-alert"/></svg> Not sent</span><b class="by-ai__title">Facilities didn't respond</b><p class="t-small" style="color:var(--ink-2)">Nothing was sent. Your request is still here.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="states">
+    <div class="sec-head">
+      <span class="num">STATES</span>
+      <h2>Eight states, designed on purpose</h2>
+      <p>The prototype above runs through all of these. Here they are side by side.</p>
+    </div>
+    <div class="states">
+      <div class="st"><div class="by" data-by="light"><span class="by-ai-tag"><svg class="ic"><use href="#i-spark"/></svg> Brightyard AI</span><b class="t-h3">What do you need?</b><p class="t-small">I can book rooms, add visitors, reserve parking and send requests to facilities.</p><div class="row" style="gap:6px"><span class="by-chip">Book a room</span><span class="by-chip">Add a visitor</span></div></div><h4>1 · Empty</h4><p class="d">Says what it can do and offers examples, so there is no blank box to fear.</p></div>
+      <div class="st"><div class="by" data-by="light"><span class="by-ai-tag"><svg class="ic"><use href="#i-spark"/></svg> Working</span><ul class="by-think" style="margin:0"><li class="is-done"><span class="st"><svg class="ic"><use href="#i-check"/></svg></span>Reading your calendar</li><li class="is-run"><span class="st"><span class="by-spin"></span></span>Finding rooms for 8</li><li><span class="st"></span>Checking distance</li></ul></div><h4>2 · Thinking</h4><p class="d">Names each step, so waiting feels like progress and not a stall.</p></div>
+      <div class="st"><div class="by" data-by="light"><b class="t-h3">Which day do you need parking?</b><div class="row" style="gap:6px"><span class="by-chip">Today</span><span class="by-chip">Tomorrow</span><span class="by-chip">Friday</span></div></div><h4>3 · Clarifying</h4><p class="d">When a request is ambiguous it asks, with tappable answers, instead of guessing.</p></div>
+      <div class="st"><div class="by" data-by="light"><div class="by-ai"><span class="by-ai-tag"><svg class="ic"><use href="#i-spark"/></svg> Proposal · not booked</span><b class="by-ai__title">Book a meeting room</b><div class="row"><span class="by-btn by-btn--primary by-btn--sm">Confirm booking</span><span class="by-btn by-btn--ghost by-btn--sm">Not now</span></div></div></div><h4>4 · Proposal</h4><p class="d">Dashed card with details, reasons, alternatives and two clear actions.</p></div>
+      <div class="st"><div class="by" data-by="light"><div class="by-field"><span class="by-label">Visitor email</span><span class="by-input is-error" style="display:flex;align-items:center">anna@company</span><span class="by-help is-error"><svg class="ic"><use href="#i-alert"/></svg>Enter a full email address, like anna@company.example</span></div></div><h4>5 · Validation</h4><p class="d">The error appears next to the field, in words, and focus moves there.</p></div>
+      <div class="st"><div class="by" data-by="light"><div class="by-ai is-committed"><span class="by-badge by-badge--ok"><svg class="ic"><use href="#i-check"/></svg> Done</span><b class="by-ai__title">Room B2 booked</b><div class="undo-line"><span class="ring" style="--t:.5"></span><span>Undo</span></div></div></div><h4>6 · Committed</h4><p class="d">Solid card, a clear result and an undo with a countdown.</p></div>
+      <div class="st"><div class="by" data-by="light"><div class="by-ai is-error"><span class="by-badge by-badge--bad"><svg class="ic"><use href="#i-alert"/></svg> Not sent</span><b class="by-ai__title">Facilities didn't respond</b><div class="row"><span class="by-btn by-btn--primary by-btn--sm">Try again</span><span class="by-btn by-btn--secondary by-btn--sm">Save as draft</span></div></div></div><h4>7 · Failure</h4><p class="d">Says nothing was sent, then offers a retry and a draft.</p></div>
+      <div class="st"><div class="by" data-by="light"><div class="by-toast"><span>Suggestion dismissed</span><button type="button">Undo</button></div><p class="t-small">The suggestion won't come back today.</p></div><h4>8 · Dismissed</h4><p class="d">Dismissing is reversible too, and the product remembers the choice.</p></div>
+    </div>
+  </section>
+
+  <section id="next">
+    <div class="sec-head">
+      <span class="num">WHAT I WOULD TEST NEXT</span>
+      <h2>Hypotheses, not claims</h2>
+      <p>This concept has not been tested with tenants. This is how I would find out whether it works.</p>
+    </div>
+    <div class="hyp">
+      <div class="box"><b>H1 · SPEED</b><p>Tenants confirm a booking faster with the assistant than with the booking form.</p><small>Measure: time from intent to confirmed booking, on 3 tasks, with 5 tenants.</small></div>
+      <div class="box"><b>H2 · TRUST</b><p>Showing why a room was chosen raises acceptance without slowing the decision.</p><small>Measure: proposal acceptance rate and time to decide, with and without evidence chips.</small></div>
+      <div class="box"><b>H3 · SAFETY</b><p>An 8-second undo window is long enough for tenants to catch a wrong proposal.</p><small>Measure: undo rate, and wrong bookings found later through support requests.</small></div>
+    </div>
+    <div class="next-work">
+      <a href="brightyard-mobile.html"><span class="label">Next</span><b>Brightyard Mobile</b><span>The same product on iOS and Android, with a slide-to-open door pass.</span></a>
+      <a href="brightyard-system.html"><span class="label">Related</span><b>Brightyard Design System</b><span>The tokens and components behind this page, with a live brand-hue slider.</span></a>
+      <a href="ai-states.html"><span class="label">New work</span><b>AI Status Kit</b><span>Every state of one AI action, tuned to how long it takes.</span></a>
+    </div>
+  </section>
+
+  <footer><span>Concept work. Fictional company, sample data.</span><span>Designed and built with Claude Code, November 2026</span></footer>
+</main>
+
+<script src="../assets/profile.js"></script>
+<script src="../assets/icons.js"></script>
+<script src="../assets/site.js"></script>
+<script>
+(function () {
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+  var IC = window.ic;
+  var app = $("#app"), drawer = $("#drawer"), thread = $("#thread"), toasts = $("#toasts"), chips = $("#chips");
+  var sleep = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
+  var esc = function (s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); };
+  var el = function (h) { var t = document.createElement("template"); t.innerHTML = h.trim(); return t.content.firstElementChild; };
+  var isMac = /Mac|iPhone|iPad/.test(navigator.platform || "");
+  $("#kbd").textContent = isMac ? "⌘ K" : "Ctrl K";
+  var now = new Date();
+  $("#today").textContent = "Orbit Labs · Unit 4.12 · " + now.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
+  var NOW = "10:42";
+
+  /* ---------- state ---------- */
+  var S;
+  function fresh() {
+    return {
+      bookings: [
+        { id: "b1", t: "09:30", end: "10:30", title: "Design sync", place: "Room A3", meta: "6 people", ic: "users" },
+        { id: "b2", t: "13:00", end: "13:30", title: "Investor call", place: "Phone booth 2", meta: "1 person", ic: "users" }
+      ],
+      visitors: [{ id: "v1", t: "11:30", title: "Marta Ozola", place: "Nordic Freight · Reception", meta: "", ic: "userplus" }],
+      deliveries: [{ id: "d1", t: "15:30", title: "Delivery: office chairs", place: "Loading bay 2", meta: "", ic: "building" }],
+      parkUsed: 14, parkTotal: 20, parkAhead: 1,
+      requests: [{ id: "R-2041", title: "Projector flicker in Room A3", stage: 2, eta: "Today by 15:00" }],
+      dismissed: {}, tries: 0
+    };
+  }
+  S = fresh();
+  var token = 0, pending = null, CANCEL = {};
+  function alive(t) { if (t !== token) throw CANCEL; }
+
+  /* ---------- dashboard render ---------- */
+  function mins(a) { var p = a.split(":"); return +p[0] * 60 + +p[1]; }
+  function hm(m) { var h = Math.floor(m / 60), r = m % 60; return (h ? h + "h " : "") + (r ? r + "m" : (h ? "" : "0m")); }
+  var lastKpi = {};
+  function kpi(key, icon, label, big, sub) {
+    var bump = lastKpi[key] !== undefined && lastKpi[key] !== big ? " bump" : "";
+    lastKpi[key] = big;
+    return '<div class="by-card kpi"><div class="top"><span>' + label + '</span>' + IC(icon) + '</div><div class="big' + bump + '">' + big + '</div><div class="sub">' + sub + '</div></div>';
+  }
+  function renderKpis() {
+    var total = S.bookings.reduce(function (a, b) { return a + mins(b.end) - mins(b.t); }, 0);
+    $("#kpis").innerHTML =
+      kpi("rooms", "calendar", "Rooms today", S.bookings.length, hm(total) + " booked") +
+      kpi("park", "car", "Parking", S.parkUsed + " / " + S.parkTotal, S.parkAhead + " reserved ahead") +
+      kpi("vis", "userplus", "Visitors today", S.visitors.length, S.visitors.length ? "Next at " + S.visitors.slice().sort(function (a, b) { return a.t < b.t ? -1 : 1; })[0].t : "None expected") +
+      kpi("req", "wrench", "Open requests", S.requests.length, S.requests.length ? "1 in progress" : "All clear");
+  }
+  function renderTimeline() {
+    var items = [].concat(S.bookings, S.visitors, S.deliveries).sort(function (a, b) { return a.t < b.t ? -1 : a.t > b.t ? 1 : 0; });
+    var html = "", placed = false, nextMarked = false;
+    items.forEach(function (it) {
+      var past = (it.end || it.t) <= NOW;
+      if (!past && !placed) { html += '<li class="tl-now" aria-label="Now">Now ' + NOW + '</li>'; placed = true; }
+      var cls = "tl-i" + (past ? " is-past" : "");
+      if (!past && !nextMarked) { cls += " is-next"; nextMarked = true; }
+      if (it.isNew) cls += " is-new";
+      var badge = past ? '<span class="by-badge by-badge--ok">Done</span>' : (cls.indexOf("is-next") > -1 ? '<span class="by-badge by-badge--brand">Next</span>' : "");
+      html += '<li class="' + cls + '"><time>' + it.t + '</time><span class="dot"></span><div><b>' + esc(it.title) + '</b><span class="m">' + esc(it.place) + (it.meta ? " · " + esc(it.meta) : "") + '</span></div>' + badge + '</li>';
+      it.isNew = false;
+    });
+    if (!placed) html += '<li class="tl-now">Now ' + NOW + '</li>';
+    $("#timeline").innerHTML = html;
+    $("#todayCount").textContent = items.length + " items";
+  }
+  function renderReqs() {
+    var stages = ["Received", "Assigned", "In progress", "Done"];
+    $("#reqs").innerHTML = S.requests.length ? S.requests.map(function (r) {
+      var steps = stages.map(function (s, i) { return '<div class="' + (i < r.stage ? "is-done" : i === r.stage ? "is-now" : "") + '">' + s + "</div>"; }).join("");
+      return '<div class="req-i"><b>' + esc(r.title) + '</b><div class="m"><span>' + r.id + "</span><span>·</span><span>" + esc(r.eta) + '</span></div><div class="by-stepper" aria-label="Status: ' + stages[r.stage] + '">' + steps + "</div></div>";
+    }).join("") : '<p class="empty-line">No open requests.</p>';
+  }
+  var SUGS = {
+    room: { title: "Room B2 is free 14:00–15:00", body: "Your calendar has “Product sync” with 8 people at 14:00 and no room yet. B2 seats 10 and is in your building.", why: "Based on your calendar only. No other tenant's data was used.", cta: "Review booking", run: "room-s" },
+    park: { title: "Book Friday parking?", body: "You parked every Friday for the last 4 weeks and have no pass for this Friday yet.", why: "Based on your own parking history. Nothing is booked until you confirm.", cta: "Review reservation", run: "parking-s" }
+  };
+  function renderSugs() {
+    var html = Object.keys(SUGS).filter(function (k) { return !S.dismissed[k]; }).map(function (k) {
+      var s = SUGS[k];
+      return '<article class="by-ai sug" data-sug="' + k + '"><div class="head"><span class="by-ai-tag">' + IC("spark") + ' Suggestion</span><button class="by-btn by-btn--ghost by-btn--sm by-iconbtn" style="min-height:32px;width:32px" type="button" aria-label="Dismiss suggestion" data-dismiss="' + k + '">' + IC("x") + '</button></div><h3 class="by-ai__title">' + s.title + '</h3><p class="t-small">' + s.body + '</p><details><summary>Why am I seeing this?</summary><p>' + s.why + '</p></details><div class="row"><button class="by-btn by-btn--ai by-btn--sm" type="button" data-sugrun="' + s.run + '">' + s.cta + '</button></div></article>';
+    }).join("");
+    $("#sugs").innerHTML = html;
+  }
+  function renderAll() { renderKpis(); renderTimeline(); renderReqs(); renderSugs(); }
+
+  /* ---------- toasts ---------- */
+  function toast(msg, undo) {
+    var t = el('<div class="by-toast" role="status"><span>' + esc(msg) + "</span>" + (undo ? '<button type="button">Undo</button>' : "") + "</div>");
+    toasts.appendChild(t);
+    var gone = false;
+    function rm() { if (gone) return; gone = true; t.remove(); }
+    if (undo) t.querySelector("button").addEventListener("click", function () { undo(); rm(); });
+    setTimeout(rm, 5200);
+  }
+
+  /* ---------- drawer ---------- */
+  var opened = false;
+  function openDrawer(focus) {
+    app.classList.add("drawer-open"); opened = true;
+    drawer.setAttribute("aria-hidden", "false");
+    if (focus !== false) setTimeout(function () { $("#askIn").focus({ preventScroll: true }); }, 60);
+  }
+  function closeDrawer() { app.classList.remove("drawer-open"); opened = false; drawer.setAttribute("aria-hidden", "true"); }
+  $("#askBtn").addEventListener("click", function () { openDrawer(); });
+  $("#closeBtn").addEventListener("click", closeDrawer);
+  $("#scrim").addEventListener("click", closeDrawer);
+  document.addEventListener("keydown", function (e) {
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") { e.preventDefault(); openDrawer(); }
+    if (e.key === "Escape" && opened) closeDrawer();
+  });
+  $$("[data-noop]").forEach(function (a) { a.addEventListener("click", function (e) { e.preventDefault(); toast("Only the overview is built in this prototype."); }); });
+
+  function emptyState() {
+    thread.innerHTML = '<div class="empty" id="empty"><span class="mark">' + IC("spark") + '</span><h3 class="t-h2">What do you need?</h3><p class="t-small" style="max-width:34ch">I can book rooms, add visitors, reserve parking and send requests to facilities. I show you the change before I make it.</p></div>';
+  }
+  var PROMPTS = [
+    { text: "Book a room for 8 at 14:00", run: "room" },
+    { text: "Add a visitor: Anna Kalnina at 15:00", run: "visitor" },
+    { text: "It's too cold on the 4th floor", run: "request" },
+    { text: "Book parking", run: "parking" }
+  ];
+  chips.innerHTML = PROMPTS.map(function (p, i) { return '<button class="by-chip" type="button" data-p="' + i + '">' + esc(p.text) + "</button>"; }).join("");
+  function push(d) {
+    var e = $("#empty"); if (e) e.remove();
+    thread.appendChild(d);
+    thread.scrollTo({ top: thread.scrollHeight, behavior: "smooth" });
+    return d;
+  }
+  function say(html) { return push(el('<div class="msg msg--ai"><span class="av">' + IC("spark") + '</span><div class="by-bub by-bub--ai">' + html + "</div></div>")); }
+  function user(t) { return push(el('<div class="msg msg--user"><div class="by-bub by-bub--user">' + esc(t) + "</div></div>")); }
+  function card(html, cls) { return push(el('<div class="msg msg--card"><div class="by-ai ' + (cls || "") + '">' + html + "</div></div>")); }
+
+  /* ---------- building blocks ---------- */
+  async function think(t, steps, summary) {
+    var d = card('<span class="by-ai-tag">' + IC("spark") + ' Working</span><ul class="by-think">' + steps.map(function (s) { return '<li><span class="st"></span>' + esc(s) + "</li>"; }).join("") + "</ul>");
+    var lis = $$("li", d);
+    for (var i = 0; i < lis.length; i++) {
+      lis[i].className = "is-run"; lis[i].firstChild.innerHTML = '<span class="by-spin"></span>';
+      await sleep(620); alive(t);
+      lis[i].className = "is-done"; lis[i].firstChild.innerHTML = IC("check");
+    }
+    await sleep(260); alive(t);
+    d.firstChild.replaceWith(el('<div class="sumline">' + IC("check") + "<span>" + esc(summary) + "</span></div>"));
+    d.classList.add("done-think");
+  }
+  function ask(t, q, options) {
+    return new Promise(function (resolve, reject) {
+      var d = push(el('<div class="msg msg--ai"><span class="av">' + IC("spark") + '</span><div class="by-bub by-bub--ai"><div>' + esc(q) + '</div><div class="chips" style="margin-top:10px">' + options.map(function (o, i) { return '<button class="by-chip" type="button" data-i="' + i + '">' + esc(o) + "</button>"; }).join("") + "</div></div></div>"));
+      pending = { cancel: function () { d.querySelectorAll("button").forEach(function (b) { b.disabled = true; }); reject(CANCEL); } };
+      d.addEventListener("click", function (e) {
+        var b = e.target.closest("button"); if (!b || b.disabled) return;
+        d.querySelectorAll("button").forEach(function (x) { x.disabled = true; });
+        b.setAttribute("aria-pressed", "true");
+        pending = null; user(options[+b.dataset.i]); resolve(options[+b.dataset.i]);
+      });
+    });
+  }
+  function rowsHtml(rows) { return rows.map(function (r) { return '<dt>' + r[1] + '</dt><dd data-k="' + r[0] + '">' + esc(r[2]) + "</dd>"; }).join(""); }
+  function propose(t, spec) {
+    var alts = spec.alts || [], sel = (alts.filter(function (a) { return a.sel; })[0] || {}).id;
+    var html =
+      '<div class="row-between"><span class="by-ai-tag">' + IC("spark") + " " + esc(spec.tag) + '</span></div>' +
+      '<b class="by-ai__title">' + esc(spec.title) + "</b>" +
+      (spec.note ? '<p class="t-small">' + esc(spec.note) + "</p>" : "") +
+      '<dl class="by-dl">' + rowsHtml(spec.rows) + "</dl>" +
+      (alts.length ? '<div class="alts" role="radiogroup" aria-label="Choose an option">' + alts.map(function (a) { return '<button type="button" class="alt" role="radio" aria-checked="' + (a.sel ? "true" : "false") + '" data-alt="' + a.id + '"' + (a.disabled ? " disabled" : "") + '><span class="rad"></span><span><b>' + esc(a.label) + "</b><small>" + esc(a.meta) + "</small></span></button>"; }).join("") + "</div>" : "") +
+      (spec.fields || []).map(function (f) { return '<div class="by-field"><label class="by-label" for="f-' + f.id + '">' + esc(f.label) + '</label><input class="by-input" id="f-' + f.id + '" data-f="' + f.id + '" placeholder="' + esc(f.placeholder) + '" autocomplete="off" aria-describedby="h-' + f.id + '"><span class="by-help" id="h-' + f.id + '">' + esc(f.help) + "</span></div>"; }).join("") +
+      (spec.why ? '<div class="by-why">' + spec.why.map(function (w) { return "<span>" + IC("check") + esc(w) + "</span>"; }).join("") + "</div>" : "") +
+      '<div class="row" data-actions><button class="by-btn by-btn--primary" type="button" data-c="confirm">' + esc(spec.confirm) + '</button><button class="by-btn by-btn--ghost" type="button" data-c="no">Not now</button></div>';
+    var d = card(html), box = d.firstChild, actions = $("[data-actions]", box);
+    return new Promise(function (resolve, reject) {
+      function lock(on) { $$("button, input", box).forEach(function (x) { x.disabled = on; }); }
+      pending = { cancel: function () { lock(true); box.style.opacity = ".55"; reject(CANCEL); } };
+      async function attempt() {
+        var values = {}, bad = null;
+        (spec.fields || []).forEach(function (f) {
+          var inp = $('[data-f="' + f.id + '"]', box), h = $("#h-" + f.id, box);
+          values[f.id] = inp.value.trim();
+          if (!f.validate(values[f.id])) {
+            inp.setAttribute("aria-invalid", "true"); h.className = "by-help is-error"; h.innerHTML = IC("alert") + esc(f.error); if (!bad) bad = inp;
+          } else { inp.removeAttribute("aria-invalid"); h.className = "by-help"; h.textContent = f.help; }
+        });
+        if (bad) { bad.focus(); return; }
+        var btn = $('[data-c="confirm"]', box); btn.classList.add("is-loading");
+        lock(true);
+        try { if (spec.send) await spec.send(values, sel); }
+        catch (err) {
+          btn.classList.remove("is-loading");
+          box.classList.add("is-error");
+          box.innerHTML = '<span class="by-badge by-badge--bad">' + IC("alert") + ' Not sent</span><b class="by-ai__title">' + esc(spec.failTitle) + '</b><p class="t-small" style="color:var(--ink-2)">' + esc(spec.failBody) + '</p><div class="row"><button class="by-btn by-btn--primary" type="button" data-c="retry">Try again</button><button class="by-btn by-btn--secondary" type="button" data-c="draft">Save as draft</button></div>';
+          return;
+        }
+        alive(t); pending = null; resolve({ ok: true, values: values, alt: sel, box: box });
+      }
+      box.addEventListener("click", async function (e) {
+        var b = e.target.closest("button"); if (!b || b.disabled) return;
+        if (b.dataset.alt) {
+          sel = b.dataset.alt;
+          $$(".alt", box).forEach(function (x) { x.setAttribute("aria-checked", x === b ? "true" : "false"); });
+          var a = alts.filter(function (x) { return x.id === sel; })[0];
+          Object.keys(a.rows || {}).forEach(function (k) { var dd = $('[data-k="' + k + '"]', box); if (dd) dd.textContent = a.rows[k]; });
+        } else if (b.dataset.c === "no") {
+          pending = null; lock(true); box.style.opacity = ".6"; resolve({ ok: false });
+        } else if (b.dataset.c === "draft") {
+          pending = null; box.style.opacity = ".6"; resolve({ ok: false, draft: true });
+        } else if (b.dataset.c === "confirm" || b.dataset.c === "retry") {
+          if (b.dataset.c === "retry") { b.classList.add("is-loading"); $$("button", box).forEach(function (x) { x.disabled = true; }); try { if (spec.send) await spec.send({}, sel); } catch (err2) { b.classList.remove("is-loading"); $$("button", box).forEach(function (x) { x.disabled = false; }); return; } alive(t); pending = null; resolve({ ok: true, values: {}, alt: sel, box: box }); }
+          else attempt();
+        }
+      });
+    });
+  }
+  function done(box, o) {
+    box.classList.remove("is-error"); box.classList.add("is-committed");
+    box.innerHTML = '<span class="by-badge by-badge--ok">' + IC("check") + " " + esc(o.badge || "Done") + '</span><b class="by-ai__title">' + esc(o.title) + '</b><p class="t-small" style="color:var(--ink-2)">' + esc(o.detail) + '</p><div class="undo-line"><span class="ring" style="--t:1"></span><span class="u-txt">You can undo this for a few more seconds.</span><button class="by-btn by-btn--secondary by-btn--sm" type="button">' + IC("undo") + (o.undoLabel || "Undo") + "</button></div>";
+    var ring = $(".ring", box), line = $(".undo-line", box), start = Date.now(), total = 8000, used = false;
+    var tick = setInterval(function () {
+      var f = 1 - (Date.now() - start) / total;
+      if (f <= 0 || used) { clearInterval(tick); if (!used) line.innerHTML = '<span class="u-txt">Saved. Need to change it? Ask me again.</span>'; return; }
+      ring.style.setProperty("--t", f.toFixed(3));
+    }, 120);
+    $("button", box).addEventListener("click", function () { used = true; line.innerHTML = '<span class="by-badge">' + IC("undo") + " Undone</span>"; o.undo(); });
+  }
+
+  /* ---------- flows ---------- */
+  async function run(fn) {
+    var t = ++token;
+    if (pending) { var p = pending; pending = null; p.cancel(); }
+    openDrawer(false);
+    try { await fn(t); } catch (e) { if (e !== CANCEL) throw e; }
+  }
+  function flowRoom(proactive) {
+    return run(async function (t) {
+      if (!proactive) {
+        user("Book a room for 8 at 14:00");
+        await think(t, ["Reading your calendar", "Finding rooms for 8 people at 14:00", "Checking distance from Unit 4.12"], "Checked your calendar, 3 rooms and distance");
+        say("I found a room that fits. Check the details, then confirm.");
+      } else {
+        say("This comes from “Product sync” in your calendar at 14:00. Check the details, then confirm.");
+      }
+      var alts = [
+        { id: "b2", label: "Room B2 · 10 seats", meta: "2 min walk · free 14:00", sel: true, rows: { when: "Today · 14:00–15:00", where: "Room B2 · Building B, floor 2" } },
+        { id: "b1", label: "Room B1 · 8 seats", meta: "Starts 14:30 · same floor as you", rows: { when: "Today · 14:30–15:30", where: "Room B1 · Building B, floor 4" } },
+        { id: "c4", label: "Room C4 · 6 seats", meta: "Too small for 8 people", disabled: true }
+      ];
+      var r = await propose(t, { tag: "Proposal · not booked yet", title: "Book a meeting room", rows: [["when", "When", "Today · 14:00–15:00"], ["where", "Where", "Room B2 · Building B, floor 2"], ["gear", "Equipment", "Projector, whiteboard"], ["who", "Invites", "You + 7 · not sent"]], alts: alts, why: ["Fits 8 people", "Same building", "Free for the whole hour"], confirm: "Confirm booking" });
+      if (!r.ok) { say("Okay. Nothing was booked."); return; }
+      var a = alts.filter(function (x) { return x.id === r.alt; })[0], b1 = r.alt === "b1";
+      var item = { id: "b" + Date.now(), t: b1 ? "14:30" : "14:00", end: b1 ? "15:30" : "15:00", title: "Product sync", place: a.label.split(" · ")[0], meta: "8 people", ic: "users", isNew: true };
+      S.bookings.push(item); S.dismissed.room = true; renderAll();
+      done(r.box, { title: item.place + " booked", detail: a.rows.when + ". Added to your calendar.", undo: function () { S.bookings = S.bookings.filter(function (x) { return x !== item; }); renderAll(); say("Booking removed. The room is free again."); } });
+    });
+  }
+  function flowVisitor() {
+    return run(async function (t) {
+      user("Add a visitor: Anna Kalnina at 15:00");
+      await think(t, ["Reading the request", "Checking visitor limits for Unit 4.12", "Preparing a QR pass"], "Checked limits and prepared a pass");
+      say("I need one detail before I can send the pass.");
+      var r = await propose(t, { tag: "Proposal · pass not sent yet", title: "Add a visitor", rows: [["who", "Visitor", "Anna Kalnina"], ["when", "Arrives", "Today · 15:00"], ["host", "Host", "Elena Berzina · Unit 4.12"], ["acc", "Access", "Reception and floor 4, until 18:00"]], fields: [{ id: "email", label: "Visitor email", placeholder: "anna@company.example", help: "She receives a QR pass and directions to the car park.", validate: function (v) { return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v); }, error: "Enter a full email address, like anna@company.example" }], confirm: "Send pass" });
+      if (!r.ok) { say("Okay. No pass was sent."); return; }
+      var item = { id: "v" + Date.now(), t: "15:00", title: "Anna Kalnina", place: "Reception · visitor", meta: "", ic: "userplus", isNew: true };
+      S.visitors.push(item); renderAll();
+      done(r.box, { title: "Pass sent to Anna", detail: "Sent to " + r.values.email + ". You get a note when she arrives.", undoLabel: "Cancel pass", undo: function () { S.visitors = S.visitors.filter(function (x) { return x !== item; }); renderAll(); say("Pass cancelled. Anna was notified."); } });
+    });
+  }
+  function flowRequest() {
+    return run(async function (t) {
+      user("It's too cold on the 4th floor");
+      await think(t, ["Reading the message", "Matching it to a facilities category", "Looking for open requests nearby"], "Matched to Heating & cooling. No duplicates found");
+      say("That sounds like a heating issue. Here is the request I would send.");
+      S.tries = 0;
+      var r = await propose(t, { tag: "Proposal · not sent yet", title: "Send a request to facilities", rows: [["cat", "Category", "Heating & cooling"], ["loc", "Location", "Building B · floor 4"], ["pri", "Priority", "Normal"], ["msg", "Message", "Floor 4 feels too cold. Reported by Elena, Orbit Labs."]], why: ["No open request for floor 4", "Facilities answers in about 2 hours"], confirm: "Send to facilities", failTitle: "Facilities didn't respond", failBody: "Nothing was sent. Your request is still here, so you can try again or save it as a draft.", send: async function () { await sleep(1300); S.tries++; if (S.tries === 1) throw new Error("timeout"); } });
+      if (!r.ok) { say(r.draft ? "Saved as a draft in Requests. Nothing was sent." : "Okay. Nothing was sent."); if (r.draft) toast("Draft saved"); return; }
+      var req = { id: "R-2042", title: "Floor 4 too cold", stage: 0, eta: "First reply within 2 hours" };
+      S.requests.unshift(req); renderAll();
+      done(r.box, { badge: "Sent", title: "Request R-2042 sent", detail: "Facilities received it. First reply within about 2 hours.", undoLabel: "Cancel request", undo: function () { S.requests = S.requests.filter(function (x) { return x !== req; }); renderAll(); say("Request cancelled."); } });
+    });
+  }
+  function flowParking(pre) {
+    return run(async function (t) {
+      var day, car;
+      if (!pre) {
+        user("Book parking");
+        await think(t, ["Reading the message"], "I need two details first");
+        day = await ask(t, "Which day do you need parking?", ["Today", "Tomorrow", "Friday"]); alive(t);
+        await sleep(300); alive(t);
+        car = await ask(t, "Which vehicle?", ["LV-4821 · Skoda Octavia", "LV-7730 · Tesla Model 3"]); alive(t);
+        await sleep(300); alive(t);
+      } else {
+        day = "Friday"; car = "LV-4821 · Skoda Octavia";
+        say("You usually park on Fridays, so I filled in the details. Check them, then confirm.");
+      }
+      var r = await propose(t, { tag: "Proposal · not reserved yet", title: "Reserve a parking spot", rows: [["day", "Day", day], ["car", "Vehicle", car], ["spot", "Spot", "P2-14 · level 2, near lift B"], ["cost", "Cost", "Included in your lease"]], why: ["Closest free spot to Building B", "Covered"], confirm: "Reserve spot" });
+      if (!r.ok) { say("Okay. No spot was reserved."); return; }
+      var today = day === "Today";
+      if (today) S.parkUsed++; else S.parkAhead++;
+      S.dismissed.park = true; renderAll();
+      done(r.box, { title: "Spot P2-14 reserved", detail: day + " · " + car.split(" · ")[0] + ". The pass is in the mobile app.", undo: function () { if (today) S.parkUsed--; else S.parkAhead--; renderAll(); say("Reservation cancelled."); } });
+    });
+  }
+  var RUN = { room: function () { return flowRoom(false); }, visitor: flowVisitor, request: flowRequest, parking: function () { return flowParking(false); }, "room-s": function () { return flowRoom(true); }, "parking-s": function () { return flowParking(true); } };
+
+  /* ---------- wiring ---------- */
+  chips.addEventListener("click", function (e) { var b = e.target.closest("[data-p]"); if (b) RUN[PROMPTS[+b.dataset.p].run](); });
+  $$("[data-run]").forEach(function (b) { b.addEventListener("click", function () { RUN[b.dataset.run](); $("#app").scrollIntoView({ block: "nearest", behavior: "smooth" }); }); });
+  $("#sugs").addEventListener("click", function (e) {
+    var r = e.target.closest("[data-sugrun]"); if (r) { RUN[r.dataset.sugrun](); return; }
+    var d = e.target.closest("[data-dismiss]");
+    if (d) {
+      var k = d.dataset.dismiss, card = d.closest(".sug");
+      card.classList.add("is-leaving");
+      setTimeout(function () { S.dismissed[k] = true; renderSugs(); toast("Suggestion dismissed", function () { delete S.dismissed[k]; renderSugs(); }); }, 260);
+    }
+  });
+  $("#askForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var v = $("#askIn").value.trim(); if (!v) return;
+    var l = v.toLowerCase(); $("#askIn").value = "";
+    var f = /room|meeting|boardroom/.test(l) ? "room" : /visitor|guest/.test(l) ? "visitor" : /cold|hot|warm|broken|leak|light|toilet|aircon|heating|noise/.test(l) ? "request" : /park|car/.test(l) ? "parking" : null;
+    if (f) { RUN[f](); return; }
+    run(async function () { user(v); await sleep(500); say("I can help with rooms, visitors, parking and requests to facilities. I won't guess beyond that. Try one of the examples below."); });
+  });
+  $("#clearBtn").addEventListener("click", function () { ++token; if (pending) { var p = pending; pending = null; p.cancel(); } emptyState(); });
+  $("#byTheme").addEventListener("click", function () { var dark = app.dataset.by !== "dark"; app.dataset.by = dark ? "dark" : "light"; $("#byTheme").textContent = dark ? "Dark" : "Light"; });
+  $("#resetBtn").addEventListener("click", function () { ++token; if (pending) { var p = pending; pending = null; p.cancel(); } S = fresh(); lastKpi = {}; renderAll(); emptyState(); closeDrawer(); });
+
+  /* voice-note waveform */
+  var wv = $("#wave"), seed = 7, bars = "";
+  for (var i = 0; i < 64; i++) { seed = (seed * 9301 + 49297) % 233280; var h = 6 + Math.round((seed / 233280) * 26 * (0.45 + 0.55 * Math.sin(i / 7) * Math.sin(i / 7))); bars += '<i class="' + (i < 22 ? "on" : "") + '" style="height:' + h + 'px"></i>'; }
+  wv.innerHTML = bars;
+
+  renderAll(); emptyState();
+})();
+</script>
+</body>
+</html>

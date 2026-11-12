@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fabric Stock Bot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="../assets/site.css">
+<style>
+
+/* ---------- one accent per bot (light + dark). A page sets --accent from its own --bN ---------- */
+:root { --b1:#C42463; --b1s:#fce3ed; --b1i:#ffffff; --b2:#6A35D8; --b2s:#ece4ff; --b2i:#ffffff; --b3:#0A7468; --b3s:#d9f2ed; --b3i:#ffffff; --b4:#A94B06; --b4s:#fdebd0; --b4i:#ffffff; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --b1:#FF8DB3; --b1s:#3c1428; --b1i:#2a0a17; --b2:#B99CFF; --b2s:#2a1f58; --b2i:#1a0b3a; --b3:#4FD3C2; --b3s:#0f3430; --b3i:#05211d; --b4:#F5A524; --b4s:#3a2a0a; --b4i:#241600; }
+}
+:root[data-theme="dark"] { --b1:#FF8DB3; --b1s:#3c1428; --b1i:#2a0a17; --b2:#B99CFF; --b2s:#2a1f58; --b2i:#1a0b3a; --b3:#4FD3C2; --b3s:#0f3430; --b3i:#05211d; --b4:#F5A524; --b4s:#3a2a0a; --b4i:#241600; }
+body.p-b1, .bc.b1 { --accent: var(--b1); --accent-soft: var(--b1s); --accent-ink: var(--b1i); }
+body.p-b2, .bc.b2 { --accent: var(--b2); --accent-soft: var(--b2s); --accent-ink: var(--b2i); }
+body.p-b3, .bc.b3 { --accent: var(--b3); --accent-soft: var(--b3s); --accent-ink: var(--b3i); }
+body.p-b4, .bc.b4 { --accent: var(--b4); --accent-soft: var(--b4s); --accent-ink: var(--b4i); }
+.mono-ava { width: 64px; height: 64px; flex: none; border-radius: 18px; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font: 800 32px/1 var(--display); box-shadow: 0 0 0 4px var(--accent-soft); }
+
+/* ---------- page-level helpers ---------- */
+.meta div { align-content: start; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.ic { width: 18px; height: 18px; flex: none; }
+.four { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 16px; }
+.four .box { gap: 10px; }
+.four .box h3 { font-size: 19px; }
+.four .box p { font-size: 14.5px; color: var(--ink-2); }
+.four .box p b { color: var(--ink); font-weight: 600; }
+.four .box a { font: 600 13.5px var(--text); margin-top: 4px; }
+.stage { display: grid; grid-template-columns: minmax(0, 360px) minmax(0, 1fr); gap: 32px 40px; align-items: start; }
+.stage > * { min-width: 0; }
+.stack { display: grid; gap: 20px; align-content: start; min-width: 0; }
+.duo { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 360px)); gap: 28px 32px; align-items: start; }
+.duo > * { min-width: 0; }
+.cap { font-size: 14px; color: var(--ink-2); max-width: 60ch; }
+.cap b { color: var(--ink); }
+.small { font-size: 14.5px; color: var(--ink-2); }
+.small b { color: var(--ink); font-weight: 600; }
+.note-line { font: 500 12px/1.5 var(--mono); color: var(--ink-2); }
+@media (max-width: 860px) { .stage { grid-template-columns: minmax(0, 1fr); } }
+/* ---------- Telegram-like phone (new component: chat bubble + inline keyboard) ---------- */
+.tg { width: 100%; max-width: 360px; height: 580px; display: grid; grid-template-rows: auto minmax(0, 1fr) auto auto; background: var(--surface); border: 1px solid var(--rule); border-radius: 28px; box-shadow: var(--shadow); overflow: hidden; }
+.tg-head { display: flex; gap: 12px; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--rule); background: var(--surface); min-width: 0; }
+.tg-head > div { min-width: 0; display: grid; }
+.tg-head b { font: 700 15px/1.2 var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tg-head small { font: 500 11.5px var(--mono); color: var(--ink-2); }
+.tg-ava { width: 36px; height: 36px; flex: none; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font: 700 15px var(--display); }
+.tg-body { overflow-y: auto; overscroll-behavior: contain; padding: 14px 12px; display: flex; flex-direction: column; gap: 8px; background: var(--surface-2); scroll-behavior: auto; }
+.tg-body:focus-visible { outline-offset: -3px; }
+.tg-msg { max-width: 88%; font: 400 14px/1.45 var(--text); padding: 9px 12px; border-radius: 14px; overflow-wrap: anywhere; word-break: break-word; }
+.tg-msg.in { align-self: flex-start; background: var(--surface); border: 1px solid var(--rule); border-bottom-left-radius: 4px; }
+.tg-msg.out { align-self: flex-end; background: var(--accent); color: var(--accent-ink); border-bottom-right-radius: 4px; }
+.tg-msg b { font-weight: 600; }
+.tg-msg code { font: 500 12.5px var(--mono); }
+.tg-msg.pill { align-self: center; max-width: 94%; text-align: center; background: transparent; padding: 4px 8px; font: 500 11px/1.4 var(--mono); letter-spacing: .04em; text-transform: uppercase; color: var(--ink-2); }
+.tg-msg.card { align-self: center; max-width: 96%; width: 96%; border: 1px dashed var(--rule); border-radius: 12px; background: var(--surface); }
+.tg-msg.card .who { font: 600 12px var(--mono); color: var(--ink-2); margin-bottom: 4px; display: block; letter-spacing: .04em; text-transform: uppercase; }
+.tg-msg.typing { display: flex; gap: 4px; padding: 12px 14px; }
+.tg-msg.typing i { width: 6px; height: 6px; border-radius: 50%; background: var(--ink-2); animation: tgdot 1s infinite ease-in-out; }
+.tg-msg.typing i:nth-child(2) { animation-delay: .15s; } .tg-msg.typing i:nth-child(3) { animation-delay: .3s; }
+@keyframes tgdot { 0%, 80%, 100% { opacity: .25; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-3px); } }
+.tg-msg.is-new { animation: tgin 180ms cubic-bezier(.2, 0, 0, 1); }
+@keyframes tgin { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.tg-kb { display: grid; gap: 4px; align-self: stretch; margin-top: -2px; }
+.tg-kb .r { display: flex; gap: 4px; }
+.tg-btn { flex: 1 1 0; min-width: 0; min-height: 38px; padding: 8px 10px; border: 0; border-radius: 10px; background: var(--accent-soft); color: var(--accent); font: 600 13px/1.25 var(--text); text-align: center; overflow-wrap: anywhere; transition: background 100ms, transform 100ms, opacity 180ms; display: flex; align-items: center; justify-content: center; }
+.tg-btn:hover:not(:disabled) { background: var(--accent); color: var(--accent-ink); }
+.tg-btn:active:not(:disabled) { transform: scale(.98); }
+.tg-btn:disabled { cursor: default; }
+.tg-btn.is-picked { background: var(--accent); color: var(--accent-ink); }
+.tg-btn.is-spent:not(.is-picked) { opacity: .45; }
+.tg-btn.is-inert { opacity: .55; cursor: not-allowed; }
+.tg-chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 12px 0; background: var(--surface); border-top: 1px solid var(--rule); min-height: 8px; }
+.tg-chips:empty { display: none; }
+.tg-chips button { border: 1px dashed var(--accent); background: transparent; color: var(--accent); border-radius: 999px; padding: 5px 11px; font: 500 12.5px var(--mono); }
+.tg-chips button:hover { background: var(--accent-soft); }
+.tg-form { display: flex; gap: 8px; padding: 10px 12px 12px; background: var(--surface); }
+.tg-chips:empty + .tg-form { border-top: 1px solid var(--rule); }
+.tg-form input { flex: 1; min-width: 0; font: 400 14px var(--text); color: var(--ink); background: var(--surface-2); border: 1px solid var(--rule); border-radius: 999px; padding: 9px 14px; }
+.tg-form input:disabled { opacity: .6; }
+.tg-form input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.tg-send { width: 40px; height: 40px; flex: none; border: 0; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; }
+.tg-send:disabled { opacity: .4; cursor: default; }
+.tg-static { display: grid; gap: 4px; max-width: 360px; background: var(--surface-2); border: 1px solid var(--rule); border-radius: 20px; padding: 12px; }
+.tg-static .tg-btn { cursor: default; }
+/* ---------- fabric pipeline (new component: pipeline node) ---------- */
+.pipe { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0; align-items: stretch; }
+.pn { position: relative; background: var(--surface); border: 1px solid var(--rule); padding: 14px 12px 14px; display: grid; gap: 6px; align-content: start; min-width: 0; margin-right: 22px; border-radius: 12px; }
+.pn:last-child { margin-right: 0; }
+.pn:not(:last-child)::after { content: ""; position: absolute; right: -22px; top: 50%; width: 22px; height: 2px; background: var(--ink-2); }
+.pn:not(:last-child)::before { content: ""; position: absolute; right: -22px; top: calc(50% - 4px); width: 8px; height: 8px; border-top: 2px solid var(--ink-2); border-right: 2px solid var(--ink-2); transform: rotate(45deg) translate(-2px, 2px); transform-origin: center; }
+.pn .label { color: var(--ink-2); }
+.pn b { font: 700 15px/1.25 var(--text); }
+.pn p { font-size: 13px; color: var(--ink-2); line-height: 1.45; }
+.pn.ai { background: var(--accent-soft); border-color: var(--accent); border-style: dashed; }
+.pn.ai .label { color: var(--accent); }
+.pn.code { border-color: var(--ink); }
+.pipe-note { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 12px; margin-top: 16px; }
+.pipe-note > div { border-radius: 12px; padding: 12px 14px; font-size: 14px; display: grid; gap: 4px; }
+.pipe-note .sees { background: var(--accent-soft); } .pipe-note .never { background: var(--crit-soft); }
+.pipe-note b { font: 600 12px var(--mono); letter-spacing: .06em; text-transform: uppercase; }
+.pipe-note .sees b { color: var(--accent); } .pipe-note .never b { color: var(--crit); }
+@media (max-width: 960px) {
+  .pipe { grid-template-columns: minmax(0, 1fr); gap: 22px; }
+  .pn { margin-right: 0; }
+  .pn:not(:last-child)::after { right: auto; left: 50%; top: auto; bottom: -22px; width: 2px; height: 22px; }
+  .pn:not(:last-child)::before { right: auto; left: calc(50% - 4px); top: auto; bottom: -22px; transform: rotate(135deg) translate(-2px, 2px); }
+}
+/* provenance number (new component) */
+.n { text-decoration: underline dotted var(--ok); text-decoration-thickness: 2px; text-underline-offset: 3px; background: var(--ok-soft); color: inherit; border-radius: 3px; padding: 0 2px; }
+.tg-msg.out .n { color: var(--ink); }
+.legend { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-2); }
+/* fabric demo */
+.fd { display: grid; grid-template-columns: minmax(0, 340px) minmax(0, 1fr); gap: 20px 28px; align-items: start; }
+.fd > * { min-width: 0; }
+.fd-list { display: grid; gap: 8px; }
+.fd-list .lbl { font: 500 11.5px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); }
+.gm { text-align: left; width: 100%; border: 1px solid var(--rule); background: var(--surface); border-radius: 12px; padding: 10px 12px; display: grid; gap: 2px; color: var(--ink); transition: border-color 100ms, background 100ms; }
+.gm:hover { border-color: var(--accent); }
+.gm[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); box-shadow: inset 3px 0 0 var(--accent); }
+.gm .who { font: 600 12px var(--mono); color: var(--accent); }
+.gm .t { font-size: 14.5px; line-height: 1.4; overflow-wrap: anywhere; }
+.gm .tag { font: 500 11px var(--mono); color: var(--ink-2); }
+.fd-out { display: grid; gap: 14px; }
+.stepx { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 12px; }
+.stepx > i { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font: 700 12px var(--mono); font-style: normal; background: var(--ink); color: var(--bg); margin-top: 2px; }
+.stepx.ai > i { background: var(--accent); color: var(--accent-ink); }
+.stepx h4 { font: 700 15px var(--text); letter-spacing: 0; margin-bottom: 4px; }
+.stepx h4 small { font: 500 11.5px var(--mono); color: var(--ink-2); margin-left: 6px; }
+.stepx .body { display: grid; gap: 8px; min-width: 0; }
+.js { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; font: 400 12.5px/1.6 var(--mono); padding: 12px 14px; background: var(--surface); border: 1px dashed var(--accent); border-radius: 12px; }
+.js .k { color: var(--accent); font-weight: 500; } .js .s { color: var(--ok); font-weight: 400; } .js .v { color: var(--warn); }
+.fd-out .tg-msg { max-width: 100%; white-space: normal; }
+.fd-out .tg-msg.in { border-radius: 14px; background: var(--surface); }
+.fd-out .tg-msg .l { display: block; }
+.lookup { font: 500 13px/1.6 var(--mono); color: var(--ink-2); background: var(--surface-2); border-radius: 10px; padding: 10px 12px; overflow-wrap: anywhere; }
+.lookup b { color: var(--ink); font-weight: 600; }
+.fd-anim .stepx { animation: tgin 280ms cubic-bezier(.2, 0, 0, 1) both; }
+.fd-anim .stepx:nth-child(2) { animation-delay: 100ms; } .fd-anim .stepx:nth-child(3) { animation-delay: 200ms; }
+.lbl-card { width: 160px; border: 1px solid var(--ink-2); background: var(--surface); border-radius: 4px; padding: 10px 12px; font: 600 12px/1.5 var(--mono); color: var(--ink); transform: rotate(8deg); margin: 6px 0 8px 10px; box-shadow: var(--shadow); }
+.lbl-card small { display: block; color: var(--ink-2); font-weight: 400; }
+.lbl-card div { height: 14px; margin-top: 6px; background: repeating-linear-gradient(90deg, var(--ink) 0 2px, transparent 2px 4px, var(--ink) 4px 5px, transparent 5px 8px); }
+@media (max-width: 860px) { .fd { grid-template-columns: minmax(0, 1fr); } }
+/* eval table */
+.eval { background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; overflow: hidden; }
+.eval table { width: 100%; border-collapse: collapse; }
+.eval th, .eval td { padding: 12px 14px; text-align: left; border-bottom: 1px solid var(--rule); vertical-align: top; font-size: 14.5px; }
+.eval tr:last-child td { border-bottom: 0; }
+.eval thead th { background: var(--surface-2); font: 600 12px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); }
+.eval thead th.rec { color: var(--ok); }
+.eval tbody th { font-weight: 500; color: var(--ink-2); width: 34%; }
+.eval td { font: 500 14.5px var(--mono); }
+.eval td small { display: block; font: 400 12px var(--text); color: var(--ink-2); margin-top: 2px; }
+.bar-i { display: block; height: 6px; border-radius: 3px; background: var(--accent); margin-top: 6px; max-width: 100%; }
+.eval td.rec .bar-i { background: var(--ok); }
+/* failure cards */
+.fail { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 16px; }
+.fail .box h3 { font-size: 17px; }
+.fail .tg-msg { max-width: 100%; }
+.who2 { font: 600 11.5px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); }
+/* new component sheet */
+.comp { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 16px; }
+.comp .box { align-content: start; }
+.comp .box h3 { font-size: 17px; }
+.comp .demo { display: grid; gap: 8px; justify-items: start; }
+.comp .states { font: 500 12px/1.5 var(--mono); color: var(--ink-2); }
+.pipe-mini { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
+.pipe-mini .pn { margin: 0; } .pipe-mini .pn::before, .pipe-mini .pn::after { display: none; }
+
+/* ---------- bot switcher ---------- */
+.bs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-top: 20px; }
+.bs a { display: flex; align-items: center; gap: 8px; min-width: 0; padding: 11px 12px; border: 1px solid var(--rule); border-radius: 10px; background: var(--surface); color: var(--ink-2); text-decoration: none; font: 600 13.5px/1.2 var(--text); transition: border-color 100ms, background 100ms; }
+.bs a:hover { border-color: var(--ink-2); color: var(--ink); }
+.bs a > i { width: 10px; height: 10px; border-radius: 50%; flex: none; background: var(--c); }
+.bs a > b { font: 600 11px var(--mono); color: var(--ink-2); flex: none; }
+.bs a > span { min-width: 0; overflow-wrap: anywhere; }
+.bs a[aria-current="page"] { color: var(--ink); background: var(--surface-2); border-color: var(--c); box-shadow: inset 0 -3px 0 var(--c); font-weight: 700; }
+.bs .c1 { --c: var(--b1); } .bs .c2 { --c: var(--b2); } .bs .c3 { --c: var(--b3); } .bs .c4 { --c: var(--b4); }
+@media (max-width: 720px) { .bs { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.case-hero.bot { padding-block-start: 40px; }
+.bot-id { display: flex; gap: 16px; align-items: center; min-width: 0; }
+.bot-id > div { display: grid; gap: 4px; min-width: 0; }
+.bot-id .label b { color: var(--accent); font-weight: 600; }
+.bot-id a { font: 500 13px var(--text); }
+.who { font-size: 16.5px; max-width: 62ch; border-left: 3px solid var(--accent); padding: 2px 0 2px 14px; color: var(--ink); }
+.who b { font: 600 11.5px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--accent); margin-right: 6px; }
+.case-hero.bot h1 { font-size: clamp(36px, 6.2vw, 72px); }
+
+/* security checklist (new component) */
+.sl { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 14px; }
+.sl > div { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 4px 12px; background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 16px 18px; align-content: start; min-width: 0; }
+.sl > div > i { width: 28px; height: 28px; border-radius: 8px; background: var(--ok-soft); color: var(--ok); display: grid; place-items: center; font-style: normal; grid-row: span 2; }
+.sl .ic { width: 16px; height: 16px; }
+.sl b { font: 600 15px/1.35 var(--text); }
+.sl p { font-size: 14px; color: var(--ink-2); grid-column: 2; }
+.todo { border-style: dashed; }
+.todo li::before { content: "\2192"; background: var(--warn-soft); color: var(--warn); }
+.nextbot { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 24px; align-items: center; padding: 22px 24px; border: 1px solid var(--rule); border-left: 8px solid var(--nc); border-radius: 12px; background: var(--surface); text-decoration: none; color: var(--ink); margin-top: 84px; }
+.nextbot:hover { border-color: var(--nc); }
+.nextbot > div { display: grid; gap: 4px; min-width: 0; }
+.nextbot b { font: 700 24px var(--display); letter-spacing: -.02em; }
+.nextbot span { font-size: 14.5px; color: var(--ink-2); }
+.nextbot em { font: 600 14px var(--text); font-style: normal; color: var(--ink); background: var(--nc); color: var(--nci); padding: 10px 16px; border-radius: 8px; white-space: nowrap; }
+.nextbot.n1 { --nc: var(--b1); --nci: var(--b1i); } .nextbot.n2 { --nc: var(--b2); --nci: var(--b2i); } .nextbot.n3 { --nc: var(--b3); --nci: var(--b3i); } .nextbot.n4 { --nc: var(--b4); --nci: var(--b4i); }
+.allbots { margin-top: 14px; font-size: 14px; }
+@media (max-width: 560px) { .nextbot { grid-template-columns: minmax(0, 1fr); } .nextbot em { justify-self: start; } }
+
+</style>
+</head>
+<body class="p-b3">
+<header class="bar">
+  <div class="wrap">
+    <a class="brand" href="../index.html"><i aria-hidden="true"></i><span id="brandName">Your Name</span></a>
+    <nav aria-label="Work">
+      <a href="../index.html#work">All work</a>
+      <a href="telegram-bots.html" aria-current="page">Bots</a>
+      <a href="security.html">Security</a>
+      <a href="plectra.html">Plectra</a>
+      <a href="brightyard-portal.html">Portal</a>
+      <a href="brightyard-mobile.html">Mobile</a>
+      <a href="brightyard-system.html">System</a>
+      <a href="voice-note.html">Voice note</a>
+      <a href="ai-states.html">AI states</a>
+      <a href="space-finder.html">Space finder</a>
+    </nav>
+    <button class="toggle" id="themeBtn" type="button" aria-label="Switch colour theme">Theme: auto</button>
+  </div>
+</header>
+
+<main class="wrap">
+  <nav class="bs" aria-label="The four bots">
+    <a class="c1" href="bot-salon.html"><i aria-hidden="true"></i><b>1</b><span>Salon</span></a>
+    <a class="c2" href="bot-shop.html"><i aria-hidden="true"></i><b>2</b><span>Aura Wear</span></a>
+    <a class="c3" href="bot-fabric.html" aria-current="page"><i aria-hidden="true"></i><b>3</b><span>Fabric stock</span></a>
+    <a class="c4" href="bot-revenue.html"><i aria-hidden="true"></i><b>4</b><span>Revenue</span></a>
+  </nav>
+  <div class="case-hero bot">
+    <div class="bot-id"><span class="mono-ava" aria-hidden="true">F</span><div><span class="label">Bot <b>3 of 4</b></span><a href="telegram-bots.html">All four bots</a></div></div>
+    <div class="row"><span class="kind shipped">Shipped</span><span class="kind">Telegram</span><span class="kind">AI</span><span class="kind">1C</span></div>
+    <h1>Fabric Stock Bot</h1>
+    <p class="sub">A bot in B2B groups that answers "is it in stock?" in 1 to 4 seconds. Claude reads the question. Code writes the number.</p>
+    <p class="who"><b>For</b>A fabric wholesaler: B2B clients who ask about stock in group chats, and the managers who handle everything else.</p>
+    <dl class="meta">
+      <div><dt class="label">Role</dt><dd>Product and conversation design, AI behaviour and eval, built and deployed with Claude Code</dd></div>
+      <div><dt class="label">Stack</dt><dd>Python, aiogram 3, Claude API with tool use, an HTTP service for 1C, SQLite, Docker</dd></div>
+      <div><dt class="label">Status</dt><dd>Shipped, ran on my server in October 2026</dd></div>
+      <div><dt class="label">Scale</dt><dd>About 1,900 lines of Python, 24 offline tests, 80-case eval, no Mini App</dd></div>
+    </dl>
+    <p class="honest"><b>Honest note</b><span>This is a working product built with Claude Code and run on a Linux server in October 2026. Every example and stock number on this page is invented. Real customer data stays in the bot.</span></p>
+  </div>
+  <section id="pipeline" style="padding-top:56px">
+    <div class="sec-head">
+      <span class="num">01 · HOW IT ANSWERS</span>
+      <h2>The model reads the question. Code writes the number.</h2>
+      <p>The bot reads B2B Telegram groups and answers "is it in stock?" from text or a label photo. Everything else, such as prices, orders and complaints, goes to a manager.</p>
+    </div>
+    <div>
+      <div class="pipe" role="list" aria-label="Pipeline from group message to reply">
+        <div class="pn" role="listitem"><span class="label">1 · Input</span><b>Group message</b><p>Text or a photo of a label.</p></div>
+        <div class="pn code" role="listitem"><span class="label">2 · Code</span><b>Filter</b><p>Drops chatter, managers' own replies, floods.</p></div>
+        <div class="pn ai" role="listitem"><span class="label">3 · Claude</span><b>Decides what is asked</b><p>Returns one tool call: check_stock or handoff_to_manager.</p></div>
+        <div class="pn code" role="listitem"><span class="label">4 · Code</span><b>Exact catalogue item</b><p>Fuzzy match over the 1C catalogue: typos, Cyrillic, transliteration.</p></div>
+        <div class="pn code" role="listitem"><span class="label">5 · 1C</span><b>Free stock</b><p>One HTTP call for the matched item.</p></div>
+        <div class="pn code" role="listitem"><span class="label">6 · Code</span><b>Writes the reply</b><p>A template filled from 1C data, in the client's language.</p></div>
+      </div>
+      <div class="pipe-note">
+        <div class="sees"><b>Claude sees</b><span>The message or photo, the catalogue names, and two strict tools.</span></div>
+        <div class="never"><b>Claude never sees</b><span>Stock levels or prices. It cannot write a number, so it cannot get one wrong. A test enforces that prices never leave the 1C layer.</span></div>
+      </div>
+    </div>
+    <div>
+      <h3 style="font-size:24px;margin-bottom:6px">Pick a message</h3>
+      <p class="small" style="margin-bottom:16px">Messy requests in the style of the eval set. The tool calls show the shape Claude returns. The stock numbers are invented. <span class="legend"><span class="n">42,5 м</span> comes from 1C, written by code.</span></p>
+      <div class="fd">
+        <div class="fd-list" id="fdList" role="group" aria-label="Example group messages"></div>
+        <div class="fd-out" id="fdOut" aria-live="polite"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="eval">
+    <div class="sec-head">
+      <span class="num">02 · EVAL AND FAILURE</span>
+      <h2>Tested before it was trusted</h2>
+      <p>I picked the model from numbers, and I designed what happens when a part breaks.</p>
+    </div>
+    <div class="two">
+      <div class="stack">
+        <h3 style="font-size:24px">Eval before choosing a model</h3>
+        <div class="eval">
+          <table>
+            <thead><tr><th scope="col">Effort: low</th><th scope="col">Opus 5.5</th><th scope="col" class="rec">Haiku 5.5</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">Text, 50 requests</th><td>50 / 50<small>100%, one retry after a gateway rate limit</small></td><td class="rec">50 / 50<small>100%</small></td></tr>
+              <tr><th scope="row">Photos, 30 labels</th><td>30 / 30</td><td class="rec">30 / 30</td></tr>
+              <tr><th scope="row">Median, text</th><td>2.7 s<span class="bar-i" style="width:100%"></span></td><td class="rec">1.0 s<span class="bar-i" style="width:37%"></span></td></tr>
+              <tr><th scope="row">Median, photo</th><td>3.6 s<span class="bar-i" style="width:100%"></span></td><td class="rec">1.8 s<span class="bar-i" style="width:50%"></span></td></tr>
+              <tr><th scope="row">Cost, text</th><td>≈ $0.003</td><td class="rec">≈ $0.0001</td></tr>
+              <tr><th scope="row">Cost, photo</th><td>≈ $0.010</td><td class="rec">≈ $0.0003</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="small">Haiku is the default I recommend: the same accuracy on this set, about 3 times faster and about 30 times cheaper. The photos are synthetic labels, rotated, blurred and with glare, so a real label may do worse. Times were measured through OpenRouter. 24 offline tests cover the rest.</p>
+      </div>
+      <div class="stack">
+        <h3 style="font-size:24px">When something breaks</h3>
+        <div class="fail">
+          <div class="box"><span class="who2">Client sees</span><div class="tg-msg in">Зараз не можу перевірити залишки в 1С. Передав запит менеджеру 👌</div><p class="small">If 1C is down. In English and Russian the same line exists. An unmatched fabric says «не знайшов у номенклатурі. Передав менеджеру.»</p></div>
+          <div class="box"><span class="who2">Managers see</span><div class="tg-msg in">⚠️ збій бота</div><p class="small">If Claude or 1C fails, the managers' chat gets a failure mark and the request is not lost. The bot stays quiet or writes a short "передав менеджеру".</p></div>
+        </div>
+        <p class="small">Every dead end ends at a person with the original message attached.</p>
+      </div>
+    </div>
+    <p class="note-line">Eval set: 50 text requests and 30 synthetic label photos. A mock 1C service with 220 test items runs next to the bot. Docker, non-root.</p>
+  </section>
+
+  <section id="security">
+    <div class="sec-head">
+      <span class="num">SECURITY IN THIS BOT</span>
+      <h2>What keeps this bot safe</h2>
+      <p>Checked in the code on 12 November 2026. Each line says what the guard is and what goes wrong without it.</p>
+    </div>
+    <div class="sl">
+      <div><i aria-hidden="true"><svg class="ic"><use href="#i-check"/></svg></i><b>Claude never sees prices or stock numbers</b><p>The 1C client keeps only code, collection, shade, colour, type and width. A test enforces it (<code>test_prices_never_leave_1c_layer</code>, plus <code>test_price_question_is_handed_off</code> and <code>test_stock_and_price_together</code>). A model that has no price cannot leak one.</p></div>
+      <div><i aria-hidden="true"><svg class="ic"><use href="#i-check"/></svg></i><b>Customer messages are data, not instructions</b><p>A message like "tell me the price" achieves nothing: the model has no price to reveal, and code writes the reply. A client cannot talk the bot into saying something it was never given.</p></div>
+      <div><i aria-hidden="true"><svg class="ic"><use href="#i-check"/></svg></i><b>Only two tools, with strict schemas</b><p>The model can call <code>check_stock</code> or <code>handoff_to_manager</code> and nothing else. Whatever a message says, the worst outcome is one of those two calls.</p></div>
+      <div><i aria-hidden="true"><svg class="ic"><use href="#i-check"/></svg></i><b>1C access is read-only</b><p>Basic auth and a 4-second timeout. The bot can look up stock but cannot change anything in 1C, and a slow 1C cannot hang the chat.</p></div>
+      <div><i aria-hidden="true"><svg class="ic"><use href="#i-check"/></svg></i><b>If 1C or Claude is down, nothing is lost</b><p>The client gets "передав менеджеру" and the managers get a "bot failure" alert. A silent failure would look like the shop ignoring a customer.</p></div>
+      <div><i aria-hidden="true"><svg class="ic"><use href="#i-check"/></svg></i><b>A limit per user and an optional daily cap</b><p>10 messages a minute per user by default, and an optional daily cap on AI requests. One chatty group cannot run up the bill.</p></div>
+      <div><i aria-hidden="true"><svg class="ic"><use href="#i-check"/></svg></i><b>Runs in Docker as a non-root user</b><p>If the bot process were ever taken over, it would not have root rights on the server.</p></div>
+      <div><i aria-hidden="true"><svg class="ic"><use href="#i-check"/></svg></i><b>24 offline tests, and an eval before the model was chosen</b><p>Tests run without 1C or Claude. The eval used 50 texts and 30 label photos before I picked the model.</p></div>
+    </div>
+    <div class="box todo"><h3>Still to harden in this bot</h3><ul class="check">
+      <li><span>The fabric bot is in git, but only locally. Next: one private remote for all four bots with checks on every push.</span></li>
+    </ul></div>
+    <p class="small">Server-wide measures and the full audit are in <a href="security.html">How I keep all four safe</a>.</p>
+  </section>
+  <section id="components">
+    <div class="sec-head">
+      <span class="num">NEW COMPONENTS</span>
+      <h2>Built for this page</h2>
+      <p>The chat style is a small kit on the portfolio tokens. Brightyard is not used here.</p>
+    </div>
+    <div class="comp">
+      <div class="box"><h3>Chat bubble</h3><p class="small">Carries a bot or user message. Keeps long Ukrainian words inside the bubble.</p>
+        <div class="demo"><div class="tg-msg in">Підтвердіть, будь ласка, що прийдете 👇</div><div class="tg-msg out">✅ Буду</div><div class="tg-msg in typing" aria-label="Typing"><i></i><i></i><i></i></div></div>
+        <p class="states">STATES: bot, user, typing, centre pill</p></div>
+      <div class="box"><h3>Provenance number</h3><p class="small">Marks a figure that code took from 1C. Underlined green means no model touched it.</p>
+        <div class="demo"><div class="tg-msg in">✅ SIENA 05-Birch — є <span class="n">142,5 м</span></div></div>
+        <p class="states">STATES: from source (always)</p></div>
+      <div class="box"><h3>Pipeline node</h3><p class="small">One step of the fabric pipeline. Dashed blue is the model, solid dark is code.</p>
+        <div class="demo" style="width:100%"><div class="pipe-mini"><div class="pn ai"><span class="label">Claude</span><b>Decides</b></div><div class="pn code"><span class="label">Code</span><b>Writes</b></div></div></div>
+        <p class="states">STATES: model, code, input</p></div>
+    </div>
+  </section>
+  <a class="nextbot n4" href="bot-revenue.html"><div><span class="label">Next bot · Bot 4 of 4</span><b>Shop-Chain Revenue Bot</b><span>Close a shift in about 20 seconds.</span></div><em>Open Revenue →</em></a>
+  <p class="allbots"><a href="telegram-bots.html">All four bots</a> · <a href="security.html">How I keep them safe</a></p>
+  <footer><span>Working products. Demos use invented data.</span><span>Built with Claude Code, October–November 2026</span></footer>
+</main>
+<script src="../assets/profile.js"></script>
+<script src="../assets/icons.js"></script>
+<script src="../assets/site.js"></script>
+<script>
+(function () {
+  "use strict";
+  var reduceMq = window.matchMedia ? matchMedia("(prefers-reduced-motion: reduce)") : { matches: false };
+  function wait(ms) { return new Promise(function (r) { setTimeout(r, reduceMq.matches ? 0 : ms); }); }
+
+  var T = {
+    uk: { have: "✅ {t} — є {m} м", enough: " (потрібно {n} м — вистачає)", only: "⚠️ {t} — є лише {m} м (потрібно {n} м)", alts: "   Схожі в наявності: {list}", family: "🔎 {c}, підходять за кольором: {list}", ack: "Передав питання менеджеру 👌", u: "м" },
+    ru: { have: "✅ {t} — есть {m} м", enough: " (нужно {n} м — хватает)", only: "⚠️ {t} — есть только {m} м (нужно {n} м)", alts: "   Похожие в наличии: {list}", family: "🔎 {c}, подходят по цвету: {list}", ack: "Передал вопрос менеджеру 👌", u: "м" },
+    en: { have: "✅ {t} — {m} m in stock", enough: " (you need {n} m — enough)", only: "⚠️ {t} — only {m} m left (you need {n} m)", alts: "   Similar in stock: {list}", family: "🔎 {c}, matching colours: {list}", ack: "Passed your question to a manager 👌", u: "m" }
+  };
+  function fm(v, lang) { var s = (Math.round(v * 10) / 10).toString(); return lang === "en" ? s : s.replace(".", ","); }
+  function tp(s, o) { return s.replace(/\{(\w+)\}/g, function (_, k) { return o[k]; }); }
+  function N(s) { return "<span class=\"n\">" + s + "</span>"; }
+  function buildReply(ex) {
+    var L = T[ex.lang || "uk"], lang = ex.lang || "uk", l = ex.line;
+    if (!l) return null;
+    if (l.kind === "have") return tp(L.have, { t: l.t, m: N(fm(l.m, lang)) }) + (l.n ? tp(L.enough, { n: fm(l.n, lang) }) : "");
+    if (l.kind === "only") return tp(L.only, { t: l.t, m: N(fm(l.m, lang)), n: fm(l.n, lang) }) + "<span class=\"l\">" + tp(L.alts, { list: l.alts.map(function (a) { return a[0] + " — " + N(fm(a[1], lang) + " " + L.u); }).join("; ") }) + "</span>";
+    if (l.kind === "family") return tp(L.family, { c: l.c, list: l.opts.map(function (o) { return o[0] + " " + N(fm(o[1], lang) + " " + L.u); }).join(" · ") });
+    if (l.kind === "ack") return L.ack;
+    return null;
+  }
+  var EX = [
+    { who: "Олена", text: "Siena 5 є?", tag: "uk · short, number only", lang: "uk",
+      call: { name: "check_stock", input: { items: [{ collection: "SIENA", shade_code: "05", shade_name: "Birch", meters: 0 }] } },
+      look: "Catalogue match: <b>SIENA 05-Birch</b> (exact)<br>1C free stock: <b>142.5 m</b> (invented)", line: { kind: "have", t: "SIENA 05-Birch", m: 142.5, n: 0 } },
+    { who: "Марта К.", text: "Добрий день! Підкажіть, чи є Florence 03 Sand, треба метрів 12", tag: "uk · meters requested", lang: "uk",
+      call: { name: "check_stock", input: { items: [{ collection: "FLORENCE", shade_code: "03", shade_name: "Sand", meters: 12 }] } },
+      look: "Catalogue match: <b>FLORENCE 03-Sand</b><br>1C free stock: <b>38 m</b> (invented), need 12", line: { kind: "have", t: "FLORENCE 03-Sand", m: 38, n: 12 } },
+    { who: "Ігор", text: "Нужно 30 метров Верона 2, есть?", tag: "ru · not enough, shows alternatives", lang: "ru",
+      call: { name: "check_stock", input: { items: [{ collection: "VERONA", shade_code: "02", shade_name: "", meters: 30 }] } },
+      look: "Catalogue match: <b>VERONA 02-Cream</b> (code only, the name comes from the catalogue)<br>1C free stock: <b>18.5 m</b> (invented), need 30<br>Alternatives: same colour group, same fabric type", line: { kind: "only", t: "VERONA 02-Cream", m: 18.5, n: 30, alts: [["VERONA 03-Ivory", 64], ["FLORENCE 02-Cream", 41]] } },
+    { who: "Салон «Тюль»", text: "сіра Матера є?", tag: "uk · colour in words, no shade", lang: "uk",
+      call: { name: "check_stock", input: { items: [{ collection: "MATERA", shade_code: "", shade_name: "grey", meters: 0 }] } },
+      look: "Catalogue match: collection <b>MATERA</b>, shade unclear<br>Shades in grey family with stock, from 1C (invented)", line: { kind: "family", c: "MATERA", opts: [["02-Grey", 56], ["05-Silver", 12.5]] } },
+    { who: "Anna", text: "Roma 06 navy — price per metre? thanks", tag: "en · price question hands off", lang: "en",
+      call: { name: "handoff_to_manager", input: { reason: "price", summary: "Клієнт питає ціну за метр на ROMA 06 Navy.", lang: "en" } },
+      look: "No 1C call. The managers' chat gets the summary and a link to the message.<br>Prices never leave the 1C layer, so nothing here could be quoted.", line: { kind: "ack" } },
+    { who: "Марта К.", text: "Дякуємо! Беремо 20 м, оформіть замовлення", tag: "uk · an order, not a stock question", lang: "uk",
+      call: { name: "handoff_to_manager", input: { reason: "order", summary: "Клієнт хоче оформити замовлення на 20 м.", lang: "uk" } },
+      look: "No 1C call. Orders are a person's job.", line: { kind: "ack" } },
+    { who: "Олена", text: "[фото етикетки] є?", tag: "uk · label photo, rotated", lang: "uk", photo: true,
+      call: { name: "check_stock", input: { items: [{ collection: "TOSCANA", shade_code: "07", shade_name: "Sage", meters: 0 }] } },
+      look: "The model read the printed collection and shade, ignoring width and barcode lines.<br>Catalogue match: <b>TOSCANA 07-Sage</b><br>1C free stock: <b>76 m</b> (invented)", line: { kind: "have", t: "TOSCANA 07-Sage", m: 76, n: 0 } },
+    { who: "Ігор", text: "👍 дякую", tag: "chatter · no tool call", lang: "uk",
+      call: null, look: "The model answers with a single “-”. The bot stays silent.", line: null }
+  ];
+  function hl(obj) {
+    var s = JSON.stringify(obj, null, 2).replace(/&/g, "&amp;").replace(/</g, "&lt;");
+    return s.replace(/("(?:[^"\\]|\\.)*")(\s*:)?|(\b\d+(?:\.\d+)?\b)/g, function (m, str, colon, num) {
+      if (str) return colon ? "<span class=\"k\">" + str + "</span>" + colon : "<span class=\"s\">" + str + "</span>";
+      return "<span class=\"v\">" + num + "</span>";
+    });
+  }
+  var list = document.getElementById("fdList"), out = document.getElementById("fdOut");
+  list.insertAdjacentHTML("beforeend", "<div class=\"lbl\">Group chat</div>");
+  EX.forEach(function (ex, i) {
+    var b = document.createElement("button"); b.type = "button"; b.className = "gm"; b.id = "gm" + i; b.setAttribute("aria-pressed", "false");
+    b.innerHTML = "<span class=\"who\"></span><span class=\"t\"></span><span class=\"tag\"></span>";
+    b.querySelector(".who").textContent = ex.who; b.querySelector(".t").textContent = ex.text; b.querySelector(".tag").textContent = ex.tag;
+    b.addEventListener("click", function () { selectEx(i, true); }); list.appendChild(b);
+  });
+  function selectEx(i, animate) {
+    var ex = EX[i];
+    Array.prototype.forEach.call(list.querySelectorAll(".gm"), function (b, j) { b.setAttribute("aria-pressed", String(i === j)); });
+    var reply = buildReply(ex), h = "";
+    h += "<div class=\"stepx ai\"><i>1</i><div class=\"body\"><h4>Claude returns<small>tool call</small></h4>" +
+      (ex.photo ? "<div class=\"lbl-card\" aria-label=\"Synthetic label drawn in CSS\">TOSCANA<br>Col. 07 Sage<small>280 cm</small><div></div></div>" : "") +
+      (ex.call ? "<pre class=\"js\">" + ex.call.name + "\n" + hl(ex.call.input) + "</pre>" : "<pre class=\"js\">- <span class=\"c\"></span></pre>") + "</div></div>";
+    h += "<div class=\"stepx\"><i>2</i><div class=\"body\"><h4>Code looks it up<small>catalogue and 1C</small></h4><div class=\"lookup\">" + ex.look + "</div></div></div>";
+    h += "<div class=\"stepx\"><i>3</i><div class=\"body\"><h4>Code writes the reply<small>bot/replies.py template</small></h4>" +
+      (reply ? "<div class=\"tg-msg in\">" + reply + "</div>" : "<div class=\"lookup\">No reply is sent.</div>") + "</div></div>";
+    out.innerHTML = h;
+    if (animate && !reduceMq.matches) { out.classList.remove("fd-anim"); void out.offsetWidth; out.classList.add("fd-anim"); }
+  }
+  selectEx(0, false);
+})();
+</script>
+</body>
+</html>

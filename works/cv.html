@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CV</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap">
+<style>
+/* One-page CV on an A4 sheet. Screen: the sheet on a quiet ground, both themes. Print: the sheet only, light.
+   Same type and accent as the portfolio. Name and contacts come from ../assets/profile.js. */
+:root {
+  --ground: #e9ebf1; --paper: #ffffff; --ink: #0e1220; --ink-2: #4c5368; --rule: #dde0e8; --accent: #3144ff; --soft: #eef0ff;
+  --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --text: "Inter", "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+  --mono: "JetBrains Mono", Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --ground: #0b0d15; color-scheme: dark; } }
+:root[data-theme="dark"] { --ground: #0b0d15; color-scheme: dark; }
+* { box-sizing: border-box; }
+html { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+body { margin: 0; background: var(--ground); color: var(--ink); font: 400 10.4pt/1.42 var(--text); -webkit-font-smoothing: antialiased;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.top { max-width: 210mm; margin: 0 auto; padding-block: 18px 12px; display: flex; justify-content: space-between; align-items: center; gap: 12px; font: 500 13px var(--text); }
+.top a { color: #8795ff; text-decoration: none; }
+:root:not([data-theme="dark"]) .top a { color: var(--accent); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .top a { color: #8795ff; } }
+.top span { color: #8a91a6; font-size: 12.5px; }
+
+.sheet { width: 210mm; min-height: 297mm; max-width: 100%; margin: 0 auto 40px; background: var(--paper); color: var(--ink); padding: 14mm 14mm 12mm; box-shadow: 0 2px 6px rgba(0,0,0,.08), 0 20px 50px rgba(0,0,0,.18);
+  display: grid; grid-template-columns: minmax(0, 1fr) 58mm; grid-template-rows: auto 1fr; gap: 0 9mm; }
+header.head { grid-column: 1 / -1; display: grid; gap: 3px; padding-bottom: 5mm; margin-bottom: 5mm; border-bottom: 2px solid var(--ink); }
+h1 { font: 800 27pt/1 var(--display); letter-spacing: -0.03em; margin: 0; }
+h1.empty { color: #a9aec0; }
+.role { font: 600 11.5pt/1.3 var(--display); color: var(--accent); }
+.loc { font: 500 9pt var(--mono); color: var(--ink-2); }
+h2 { font: 600 8pt/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); margin: 0 0 2.4mm; }
+main, aside { display: grid; gap: 5mm; align-content: start; min-width: 0; }
+p { margin: 0; }
+.summary { font-size: 10.6pt; }
+.job { display: grid; gap: 1.2mm; }
+.job + .job { margin-top: 3.4mm; }
+.job-h { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.job-h b { font: 600 11pt/1.25 var(--display); letter-spacing: -0.01em; }
+.job-h span { font: 500 8.4pt var(--mono); color: var(--ink-2); white-space: nowrap; }
+.tag { font: 600 7.4pt/1 var(--mono); letter-spacing: .06em; text-transform: uppercase; padding: 2px 5px; border-radius: 3px; background: var(--soft); color: var(--accent); margin-left: 6px; vertical-align: 2px; }
+ul { margin: 0; padding: 0 0 0 4mm; display: grid; gap: .8mm; }
+li::marker { color: var(--accent); }
+.link { font: 500 8.6pt var(--mono); color: var(--accent); text-decoration: none; overflow-wrap: anywhere; }
+aside { border-left: 1px solid var(--rule); padding-left: 6mm; font-size: 9.6pt; }
+.kv { display: grid; gap: 1.6mm; }
+.kv div { display: grid; gap: 0; min-width: 0; }
+.kv small { font: 600 7.4pt var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); }
+.kv a, .kv b { font-weight: 500; color: var(--ink); text-decoration: none; overflow-wrap: anywhere; }
+.kv .empty { color: #a9aec0; border: 1px dashed #c9cdd9; border-radius: 4px; padding: 1px 5px; font-size: 8.6pt; justify-self: start; }
+.list { display: grid; gap: 1mm; margin: 0; padding: 0; list-style: none; }
+.list li { padding-left: 3.4mm; position: relative; }
+.list li::before { content: ""; position: absolute; left: 0; top: .62em; width: 1.6mm; height: 1.6mm; border-radius: 1px; background: var(--accent); }
+.note { font-size: 8.6pt; color: var(--ink-2); }
+
+@media screen and (max-width: 760px) {
+  .sheet { width: 100%; min-height: 0; padding: 22px 18px; grid-template-columns: minmax(0, 1fr); gap: 18px; }
+  aside { border-left: 0; padding-left: 0; border-top: 1px solid var(--rule); padding-top: 16px; }
+  h1 { font-size: 30px; }
+}
+@media print {
+  @page { size: A4; margin: 0; }
+  html, body { background: #fff; padding: 0; }
+  .top { display: none; }
+  .sheet { box-shadow: none; margin: 0; width: 210mm; height: 297mm; overflow: hidden; }
+  .kv .empty, .kv div.is-empty { display: none; }
+}
+</style>
+</head>
+<body>
+<div class="top"><a href="../index.html">&larr; Portfolio</a><a href="../CV.pdf" download>Download PDF</a></div>
+
+<article class="sheet" aria-label="Curriculum vitae">
+  <header class="head">
+    <h1 id="cvName">Your Name</h1>
+    <p class="role" id="cvRole">UI/UX designer · design in code with Claude Code</p>
+    <p class="loc" id="cvLoc">Kyiv, Ukraine · remote</p>
+  </header>
+
+  <main>
+    <section>
+      <h2>Profile</h2>
+      <p class="summary">Junior UI/UX designer who designs and builds in code with Claude Code. I have shipped four Telegram bots with Mini App admin panels and built a VST3 audio plugin from a reference image to a working interface. I write clear briefs, compare variants side by side, and check every state, theme and edge case before I accept a result.</p>
+    </section>
+
+    <section>
+      <h2>Selected work</h2>
+      <div class="job">
+        <div class="job-h"><b>Four Telegram bots<span class="tag">Shipped</span></b><span>Oct 2026</span></div>
+        <ul>
+          <li>Designed the conversations and three Mini App admin panels: salon bookings, a clothing shop selling through Instagram, and daily revenue for a shop chain.</li>
+          <li>Fabric stock bot: Claude reads the question through two strict tools, code writes the stock from 1C. Chose the model with an 80-case eval: same accuracy, about 30 times cheaper.</li>
+          <li>Security by design: signed Mini App sign-in, webhook signatures, parameterised SQL, caps on paid AI. Ran on a Linux server with Caddy, systemd and Docker.</li>
+        </ul>
+      </div>
+      <div class="job">
+        <div class="job-h"><b>NZR Plectra, VST3 audio plugin<span class="tag">Built</span></b><span>Sep–Oct 2026</span></div>
+        <ul>
+          <li>Turned a reference image into a working panel: real ranges instead of fake scales, a preset browser, a level meter and a hidden advanced rail. Compared three layouts first.</li>
+          <li>Knobs rendered in Blender, live UI in JUCE. 1,733 tests green at merge; passes pluginval at strictness 10.</li>
+          <li>Redesigned a sound feature after two rejected versions, using listening prototypes and measured comparisons.</li>
+        </ul>
+      </div>
+      <div class="job">
+        <div class="job-h"><b>Concept prototypes<span class="tag">Concept</span></b><span>Nov 2026</span></div>
+        <ul>
+          <li>Six interactive HTML/CSS prototypes on one token-based design system: AI status and loading states, a voice note turned into three flows, a leasing space finder with an AI match, and an iOS and Android app.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section>
+      <h2>Experience</h2>
+      <div class="job">
+        <div class="job-h"><b>Sound engineering and equipment rental</b><span>Part-time</span></div>
+        <p>Part-time work as a sound engineer and at equipment rental companies.</p>
+      </div>
+    </section>
+
+    <section>
+      <h2>Education</h2>
+      <div class="job">
+        <div class="job-h"><b>Music production</b><span>Studying now</span></div>
+      </div>
+    </section>
+  </main>
+
+  <aside>
+    <section>
+      <h2>Contact</h2>
+      <div class="kv" id="cvContacts"></div>
+    </section>
+    <section id="cvPortfolioSec" hidden>
+      <h2>Portfolio</h2>
+      <a class="link" id="cvPortfolio" href="#" target="_blank" rel="noopener"></a>
+      <p class="note" style="margin-top:1.4mm">Working prototypes, three live Mini App demos, a security audit.</p>
+    </section>
+    <section>
+      <h2>Design</h2>
+      <ul class="list">
+        <li>Visual hierarchy, type, spacing, grids</li>
+        <li>Interaction states and edge cases</li>
+        <li>Design tokens, light and dark themes</li>
+        <li>AI features: proposal, confirm, undo, loading</li>
+        <li>Conversation design for bots</li>
+      </ul>
+    </section>
+    <section>
+      <h2>Build</h2>
+      <ul class="list">
+        <li>Read and change HTML, CSS, JavaScript</li>
+        <li>Python bots: aiogram, SQLite</li>
+        <li>Git, terminal, Docker</li>
+        <li>Blender for interface assets</li>
+      </ul>
+    </section>
+    <section>
+      <h2>AI tools</h2>
+      <ul class="list">
+        <li>Claude Code every day</li>
+        <li>Briefs and acceptance checks</li>
+        <li>Evals before choosing a model</li>
+        <li>Several agents in parallel</li>
+      </ul>
+    </section>
+    <section>
+      <h2>Audio</h2>
+      <ul class="list"><li>REAPER, Cubase</li></ul>
+    </section>
+    <section>
+      <h2>Languages</h2>
+      <div class="kv">
+        <div><small>Ukrainian</small><b>Native</b></div>
+        <div id="cvEnglish"><small>English</small><span class="empty">add your level</span></div>
+      </div>
+    </section>
+  </aside>
+</article>
+
+<script src="../assets/profile.js"></script>
+<script src="../assets/site.js"></script>
+<script>
+(function () {
+  var P = window.PROFILE || {};
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); };
+  if (P.name) { $("cvName").textContent = P.name; document.title = P.name + " CV"; } else { $("cvName").classList.add("empty"); }
+  if (P.role) $("cvRole").textContent = P.role;
+  if (P.location) $("cvLoc").textContent = P.location;
+  if (P.english) $("cvEnglish").innerHTML = "<small>English</small><b>" + esc(P.english) + "</b>";
+  if (P.portfolio) { var a = $("cvPortfolio"); a.href = P.portfolio; a.textContent = P.portfolio.replace(/^https?:\/\//, "").replace(/\/$/, ""); $("cvPortfolioSec").hidden = false; }
+  var rows = [["Email", P.email, false], ["Telegram", P.telegram, true], ["GitHub", P.github, true], ["LinkedIn", P.linkedin, true], ["Figma", P.figma, true]];
+  $("cvContacts").innerHTML = rows.filter(function (r) { return r[1] || r[0] === "Email" || r[0] === "Telegram"; }).map(function (r) {
+    if (!r[1]) return '<div class="is-empty"><small>' + r[0] + '</small><span class="empty">add your ' + r[0].toLowerCase() + "</span></div>";
+    var text = esc(r[1].replace(/^https?:\/\//, ""));
+    return "<div><small>" + r[0] + "</small>" + (r[2] ? '<a href="' + esc(r[1]) + '" target="_blank" rel="noopener">' + text + "</a>" : "<b>" + text + "</b>") + "</div>";
+  }).join("");
+})();
+</script>
+</body>
+</html>

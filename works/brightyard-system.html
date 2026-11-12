@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Brightyard Design System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="../assets/by.css">
+<style>
+/* live controls */
+.dock { position: sticky; top: 58px; z-index: 50; background: color-mix(in srgb, var(--bg) 90%, transparent); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid var(--rule); border-radius: 14px; padding: 12px 16px; display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: center; box-shadow: var(--shadow); margin-top: 28px; }
+.dock .lbl { display: grid; gap: 4px; font: 500 11px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); }
+.dock .lbl span b { color: var(--ink); font-weight: 600; }
+.dock input[type=range] { width: 170px; accent-color: var(--accent); }
+.dock .grp { display: inline-flex; padding: 3px; background: var(--surface-2); border-radius: 10px; gap: 2px; }
+.dock .grp button { border: 0; background: transparent; padding: 6px 12px; border-radius: 8px; font: 600 12.5px var(--text); color: var(--ink-2); }
+.dock .grp button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+.warnline { font: 500 13px var(--text); color: var(--warn); background: var(--warn-soft); padding: 6px 10px; border-radius: 8px; flex: 1 1 260px; display: none; }
+.warnline.on { display: block; }
+
+/* documentation canvas = a .by scope so tokens apply */
+.doc { border-radius: 16px; border: 1px solid var(--rule); padding: clamp(18px, 3vw, 32px); display: grid; gap: 30px; min-width: 0; }
+.doc h3 { font: 750 20px var(--font); letter-spacing: -0.015em; }
+.doc .blk { display: grid; gap: 14px; min-width: 0; }
+.doc .lead { color: var(--ink-2); max-width: 62ch; font: 500 15px/1.55 var(--font); }
+.sw-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr)); gap: 12px; }
+.sw { border: 1px solid var(--line); border-radius: 14px; overflow: hidden; background: var(--surface); display: grid; }
+.sw .swc { padding: 16px 14px; display: flex; justify-content: space-between; align-items: flex-end; min-height: 84px; font: 800 24px var(--font); }
+.sw .swc small { font: 600 11.5px var(--mono); text-align: right; }
+.sw .meta { padding: 10px 14px 12px; display: grid; gap: 2px; font: 500 12.5px/1.4 var(--font); color: var(--ink-2); }
+.sw .meta b { font: 750 13.5px var(--font); color: var(--ink); }
+.sw .meta code { font: 500 11.5px var(--mono); color: var(--ink-3); overflow-wrap: anywhere; }
+.ratio { display: inline-flex; gap: 6px; align-items: center; font: 700 12px var(--mono); }
+.ratio i { font-style: normal; padding: 2px 6px; border-radius: 4px; font-size: 10.5px; }
+.ratio i.aaa, .ratio i.aa { background: var(--ok-soft); color: var(--ok); }
+.ratio i.large { background: var(--warn-soft); color: var(--warn); }
+.ratio i.fail { background: var(--bad-soft); color: var(--bad); }
+.scale { display: grid; gap: 0; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; background: var(--surface); }
+.scale > div { display: grid; grid-template-columns: 130px minmax(0, 1fr); gap: 16px; align-items: baseline; padding: 14px 18px; border-top: 1px solid var(--line); }
+.scale > div:first-child { border-top: 0; }
+.scale small { font: 500 11.5px var(--mono); color: var(--ink-3); }
+.space { display: grid; gap: 8px; }
+.space div { display: grid; grid-template-columns: 70px 50px minmax(0, 1fr); gap: 12px; align-items: center; font: 500 12.5px var(--mono); color: var(--ink-2); }
+.space i { display: block; height: 14px; background: var(--brand); border-radius: 3px; }
+.shapes { display: flex; flex-wrap: wrap; gap: 14px; }
+.shape { width: 118px; height: 80px; background: var(--surface); border: 1px solid var(--line-2); display: grid; place-items: center; font: 600 11.5px var(--mono); color: var(--ink-2); }
+.elev { display: flex; flex-wrap: wrap; gap: 18px; padding: 8px; }
+.elev div { width: 130px; height: 80px; background: var(--surface); border-radius: calc(var(--r) + 4px); display: grid; place-items: center; font: 600 11.5px var(--mono); color: var(--ink-2); }
+.matrix { overflow-x: auto; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
+.matrix table { border-collapse: collapse; width: 100%; min-width: 760px; }
+.matrix th, .matrix td { padding: 14px 16px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: middle; }
+.matrix tr:last-child td { border-bottom: 0; }
+.matrix th { font: 600 11.5px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); background: var(--surface-2); white-space: nowrap; }
+.matrix td:first-child { font: 650 13.5px var(--font); color: var(--ink-2); white-space: nowrap; }
+.comp-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 16px; }
+.anat { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 28px; align-items: center; }
+.anat ol { margin: 0; padding: 0; list-style: none; display: grid; gap: 12px; counter-reset: a; }
+.anat li { display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 12px; font: 500 14.5px/1.45 var(--font); color: var(--ink-2); }
+.anat li::before { counter-increment: a; content: counter(a); display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--ai); color: var(--on-ai); font: 700 12px var(--mono); }
+.anat li b { color: var(--ink); display: block; }
+.pin { position: relative; }
+.pin::after { content: attr(data-n); position: absolute; right: -10px; top: -10px; width: 22px; height: 22px; border-radius: 50%; background: var(--ai); color: var(--on-ai); display: grid; place-items: center; font: 700 11px var(--mono); }
+.dd { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 16px; }
+.do, .dont { border-radius: 14px; padding: 14px; display: grid; gap: 10px; border: 1px solid var(--line); background: var(--surface); }
+.do > b, .dont > b { font: 700 12px var(--mono); letter-spacing: .06em; text-transform: uppercase; }
+.do > b { color: var(--ok); } .dont > b { color: var(--bad); }
+.do p, .dont p { font: 500 14px/1.45 var(--font); color: var(--ink-2); }
+.motion { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 14px; }
+.mt { border: 1px solid var(--line); border-radius: 14px; background: var(--surface); padding: 14px; display: grid; gap: 10px; }
+.mt b { font: 700 14px var(--font); } .mt code { font: 500 12px var(--mono); color: var(--ink-3); }
+.track { height: 30px; border-radius: 15px; background: var(--surface-2); position: relative; }
+.track i { position: absolute; left: 4px; top: 4px; width: 22px; height: 22px; border-radius: 50%; background: var(--brand); transition: transform var(--dur, 280ms) var(--eas, var(--ease)); }
+.track.go i { transform: translateX(var(--dist, 200px)); }
+.codebox { position: relative; }
+.codebox pre { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; color: var(--ink); max-height: 340px; overflow: auto; font: 500 12.5px/1.7 var(--mono); padding: 16px 18px; margin: 0; }
+.codebox pre b { color: var(--ai); font-weight: 600; }
+.codebox .by-btn { position: absolute; top: 10px; right: 10px; }
+.a11y { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 14px; }
+.a11y > div { border: 1px solid var(--line); border-radius: 14px; background: var(--surface); padding: 16px; display: grid; gap: 6px; align-content: start; }
+.a11y b { font: 750 15.5px var(--font); } .a11y p { font: 500 14px/1.5 var(--font); color: var(--ink-2); }
+@media (max-width: 760px) { .anat { grid-template-columns: minmax(0, 1fr); } .scale > div { grid-template-columns: minmax(0, 1fr); gap: 4px; } }
+</style>
+</head>
+<body>
+<header class="bar">
+  <div class="wrap">
+    <a class="brand" href="../index.html"><i aria-hidden="true"></i><span id="brandName">Your Name</span></a>
+    <nav aria-label="Work">
+      <a href="../index.html#work">All work</a>
+      <a href="telegram-bots.html">Bots</a>
+      <a href="security.html">Security</a>
+      <a href="plectra.html">Plectra</a>
+      <a href="brightyard-portal.html">Portal</a>
+      <a href="brightyard-mobile.html">Mobile</a>
+      <a href="brightyard-system.html" aria-current="page">System</a>
+      <a href="voice-note.html">Voice note</a>
+      <a href="ai-states.html">AI states</a>
+      <a href="space-finder.html">Space finder</a>
+    </nav>
+    <button class="toggle" id="themeBtn" type="button" aria-label="Switch colour theme">Theme: auto</button>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="case-hero">
+    <div class="row"><span class="kind concept">Concept</span><span class="kind">Design system</span><span class="kind">Tokens</span></div>
+    <h1>Brightyard Design System</h1>
+    <p class="sub">The tokens, components and AI patterns behind the Portal and Mobile work. This page is live: change the brand hue and everything below recolours, with contrast re-checked on the fly.</p>
+    <dl class="meta">
+      <div><dt class="label">Role</dt><dd>Design system design, tokens, documentation, prototype in code</dd></div>
+      <div><dt class="label">Built with</dt><dd>CSS custom properties, OKLCH colour, no framework</dd></div>
+      <div><dt class="label">Used by</dt><dd>The web portal, the mobile app and this page, from one CSS file</dd></div>
+      <div><dt class="label">Status</dt><dd>Concept system for a fictional product</dd></div>
+    </dl>
+  </div>
+
+  <div class="dock" role="group" aria-label="Live system controls">
+    <label class="lbl" for="hue"><span>Brand hue <b id="hueV">205°</b></span><input type="range" id="hue" min="0" max="360" step="1" value="205"></label>
+    <label class="lbl" for="rad"><span>Radius <b id="radV">10 px</b></span><input type="range" id="rad" min="0" max="22" step="1" value="10"></label>
+    <div class="lbl"><span>Theme</span><div class="grp" role="group" aria-label="System theme"><button type="button" data-th="light" aria-pressed="true">Light</button><button type="button" data-th="dark" aria-pressed="false">Dark</button></div></div>
+    <div class="lbl"><span>Motion</span><div class="grp" role="group" aria-label="Motion"><button type="button" data-mo="full" aria-pressed="true">Full</button><button type="button" data-mo="reduce" aria-pressed="false">Reduced</button></div></div>
+    <p class="warnline" id="warn" role="status"></p>
+  </div>
+
+  <section id="principles" style="padding-top:56px">
+    <div class="sec-head">
+      <span class="num">PRINCIPLES</span>
+      <h2>Four decisions everything follows</h2>
+    </div>
+    <div class="three" style="grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr))">
+      <div><span class="label">1</span><h3>Calm by default</h3><p>Neutral surfaces, one brand colour, motion that explains. Colour is spent only where a decision needs it.</p></div>
+      <div><span class="label">2</span><h3>AI is visibly AI</h3><p>One reserved hue and one border style mark what a machine proposed. A tenant never wonders who wrote it.</p></div>
+      <div><span class="label">3</span><h3>State is never colour alone</h3><p>Every status carries an icon and a word. The palette still works for people who can't tell green from red.</p></div>
+      <div><span class="label">4</span><h3>Every action can be undone or previewed</h3><p>Components ship with the preview and undo patterns built in, so product teams inherit them.</p></div>
+    </div>
+  </section>
+
+  <section id="color">
+    <div class="sec-head">
+      <span class="num">COLOUR</span>
+      <h2>Roles, not swatches</h2>
+      <p>Colour is defined by what it does. Every pair below shows its measured contrast, calculated in your browser from the current values.</p>
+    </div>
+    <div class="doc by" data-by="light" id="docColor"><div class="sw-grid" id="swGrid"></div></div>
+  </section>
+
+  <section id="type">
+    <div class="sec-head">
+      <span class="num">TYPE, SPACE, SHAPE</span>
+      <h2>A small scale, used consistently</h2>
+    </div>
+    <div class="doc by" data-by="light" id="docType">
+      <div class="blk"><h3>Type scale</h3>
+        <div class="scale">
+          <div><small>display · 800 · 52/1.02</small><span class="t-display">Open the door</span></div>
+          <div><small>h1 · 750 · 30/1.12</small><span class="t-h1">Good morning, Elena</span></div>
+          <div><small>h2 · 700 · 22/1.2</small><span class="t-h2">Today at Orbit Labs</span></div>
+          <div><small>h3 · 650 · 17/1.3</small><span class="t-h3">Room B2 is free at 14:00</span></div>
+          <div><small>body · 500 · 15/1.5</small><span class="t-body">Your calendar has a product sync with 8 people and no room yet.</span></div>
+          <div><small>small · 500 · 13.5/1.45</small><span class="t-small">Based on your calendar only. No other tenant's data was used.</span></div>
+          <div><small>caption · mono 600 · 11.5</small><span class="t-cap">Suggestion · not booked yet</span></div>
+        </div>
+      </div>
+      <div class="blk"><h3>Spacing, 4pt grid</h3>
+        <div class="space" id="spaceList"></div>
+      </div>
+      <div class="blk"><h3>Radius and elevation</h3>
+        <div class="shapes" id="shapes"></div>
+        <div class="elev"><div style="box-shadow:var(--shadow-1)">shadow-1</div><div style="box-shadow:var(--shadow-2)">shadow-2</div><div style="box-shadow:var(--shadow-3)">shadow-3</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="components">
+    <div class="sec-head">
+      <span class="num">COMPONENTS</span>
+      <h2>Every state, forced on screen</h2>
+      <p>States are shown side by side instead of hidden behind hover. Hover, focus and pressed are forced with classes, so reviewers can inspect them without a mouse.</p>
+    </div>
+    <div class="doc by" data-by="light" id="docComp">
+      <div class="blk"><h3>Button</h3>
+        <div class="matrix"><table>
+          <thead><tr><th>Variant</th><th>Default</th><th>Hover</th><th>Focus</th><th>Pressed</th><th>Disabled</th><th>Loading</th></tr></thead>
+          <tbody id="btnRows"></tbody>
+        </table></div>
+      </div>
+      <div class="blk"><h3>Field</h3>
+        <div class="comp-row">
+          <div class="by-field"><span class="by-label">Default</span><input class="by-input" placeholder="anna@company.example" aria-label="Default field"><span class="by-help">She receives a QR pass by email.</span></div>
+          <div class="by-field"><span class="by-label">Focus</span><input class="by-input is-focus" value="anna@company" aria-label="Focused field"><span class="by-help">Hint text stays visible while typing.</span></div>
+          <div class="by-field"><span class="by-label">Error</span><input class="by-input is-error" value="anna@company" aria-invalid="true" aria-label="Field with error"><span class="by-help is-error">Enter a full email address, like anna@company.example</span></div>
+          <div class="by-field"><span class="by-label">Disabled</span><input class="by-input is-disabled" value="Orbit Labs" disabled aria-label="Disabled field"><span class="by-help">Set by your administrator.</span></div>
+        </div>
+      </div>
+      <div class="blk"><h3>Controls</h3>
+        <div class="comp-row">
+          <div class="by-card" style="display:grid;gap:14px"><span class="t-cap">Switch</span>
+            <div style="display:flex;align-items:center;justify-content:space-between"><span>Email me visitor arrivals</span><button class="by-switch" role="switch" aria-checked="true" aria-label="Email me visitor arrivals" type="button"></button></div>
+            <div style="display:flex;align-items:center;justify-content:space-between"><span>Daily summary</span><button class="by-switch" role="switch" aria-checked="false" aria-label="Daily summary" type="button"></button></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;opacity:.6"><span>Disabled</span><button class="by-switch" role="switch" aria-checked="true" disabled aria-label="Disabled switch" type="button"></button></div></div>
+          <div class="by-card" style="display:grid;gap:14px"><span class="t-cap">Segmented and chips</span>
+            <div class="by-seg" role="group" aria-label="Segmented"><button type="button" aria-pressed="true">Rooms</button><button type="button" aria-pressed="false">Parking</button></div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px"><span class="by-chip">Today</span><span class="by-chip is-hover">Hover</span><span class="by-chip is-on">Selected</span><span class="by-chip is-disabled">Off</span></div></div>
+          <div class="by-card" style="display:grid;gap:12px"><span class="t-cap">Badges and avatar</span>
+            <div style="display:flex;flex-wrap:wrap;gap:8px"><span class="by-badge">Neutral</span><span class="by-badge by-badge--brand">Next</span><span class="by-badge by-badge--ok"><svg class="ic"><use href="#i-check"/></svg>Done</span><span class="by-badge by-badge--warn"><svg class="ic"><use href="#i-clock"/></svg>Pending</span><span class="by-badge by-badge--bad"><svg class="ic"><use href="#i-alert"/></svg>Not sent</span><span class="by-badge by-badge--ai"><svg class="ic"><use href="#i-spark"/></svg>Beta</span></div>
+            <div style="display:flex;gap:10px;align-items:center"><span class="by-avatar">EB</span><span class="by-avatar" style="background:var(--ai-soft);color:var(--ai)">AI</span><span class="t-small">Initials, never photos by default</span></div></div>
+        </div>
+      </div>
+      <div class="blk"><h3>Feedback</h3>
+        <div class="comp-row">
+          <div style="display:grid;gap:12px"><div class="by-toast"><span>Room B2 booked for today 14:00</span><button type="button">Undo</button></div><div class="by-progress" style="--p:62%"><i></i></div><span class="t-small">Toast with undo, and a progress bar for known durations.</span></div>
+          <div style="display:grid;gap:10px"><span class="by-skel" style="width:70%"></span><span class="by-skel"></span><span class="by-skel" style="width:46%"></span><span class="t-small">Skeleton for content that is loading, shaped like what will arrive.</span></div>
+          <div style="display:grid;gap:10px"><div class="by-stepper"><div class="is-done">Received</div><div class="is-done">Assigned</div><div class="is-now">In progress</div><div>Done</div></div><span class="t-small">Status stepper: icons and words on screen readers, colour as a bonus.</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="ai">
+    <div class="sec-head">
+      <span class="num">AI PATTERNS</span>
+      <h2>The part every AI feature inherits</h2>
+      <p>These are the same cards used in the Portal and Mobile prototypes. A team building a new AI feature starts here.</p>
+    </div>
+    <div class="doc by" data-by="light" id="docAi">
+      <div class="anat">
+        <div class="by-ai">
+          <div class="pin" data-n="1" style="width:max-content"><span class="by-ai-tag"><svg class="ic"><use href="#i-spark"/></svg> Proposal · not booked yet</span></div>
+          <div class="pin" data-n="2" style="width:max-content;max-width:100%"><b class="by-ai__title">Book a meeting room</b></div>
+          <div class="pin" data-n="3"><dl class="by-dl"><dt>When</dt><dd>Today · 14:00–15:00</dd><dt>Where</dt><dd>Room B2 · floor 2</dd><dt>Invites</dt><dd>Not sent</dd></dl></div>
+          <div class="pin" data-n="4"><div class="by-why"><span><svg class="ic"><use href="#i-check"/></svg>Fits 8 people</span><span><svg class="ic"><use href="#i-check"/></svg>Same building</span></div></div>
+          <div class="row" style="display:flex;gap:8px"><button class="by-btn by-btn--primary pin" data-n="5" type="button">Confirm booking</button><button class="by-btn by-btn--ghost" type="button">Not now</button></div>
+        </div>
+        <ol>
+          <li><div><b>AI tag</b>Names the source and the status, in words: "Proposal · not booked yet".</div></li>
+          <li><div><b>Title</b>One clear action, phrased as what will happen.</div></li>
+          <li><div><b>Preview</b>What will change, and what will not. Nothing implied.</div></li>
+          <li><div><b>Evidence</b>Short reasons the user can disagree with.</div></li>
+          <li><div><b>Actions</b>One primary verb that names the outcome, and one way out.</div></li>
+        </ol>
+      </div>
+      <div class="dd">
+        <div class="do"><b>Do</b><div class="by-ai"><span class="by-ai-tag"><svg class="ic"><use href="#i-spark"/></svg> Proposal</span><b class="by-ai__title">Book Room B2</b></div><p>Use the violet dashed card only for things a machine proposed and a person has not confirmed.</p></div>
+        <div class="dont"><b>Don't</b><div class="by-card" style="border:1.5px dashed var(--ai-line);display:grid;gap:6px"><b>Your invoice is ready</b><span class="t-small">A normal system notice</span></div><p>Don't borrow the AI style for ordinary notices. If everything looks like AI, nothing does.</p></div>
+        <div class="do"><b>Do</b><div class="by-ai is-error"><span class="by-badge by-badge--bad"><svg class="ic"><use href="#i-alert"/></svg>Not sent</span><b class="by-ai__title">Facilities didn't respond</b></div><p>Say first whether anything changed, then offer a way forward.</p></div>
+        <div class="dont"><b>Don't</b><div class="by-card" style="display:grid;gap:6px;border-color:var(--bad)"><b style="color:var(--bad)">Something went wrong</b><span class="t-small">Error 500</span></div><p>Vague errors leave the user guessing whether their data is safe.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="motion">
+    <div class="sec-head">
+      <span class="num">MOTION</span>
+      <h2>Duration and easing are tokens too</h2>
+      <p>Click any track to play it. Switch Motion to Reduced in the controls above and every duration drops to zero, the way a user's system setting would.</p>
+    </div>
+    <div class="doc by" data-by="light" id="docMotion">
+      <div class="motion" id="motionGrid"></div>
+    </div>
+  </section>
+
+  <section id="a11y">
+    <div class="sec-head">
+      <span class="num">ACCESSIBILITY</span>
+      <h2>Built in, not added later</h2>
+    </div>
+    <div class="a11y">
+      <div><b>Contrast is measured</b><p>Body text and controls target 4.5:1 or better. The table in the Colour section is computed live, so changing the hue can't quietly break it.</p></div>
+      <div><b>Focus is always visible</b><p>A 2px outline in a dedicated focus colour, offset by 2px, on every interactive element. Try Tab on this page.</p></div>
+      <div><b>Touch targets</b><p>40px minimum on web, 48px on mobile. Small buttons sit inside a larger tap area.</p></div>
+      <div><b>Status beyond colour</b><p>Icons and words accompany every status colour. Badges read "Done", "Pending", "Not sent".</p></div>
+      <div><b>Live regions</b><p>The assistant thread and toasts announce changes politely, so screen readers hear what a sighted user sees.</p></div>
+      <div><b>Reduced motion</b><p>Respecting the system setting is built into the tokens, so no product team has to remember it.</p></div>
+    </div>
+  </section>
+
+  <section id="tokens">
+    <div class="sec-head">
+      <span class="num">TOKENS</span>
+      <h2>Take them with you</h2>
+      <p>The current values, as CSS custom properties. Change a control above and this updates.</p>
+    </div>
+    <div class="codebox">
+      <pre id="tokenOut" aria-label="Current design tokens"></pre>
+      <button class="by-btn by-btn--secondary by-btn--sm" id="copyBtn" type="button" style="font-family:var(--text)">Copy</button>
+    </div>
+    <div class="next-work">
+      <a href="brightyard-portal.html"><span class="label">Used in</span><b>Brightyard Portal</b><span>The web app and its AI assistant.</span></a>
+      <a href="brightyard-mobile.html"><span class="label">Used in</span><b>Brightyard Mobile</b><span>iOS and Android, from the same tokens.</span></a>
+      <a href="space-finder.html"><span class="label">New work</span><b>Space Finder</b><span>Leasing space in a business park, with an AI match.</span></a>
+    </div>
+  </section>
+
+  <footer><span>Concept work. Fictional company.</span><span>Designed and built with Claude Code, November 2026</span></footer>
+</main>
+
+<script src="../assets/profile.js"></script>
+<script src="../assets/icons.js"></script>
+<script src="../assets/site.js"></script>
+<script>
+(function () {
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+  var docs = $$(".doc");
+  var probe = document.createElement("div"); probe.className = "by"; probe.style.cssText = "position:absolute;visibility:hidden;pointer-events:none"; document.body.appendChild(probe);
+  var cv = document.createElement("canvas"); cv.width = cv.height = 1; var cx = cv.getContext("2d", { willReadFrequently: true });
+  var state = { h: 205, r: 10, th: "light", mo: "full" };
+
+  function rgb(css) { cx.clearRect(0, 0, 1, 1); cx.fillStyle = "#000"; cx.fillStyle = css; cx.fillRect(0, 0, 1, 1); var d = cx.getImageData(0, 0, 1, 1).data; return [d[0], d[1], d[2]]; }
+  function lum(c) { var a = c.map(function (v) { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }); return 0.2126 * a[0] + 0.7152 * a[1] + 0.0722 * a[2]; }
+  function ratio(a, b) { var l1 = lum(a), l2 = lum(b); if (l1 < l2) { var t = l1; l1 = l2; l2 = t; } return (l1 + 0.05) / (l2 + 0.05); }
+  function hex(c) { return "#" + c.map(function (v) { return ("0" + v.toString(16)).slice(-2); }).join("").toUpperCase(); }
+  function val(name) { return getComputedStyle(probe).getPropertyValue(name).trim(); }
+  function badge(r) { var k = r >= 7 ? "aaa" : r >= 4.5 ? "aa" : r >= 3 ? "large" : "fail"; var t = r >= 7 ? "AAA" : r >= 4.5 ? "AA" : r >= 3 ? "Large only" : "Fail"; return '<span class="ratio">' + r.toFixed(1) + ':1 <i class="' + k + '">' + t + "</i></span>"; }
+
+  /* colour roles: [token, label, text-on token, note] */
+  var ROLES = [
+    ["--brand", "Brand", "--on-brand", "Primary actions, focus, progress"],
+    ["--brand-ink", "Brand ink", "--surface", "Brand-coloured text and icons on surfaces"],
+    ["--ink", "Ink", "--surface", "Body text, titles"],
+    ["--ink-2", "Ink 2", "--surface", "Secondary text"],
+    ["--ink-3", "Ink 3", "--surface", "Hints, captions"],
+    ["--navy", "Navy", "--on-navy", "Sidebar, door pass, strong surfaces"],
+    ["--ai", "AI", "--surface", "Reserved: AI proposals only"],
+    ["--ok", "Success", "--ok-soft", "Done, available, free"],
+    ["--warn", "Warning", "--warn-soft", "Pending, limited"],
+    ["--bad", "Danger", "--bad-soft", "Failed, busy, destructive"]
+  ];
+  function renderColor() {
+    $("#swGrid").innerHTML = ROLES.map(function (r) {
+      var bg = rgb(val(r[0])), fg = rgb(val(r[2]));
+      var k = ratio(bg, fg);
+      return '<div class="sw"><div class="swc" style="background:' + hex(bg) + ";color:" + hex(fg) + '">Aa<small>' + hex(bg) + '</small></div><div class="meta"><b>' + r[1] + '</b><code>' + r[0] + '</code><span>' + r[3] + "</span>" + badge(k) + "</div></div>";
+    }).join("");
+  }
+  function renderScale() {
+    var sp = [["s1", 4], ["s2", 8], ["s3", 12], ["s4", 16], ["s5", 24], ["s6", 32], ["s7", 48], ["s8", 64]];
+    $("#spaceList").innerHTML = sp.map(function (s) { return "<div><span>--" + s[0] + "</span><span>" + s[1] + "px</span><i style=\"width:" + s[1] * 3 + 'px"></i></div>'; }).join("");
+    $("#shapes").innerHTML = [["r × 0.5", .5], ["r", 1], ["r + 4", null], ["pill", "pill"]].map(function (s) { var rad = s[1] === "pill" ? "999px" : s[1] === null ? "calc(var(--r) + 4px)" : "calc(var(--r) * " + s[1] + ")"; return '<div class="shape" style="border-radius:' + rad + '">' + s[0] + "</div>"; }).join("");
+  }
+  function renderButtons() {
+    var V = [["primary", "by-btn--primary"], ["secondary", "by-btn--secondary"], ["ghost", "by-btn--ghost"], ["danger", "by-btn--danger"], ["ai", "by-btn--ai"]];
+    var ST = ["", "is-hover", "is-focus", "is-active", "is-disabled", "is-loading"];
+    $("#btnRows").innerHTML = V.map(function (v) {
+      return "<tr><td>" + v[0] + "</td>" + ST.map(function (s) { return '<td><button class="by-btn ' + v[1] + " " + s + '" type="button"' + (s === "is-disabled" ? " disabled" : "") + ">" + (v[0] === "ai" ? '<svg class="ic"><use href="#i-spark"/></svg>' : "") + "Confirm</button></td>"; }).join("") + "</tr>";
+    }).join("");
+  }
+  var MOT = [["duration · d1", "100ms", "--d1", "--ease", "Hover, press"], ["duration · d2", "180ms", "--d2", "--ease", "Chips, fields, small state changes"], ["duration · d3", "280ms", "--d3", "--ease", "Cards, toasts, banners"], ["duration · d4", "440ms", "--d4", "--ease-out", "Sheets, drawers"], ["easing · standard", "cubic-bezier(.2, 0, 0, 1)", "--d3", "--ease", "Elements that move and settle"], ["easing · decelerate", "cubic-bezier(.05, .7, .1, 1)", "--d3", "--ease-out", "Things entering the screen"], ["easing · accelerate", "cubic-bezier(.3, 0, .8, .15)", "--d3", "--ease-in", "Things leaving the screen"]];
+  function renderMotion() {
+    $("#motionGrid").innerHTML = MOT.map(function (m, i) { return '<div class="mt"><div><b>' + m[0] + "</b><br><code>" + m[1] + '</code></div><button class="track" type="button" data-m="' + i + '" style="border:0;width:100%;cursor:pointer" aria-label="Play ' + m[0] + '" aria-pressed="false"><i style="--dur:var(' + m[2] + ");--eas:var(" + m[3] + ')"></i></button><span class="t-small">' + m[4] + "</span></div>"; }).join("");
+    $$("[data-m]").forEach(function (t) { t.addEventListener("click", function () { var w = t.clientWidth - 30; t.style.setProperty("--dist", w + "px"); t.classList.remove("go"); void t.offsetWidth; t.classList.add("go"); setTimeout(function () { t.classList.remove("go"); }, 1400); }); });
+  }
+
+  function tokens() {
+    var names = ["--brand", "--on-brand", "--brand-ink", "--brand-soft", "--ink", "--ink-2", "--ink-3", "--surface", "--surface-2", "--bg", "--line", "--navy", "--ai", "--ai-soft", "--ok", "--warn", "--bad"];
+    var out = "/* Brightyard tokens · brand hue " + state.h + " · " + state.th + " */\n.by {\n  --h: " + state.h + ";\n  --ai-h: 295;\n  --r: " + state.r + "px;\n";
+    names.forEach(function (n) { var v = rgb(val(n)); out += "  " + n + ": " + hex(v) + ";\n"; });
+    out += "  --d1: 100ms; --d2: 180ms; --d3: 280ms; --d4: 440ms;\n  --ease: cubic-bezier(.2, 0, 0, 1);\n}";
+    $("#tokenOut").textContent = out;
+  }
+
+  function apply() {
+    var all = docs.concat([probe]);
+    all.forEach(function (d) { d.style.setProperty("--h", state.h); d.style.setProperty("--r", state.r + "px"); d.dataset.by = state.th; if (state.mo === "reduce") d.setAttribute("data-motion", "reduce"); else d.removeAttribute("data-motion"); });
+    $("#hueV").textContent = state.h + "°"; $("#radV").textContent = state.r + " px";
+    $$("[data-th]").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.th === state.th)); });
+    $$("[data-mo]").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.mo === state.mo)); });
+    /* warn when brand hue is close to a status hue */
+    var near = [["success green", 155], ["warning amber", 80], ["danger red", 25], ["the AI violet", 295]].map(function (s) { var d = Math.abs(((state.h - s[1]) + 540) % 360 - 180); return [s[0], d]; }).sort(function (a, b) { return a[1] - b[1]; })[0];
+    var w = $("#warn");
+    if (near[1] < 28) { w.textContent = "Brand hue is only " + Math.round(near[1]) + "° from " + near[0] + ". Keep icons and words on every status, or move the hue."; w.classList.add("on"); } else w.classList.remove("on");
+    renderColor(); tokens();
+  }
+  $("#hue").addEventListener("input", function (e) { state.h = +e.target.value; apply(); });
+  $("#rad").addEventListener("input", function (e) { state.r = +e.target.value; apply(); });
+  $$("[data-th]").forEach(function (b) { b.addEventListener("click", function () { state.th = b.dataset.th; apply(); }); });
+  $$("[data-mo]").forEach(function (b) { b.addEventListener("click", function () { state.mo = b.dataset.mo; apply(); }); });
+  $$(".by-switch").forEach(function (s) { s.addEventListener("click", function () { if (!s.disabled) s.setAttribute("aria-checked", String(s.getAttribute("aria-checked") !== "true")); }); });
+  $$(".by-seg").forEach(function (g) { g.addEventListener("click", function (e) { var b = e.target.closest("button"); if (!b) return; $$("button", g).forEach(function (x) { x.setAttribute("aria-pressed", String(x === b)); }); }); });
+  $("#copyBtn").addEventListener("click", function () {
+    var txt = $("#tokenOut").textContent, btn = $("#copyBtn");
+    function ok() { btn.textContent = "Copied"; setTimeout(function () { btn.textContent = "Copy"; }, 1600); }
+    function fallback() { var r = document.createRange(); r.selectNodeContents($("#tokenOut")); var s = getSelection(); s.removeAllRanges(); s.addRange(r); btn.textContent = "Selected. Press Ctrl C"; setTimeout(function () { btn.textContent = "Copy"; }, 2200); }
+    try { navigator.clipboard.writeText(txt).then(ok, fallback); } catch (e) { fallback(); }
+  });
+
+  renderScale(); renderButtons(); renderMotion(); apply();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { renderColor(); });
+})();
+</script>
+</body>
+</html>

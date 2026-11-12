@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Telegram Bots</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="../assets/site.css">
+<style>
+
+/* ---------- one accent per bot (light + dark). A page sets --accent from its own --bN ---------- */
+:root { --b1:#C42463; --b1s:#fce3ed; --b1i:#ffffff; --b2:#6A35D8; --b2s:#ece4ff; --b2i:#ffffff; --b3:#0A7468; --b3s:#d9f2ed; --b3i:#ffffff; --b4:#A94B06; --b4s:#fdebd0; --b4i:#ffffff; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --b1:#FF8DB3; --b1s:#3c1428; --b1i:#2a0a17; --b2:#B99CFF; --b2s:#2a1f58; --b2i:#1a0b3a; --b3:#4FD3C2; --b3s:#0f3430; --b3i:#05211d; --b4:#F5A524; --b4s:#3a2a0a; --b4i:#241600; }
+}
+:root[data-theme="dark"] { --b1:#FF8DB3; --b1s:#3c1428; --b1i:#2a0a17; --b2:#B99CFF; --b2s:#2a1f58; --b2i:#1a0b3a; --b3:#4FD3C2; --b3s:#0f3430; --b3i:#05211d; --b4:#F5A524; --b4s:#3a2a0a; --b4i:#241600; }
+body.p-b1, .bc.b1 { --accent: var(--b1); --accent-soft: var(--b1s); --accent-ink: var(--b1i); }
+body.p-b2, .bc.b2 { --accent: var(--b2); --accent-soft: var(--b2s); --accent-ink: var(--b2i); }
+body.p-b3, .bc.b3 { --accent: var(--b3); --accent-soft: var(--b3s); --accent-ink: var(--b3i); }
+body.p-b4, .bc.b4 { --accent: var(--b4); --accent-soft: var(--b4s); --accent-ink: var(--b4i); }
+.mono-ava { width: 64px; height: 64px; flex: none; border-radius: 18px; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font: 800 32px/1 var(--display); box-shadow: 0 0 0 4px var(--accent-soft); }
+
+/* ---------- page-level helpers ---------- */
+.meta div { align-content: start; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.ic { width: 18px; height: 18px; flex: none; }
+.four { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 16px; }
+.four .box { gap: 10px; }
+.four .box h3 { font-size: 19px; }
+.four .box p { font-size: 14.5px; color: var(--ink-2); }
+.four .box p b { color: var(--ink); font-weight: 600; }
+.four .box a { font: 600 13.5px var(--text); margin-top: 4px; }
+.stage { display: grid; grid-template-columns: minmax(0, 360px) minmax(0, 1fr); gap: 32px 40px; align-items: start; }
+.stage > * { min-width: 0; }
+.stack { display: grid; gap: 20px; align-content: start; min-width: 0; }
+.duo { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 360px)); gap: 28px 32px; align-items: start; }
+.duo > * { min-width: 0; }
+.cap { font-size: 14px; color: var(--ink-2); max-width: 60ch; }
+.cap b { color: var(--ink); }
+.small { font-size: 14.5px; color: var(--ink-2); }
+.small b { color: var(--ink); font-weight: 600; }
+.note-line { font: 500 12px/1.5 var(--mono); color: var(--ink-2); }
+@media (max-width: 860px) { .stage { grid-template-columns: minmax(0, 1fr); } }
+/* ---------- Telegram-like phone (new component: chat bubble + inline keyboard) ---------- */
+.tg { width: 100%; max-width: 360px; height: 580px; display: grid; grid-template-rows: auto minmax(0, 1fr) auto auto; background: var(--surface); border: 1px solid var(--rule); border-radius: 28px; box-shadow: var(--shadow); overflow: hidden; }
+.tg-head { display: flex; gap: 12px; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--rule); background: var(--surface); min-width: 0; }
+.tg-head > div { min-width: 0; display: grid; }
+.tg-head b { font: 700 15px/1.2 var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tg-head small { font: 500 11.5px var(--mono); color: var(--ink-2); }
+.tg-ava { width: 36px; height: 36px; flex: none; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font: 700 15px var(--display); }
+.tg-body { overflow-y: auto; overscroll-behavior: contain; padding: 14px 12px; display: flex; flex-direction: column; gap: 8px; background: var(--surface-2); scroll-behavior: auto; }
+.tg-body:focus-visible { outline-offset: -3px; }
+.tg-msg { max-width: 88%; font: 400 14px/1.45 var(--text); padding: 9px 12px; border-radius: 14px; overflow-wrap: anywhere; word-break: break-word; }
+.tg-msg.in { align-self: flex-start; background: var(--surface); border: 1px solid var(--rule); border-bottom-left-radius: 4px; }
+.tg-msg.out { align-self: flex-end; background: var(--accent); color: var(--accent-ink); border-bottom-right-radius: 4px; }
+.tg-msg b { font-weight: 600; }
+.tg-msg code { font: 500 12.5px var(--mono); }
+.tg-msg.pill { align-self: center; max-width: 94%; text-align: center; background: transparent; padding: 4px 8px; font: 500 11px/1.4 var(--mono); letter-spacing: .04em; text-transform: uppercase; color: var(--ink-2); }
+.tg-msg.card { align-self: center; max-width: 96%; width: 96%; border: 1px dashed var(--rule); border-radius: 12px; background: var(--surface); }
+.tg-msg.card .who { font: 600 12px var(--mono); color: var(--ink-2); margin-bottom: 4px; display: block; letter-spacing: .04em; text-transform: uppercase; }
+.tg-msg.typing { display: flex; gap: 4px; padding: 12px 14px; }
+.tg-msg.typing i { width: 6px; height: 6px; border-radius: 50%; background: var(--ink-2); animation: tgdot 1s infinite ease-in-out; }
+.tg-msg.typing i:nth-child(2) { animation-delay: .15s; } .tg-msg.typing i:nth-child(3) { animation-delay: .3s; }
+@keyframes tgdot { 0%, 80%, 100% { opacity: .25; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-3px); } }
+.tg-msg.is-new { animation: tgin 180ms cubic-bezier(.2, 0, 0, 1); }
+@keyframes tgin { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.tg-kb { display: grid; gap: 4px; align-self: stretch; margin-top: -2px; }
+.tg-kb .r { display: flex; gap: 4px; }
+.tg-btn { flex: 1 1 0; min-width: 0; min-height: 38px; padding: 8px 10px; border: 0; border-radius: 10px; background: var(--accent-soft); color: var(--accent); font: 600 13px/1.25 var(--text); text-align: center; overflow-wrap: anywhere; transition: background 100ms, transform 100ms, opacity 180ms; display: flex; align-items: center; justify-content: center; }
+.tg-btn:hover:not(:disabled) { background: var(--accent); color: var(--accent-ink); }
+.tg-btn:active:not(:disabled) { transform: scale(.98); }
+.tg-btn:disabled { cursor: default; }
+.tg-btn.is-picked { background: var(--accent); color: var(--accent-ink); }
+.tg-btn.is-spent:not(.is-picked) { opacity: .45; }
+.tg-btn.is-inert { opacity: .55; cursor: not-allowed; }
+.tg-chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 12px 0; background: var(--surface); border-top: 1px solid var(--rule); min-height: 8px; }
+.tg-chips:empty { display: none; }
+.tg-chips button { border: 1px dashed var(--accent); background: transparent; color: var(--accent); border-radius: 999px; padding: 5px 11px; font: 500 12.5px var(--mono); }
+.tg-chips button:hover { background: var(--accent-soft); }
+.tg-form { display: flex; gap: 8px; padding: 10px 12px 12px; background: var(--surface); }
+.tg-chips:empty + .tg-form { border-top: 1px solid var(--rule); }
+.tg-form input { flex: 1; min-width: 0; font: 400 14px var(--text); color: var(--ink); background: var(--surface-2); border: 1px solid var(--rule); border-radius: 999px; padding: 9px 14px; }
+.tg-form input:disabled { opacity: .6; }
+.tg-form input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.tg-send { width: 40px; height: 40px; flex: none; border: 0; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; }
+.tg-send:disabled { opacity: .4; cursor: default; }
+.tg-static { display: grid; gap: 4px; max-width: 360px; background: var(--surface-2); border: 1px solid var(--rule); border-radius: 20px; padding: 12px; }
+.tg-static .tg-btn { cursor: default; }
+/* provenance number (new component) */
+.n { text-decoration: underline dotted var(--ok); text-decoration-thickness: 2px; text-underline-offset: 3px; background: var(--ok-soft); color: inherit; border-radius: 3px; padding: 0 2px; }
+.tg-msg.out .n { color: var(--ink); }
+.legend { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-2); }
+/* server */
+.srv { display: grid; gap: 0; justify-items: center; }
+.srv .edge { width: 2px; height: 22px; background: var(--ink-2); }
+.srv .node { border: 1px solid var(--rule); border-radius: 12px; background: var(--surface); padding: 12px 16px; display: grid; gap: 2px; text-align: center; min-width: min(100%, 280px); }
+.srv .node.caddy { border-color: var(--ink); }
+.srv .node b { font: 700 15px var(--text); }
+.srv .node span { font-size: 13px; color: var(--ink-2); }
+.srv .fan { width: 100%; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr)); gap: 12px; border-top: 2px solid var(--ink-2); padding-top: 22px; position: relative; margin-top: 0; }
+.srv .svc { border: 1px solid var(--rule); background: var(--surface); border-radius: 12px; padding: 12px; display: grid; gap: 6px; align-content: start; min-width: 0; }
+.srv .svc b { font: 700 14.5px var(--text); }
+.srv .svc .u { font: 500 11px var(--mono); color: var(--ink-2); letter-spacing: .02em; }
+.srv .tags { display: flex; flex-wrap: wrap; gap: 4px; }
+.srv .tags span { font: 500 11px var(--mono); padding: 3px 6px; border-radius: 4px; background: var(--surface-2); color: var(--ink-2); }
+.srv .tags span.dk { background: var(--accent-soft); color: var(--accent); }
+.srv .fan-wrap { width: 100%; }
+
+.bc { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 340px); gap: 28px 40px; align-items: center; background: var(--surface); border: 1px solid var(--rule); border-left: 10px solid var(--accent); border-radius: 16px; padding: 32px 32px 32px 28px; box-shadow: var(--shadow); }
+.bc > * { min-width: 0; }
+.bc-main { display: grid; gap: 14px; align-content: start; }
+.bc-top { display: flex; gap: 14px; align-items: center; }
+.bc-top .mono-ava { width: 52px; height: 52px; border-radius: 14px; font-size: 26px; }
+.bc-top .label b { color: var(--accent); font-weight: 600; }
+.bc h2 { font-size: clamp(28px, 4vw, 42px); font-weight: 800; letter-spacing: -.03em; }
+.bc p { color: var(--ink-2); font-size: 16px; }
+.bc p b { color: var(--ink); font-weight: 600; }
+.facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.facts > div { background: var(--accent-soft); border-radius: 10px; padding: 10px 12px; display: grid; gap: 2px; align-content: start; }
+.facts strong { font: 700 17px/1.2 var(--mono); color: var(--accent); overflow-wrap: anywhere; }
+.facts span { font-size: 12.5px; color: var(--ink-2); line-height: 1.35; }
+.bc .cta { justify-self: start; margin-top: 4px; }
+.bc-thumb { display: flex; justify-content: center; align-items: flex-start; position: relative; }
+.bc-thumb .ph { width: 47%; max-width: 170px; background: var(--surface); border: 1px solid var(--rule); border-radius: 22px; padding: 5px; box-shadow: var(--shadow); }
+.bc-thumb .ph img { display: block; width: 100%; height: auto; aspect-ratio: 780 / 1688; border-radius: 17px; border: 0; box-shadow: none; background: var(--surface-2); }
+.bc-thumb .ph + .ph { margin-left: -6%; margin-top: 28px; }
+.fprev { width: 100%; max-width: 340px; background: var(--surface-2); border: 1px solid var(--rule); border-radius: 22px; padding: 14px; display: grid; gap: 8px; box-shadow: var(--shadow); }
+.fprev .tg-msg { max-width: 94%; font-size: 13.5px; }
+.fprev .js { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 11.5px; padding: 8px 10px; border-radius: 10px; }
+.fprev .tg-msg.in { justify-self: start; } .fprev .tg-msg.out { justify-self: end; }
+.fprev .lab { font: 500 10.5px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); }
+.srv .svc { border-left: 4px solid var(--c); } .srv .svc.c1 { --c: var(--b1); } .srv .svc.c2 { --c: var(--b2); } .srv .svc.c3 { --c: var(--b3); } .srv .svc.c4 { --c: var(--b4); } .srv .svc.c0 { --c: var(--ink-2); }
+.cards { display: grid; gap: 28px; }
+@media (max-width: 860px) { .bc { grid-template-columns: minmax(0, 1fr); padding: 24px 20px 24px 18px; } .bc-thumb { justify-content: flex-start; } .bc-thumb .ph { max-width: 150px; } }
+@media (max-width: 520px) { .facts { grid-template-columns: minmax(0, 1fr); } }
+
+</style>
+</head>
+<body class="">
+<header class="bar">
+  <div class="wrap">
+    <a class="brand" href="../index.html"><i aria-hidden="true"></i><span id="brandName">Your Name</span></a>
+    <nav aria-label="Work">
+      <a href="../index.html#work">All work</a>
+      <a href="telegram-bots.html" aria-current="page">Bots</a>
+      <a href="security.html">Security</a>
+      <a href="plectra.html">Plectra</a>
+      <a href="brightyard-portal.html">Portal</a>
+      <a href="brightyard-mobile.html">Mobile</a>
+      <a href="brightyard-system.html">System</a>
+      <a href="voice-note.html">Voice note</a>
+      <a href="ai-states.html">AI states</a>
+      <a href="space-finder.html">Space finder</a>
+    </nav>
+    <button class="toggle" id="themeBtn" type="button" aria-label="Switch colour theme">Theme: auto</button>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="case-hero">
+    <div class="row"><span class="kind shipped">Shipped</span><span class="kind">Telegram</span><span class="kind">Mini Apps</span><span class="kind">AI</span></div>
+    <h1>Telegram Bots</h1>
+    <p class="sub">Four separate products built with Claude Code and run on my server in October 2026. Each has its own users, its own flow and its own page.</p>
+    <dl class="meta">
+      <div><dt class="label">Role</dt><dd>Product and conversation design, Mini App UI, built and deployed with Claude Code</dd></div>
+      <div><dt class="label">Stack</dt><dd>Python, aiogram 3, aiohttp, SQLite, Claude API, Docker, systemd, Caddy</dd></div>
+      <div><dt class="label">Status</dt><dd>Shipped, ran on my server in October 2026</dd></div>
+      <div><dt class="label">Scale</dt><dd>4 bots, about 20,000 lines of Python, 3 Mini Apps</dd></div>
+    </dl>
+    <p class="honest"><b>Honest note</b><span>These are working products built with Claude Code and run on a Linux server in October 2026. Every demo and screenshot uses invented data. Real customer data stays in the bots.</span></p>
+  </div>
+
+  <section id="bots" style="padding-top:56px">
+    <div class="sec-head">
+      <span class="num">THE FOUR BOTS</span>
+      <h2>Pick one, it has its own page</h2>
+      <p>Each bot serves different people and works differently. Open one to tap through its chat, see its staff side and read how it is kept safe.</p>
+    </div>
+    <div class="cards">
+      <article class="bc b1" id="salon">
+        <div class="bc-main">
+          <div class="bc-top"><span class="mono-ava" aria-hidden="true">S</span><span class="label">Bot <b>1 of 4</b> · Beauty salon</span></div>
+          <h2>Salon Booking Bot</h2>
+          <div class="row"><span class="kind shipped">Shipped</span><span class="kind">Mini App</span><span class="kind">Instagram</span></div>
+          <p><b>What it does.</b> Clients book a service, a master and a free slot from their phone. The bot reminds them the evening before, asks for a review after the visit and sends staff a card to take.</p>
+          <p><b>Who uses it.</b> Clients, salon staff and the owner, who has a Mini App panel.</p>
+          <div class="facts"><div><strong>9,455</strong><span>lines of Python</span></div><div><strong>1</strong><span>owner Mini App</span></div><div><strong>2 h</strong><span>reminder before a visit</span></div></div>
+          <a class="cta" href="bot-salon.html">Open the Salon bot</a>
+        </div>
+        <div class="bc-thumb"><div class="ph"><img src="../shots/bots/salon-overview.png" width="780" height="1688" loading="lazy" alt="Salon owner Mini App overview with revenue and a trend line."></div><div class="ph"><img src="../shots/bots/salon-bookings.png" width="780" height="1688" loading="lazy" alt="Salon Mini App bookings tab with time, client and status."></div></div>
+      </article>
+      <article class="bc b2" id="shop">
+        <div class="bc-main">
+          <div class="bc-top"><span class="mono-ava" aria-hidden="true">A</span><span class="label">Bot <b>2 of 4</b> · Clothing shop</span></div>
+          <h2>Aura Wear Shop Bot</h2>
+          <div class="row"><span class="kind shipped">Shipped</span><span class="kind">Mini App</span><span class="kind">Instagram</span><span class="kind">AI</span></div>
+          <p><b>What it does.</b> A shopper comments "ціна" on Instagram. The bot replies in Direct with colours, sizes and an order button, then handles checkout, tracking and an AI try-on.</p>
+          <p><b>Who uses it.</b> Instagram shoppers, and the owner who ships orders from a Mini App.</p>
+          <div class="facts"><div><strong>7,780</strong><span>lines of Python</span></div><div><strong>2 h</strong><span>Nova Poshta polling</span></div><div><strong>3 / day</strong><span>AI try-ons per buyer by default</span></div></div>
+          <a class="cta" href="bot-shop.html">Open the Aura Wear bot</a>
+        </div>
+        <div class="bc-thumb"><div class="ph"><img src="../shots/bots/shop-home.png" width="780" height="1688" loading="lazy" alt="Aura Wear owner Mini App overview with sales and orders."></div><div class="ph"><img src="../shots/bots/shop-boutique.png" width="780" height="1688" loading="lazy" alt="Aura Wear customer boutique in dark theme."></div></div>
+      </article>
+      <article class="bc b3" id="fabric">
+        <div class="bc-main">
+          <div class="bc-top"><span class="mono-ava" aria-hidden="true">F</span><span class="label">Bot <b>3 of 4</b> · Fabric wholesale</span></div>
+          <h2>Fabric Stock Bot</h2>
+          <div class="row"><span class="kind shipped">Shipped</span><span class="kind">AI</span><span class="kind">1C</span></div>
+          <p><b>What it does.</b> It reads B2B groups and answers "is it in stock?" from text or a label photo. Claude only decides what is asked, and code writes the answer from 1C.</p>
+          <p><b>Who uses it.</b> B2B clients in group chats, and the managers who get everything else.</p>
+          <div class="facts"><div><strong>2</strong><span>strict tools</span></div><div><strong>80</strong><span>eval cases</span></div><div><strong>24</strong><span>offline tests</span></div></div>
+          <a class="cta" href="bot-fabric.html">Open the Fabric stock bot</a>
+        </div>
+        <div class="bc-thumb"><div class="fprev" role="img" aria-label="Preview: a client asks about Siena 5, the model returns a check_stock tool call, and the bot replies with the stock from 1C.">
+          <span class="lab">Group chat</span><div class="tg-msg out">Siena 5 є?</div>
+          <span class="lab">Claude returns</span><pre class="js">check_stock {"collection": "SIENA", "shade_code": "05"}</pre>
+          <span class="lab">Code replies</span><div class="tg-msg in">✅ SIENA 05-Birch — є <span class="n">142,5 м</span></div></div></div>
+      </article>
+      <article class="bc b4" id="revenue">
+        <div class="bc-main">
+          <div class="bc-top"><span class="mono-ava" aria-hidden="true">R</span><span class="label">Bot <b>4 of 4</b> · Shop chain</span></div>
+          <h2>Shop-Chain Revenue Bot</h2>
+          <div class="row"><span class="kind shipped">Shipped</span><span class="kind">Mini App</span></div>
+          <p><b>What it does.</b> A seller closes a shift in about 20 seconds. A likely typo gets a question, and the owner sees who has reported and the day's total.</p>
+          <p><b>Who uses it.</b> Sellers in the shops, and the owner with a Mini App dashboard.</p>
+          <div class="facts"><div><strong>20 s</strong><span>to close a shift</span></div><div><strong>10</strong><span>tests</span></div><div><strong>1</strong><span>dashboard Mini App</span></div></div>
+          <a class="cta" href="bot-revenue.html">Open the Revenue bot</a>
+        </div>
+        <div class="bc-thumb"><div class="ph"><img src="../shots/bots/revenue-overview-light.png" width="780" height="1688" loading="lazy" alt="Revenue dashboard in light theme."></div><div class="ph"><img src="../shots/bots/revenue-overview-dark.png" width="780" height="1688" loading="lazy" alt="Revenue dashboard in dark theme."></div></div>
+      </article>
+    </div>
+  </section>
+
+  <section id="server">
+    <div class="sec-head">
+      <span class="num">HOW IT RAN</span>
+      <h2>One small server, five services</h2>
+      <p>The four bots and a mock 1C service ran on one Linux server. Hostnames and ports are left out on purpose.</p>
+    </div>
+    <div class="srv">
+      <div class="node"><b>Telegram and Mini App traffic</b><span>HTTPS from outside</span></div>
+      <div class="edge" aria-hidden="true"></div>
+      <div class="node caddy"><b>Caddy</b><span>HTTPS front, reverse proxy, 1 MB request-body limit</span></div>
+      <div class="edge" aria-hidden="true"></div>
+      <div class="fan-wrap">
+        <div class="fan">
+          <div class="svc c1"><span class="u">systemd · restart: always</span><b>Salon bot</b><div class="tags"><span>aiogram 3</span><span>SQLite</span></div></div>
+          <div class="svc c2"><span class="u">systemd · restart: always</span><b>Shop bot</b><div class="tags"><span>aiogram 3</span><span>SQLite</span></div></div>
+          <div class="svc c4"><span class="u">systemd · restart: always</span><b>Revenue bot</b><div class="tags"><span>aiogram 3</span><span>SQLite</span><span class="dk">Docker Compose</span></div></div>
+          <div class="svc c3"><span class="u">systemd · restart: always</span><b>Fabric bot</b><div class="tags"><span>Claude API</span><span>SQLite</span><span class="dk">Docker Compose</span></div></div>
+          <div class="svc c0"><span class="u">systemd · restart: always</span><b>Mock 1C service</b><div class="tags"><span>220 test items</span></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="two">
+      <div class="box">
+        <h3>How I worked with Claude Code</h3>
+        <ul class="check">
+          <li><span>I wrote each flow as states and exact message texts first, then let Claude Code build it.</span></li>
+          <li><span>Tests came first for the parts that must not drift: money parsing, the price rule, the report maths.</span></li>
+          <li><span>I ran the eval set before I picked a model.</span></li>
+          <li><span>I read every reply text myself, in Ukrainian, as the client would.</span></li>
+        </ul>
+      </div>
+      <div class="box">
+        <h3>What I did not build</h3>
+        <p class="small">No admin web app outside Telegram, no multi-tenant billing, no analytics beyond what each owner panel shows. I also have no usage figures to share, so this page has none.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="safety">
+    <div class="sec-head">
+      <span class="num">SAFETY</span>
+      <h2>How I keep them safe</h2>
+      <p>Each bot page lists its own checks, each with the reason it matters. The security page covers the server and the audit behind them.</p>
+    </div>
+    <div class="two">
+      <div class="box">
+        <h3>Still on my hardening list</h3>
+        <ul class="check">
+          <li><span>The systemd services run as root without sandboxing. Next: a dedicated user, <code>NoNewPrivileges</code> and <code>ProtectSystem</code>.</span></li>
+          <li><span>Salon and shop versions were kept as <code>.bak</code> files, and fabric and revenue are in git only locally. Next: one private remote for all four, with checks on every push.</span></li>
+          <li><span>The salon and shop bots have no automated tests yet.</span></li>
+          <li><span>A Google credentials file sits next to the code. Next: tighter file permissions or a secret store.</span></li>
+        </ul>
+      </div>
+      <div class="box">
+        <h3>Read the full picture</h3>
+        <p class="small">The security page explains the guards shared by the bots, such as signed sign-in and webhooks, and what each one prevents.</p>
+        <p><a class="cta" href="security.html">How I keep them safe</a></p>
+      </div>
+    </div>
+  </section>
+
+  <section id="lessons">
+    <div class="sec-head">
+      <span class="num">TAKEAWAYS</span>
+      <h2>What bots taught me about interface design</h2>
+    </div>
+    <div class="three">
+      <div><span class="label">1</span><h3>A conversation is an interface with states</h3><p>Every message has a waiting state, a done state and an "I typed something odd" state. I mapped them like screens before writing code.</p></div>
+      <div><span class="label">2</span><h3>Every failure ends at a human</h3><p>When 1C is down, a slot is taken or a rating is low, the bot says what happened and hands over with context. It never guesses to look smart.</p></div>
+      <div><span class="label">3</span><h3>The staff side needs as much design as the client side</h3><p>Take, escalate, mark came or did not come, see who has not reported. The owner's taps matter as much as the client's.</p></div>
+    </div>
+  </section>
+
+  <div class="next-work" style="margin-top:84px">
+    <a href="space-finder.html"><span class="label">Concept</span><b>Space Finder</b><span>Leasing space in a business park, with an AI match.</span></a>
+    <a href="voice-note.html"><span class="label">Concept</span><b>Voice note</b><span>A voice message turned into a draft flow.</span></a>
+    <a href="ai-states.html"><span class="label">Concept</span><b>AI states</b><span>Suggestions, confirmations, loading and errors for AI features.</span></a>
+  </div>
+  <footer><span>Working products. Demos use invented data.</span><span>Built with Claude Code, October–November 2026</span></footer>
+</main>
+<script src="../assets/profile.js"></script>
+<script src="../assets/icons.js"></script>
+<script src="../assets/site.js"></script>
+<script>
+(function () {
+  "use strict";
+  /* no page script */
+})();
+</script>
+</body>
+</html>

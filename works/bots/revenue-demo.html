@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<title>Виручка мережі</title>
+<style>
+:root{
+  --bg:#f4f5f8; --card:#ffffff; --text:#14161c; --hint:#7a8090; --line:#e8eaf0;
+  --cash:#f5a524; --term:#7c5cff; --ok:#16a34a; --wait:#e0661b; --accent:#7c5cff;
+  --hero1:#7c5cff; --hero2:#e2489b;
+}
+@media (prefers-color-scheme: dark){
+  :root{--bg:#0f1115; --card:#181b22; --text:#eef0f5; --hint:#8b91a1; --line:#262a33;}
+}
+html.tg-dark{--bg:#0f1115; --card:#181b22; --text:#eef0f5; --hint:#8b91a1; --line:#262a33;}
+html.tg-light{--bg:#f4f5f8; --card:#ffffff; --text:#14161c; --hint:#7a8090; --line:#e8eaf0;}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--text);font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;padding:14px 14px 32px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:2px 2px 12px}
+.top h1{font-size:20px;font-weight:800;letter-spacing:-.01em}
+.top .sub{font-size:12.5px;color:var(--hint);font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.mswitch{display:flex;align-items:center;gap:4px;background:var(--card);border-radius:12px;padding:3px;box-shadow:0 1px 0 var(--line)}
+.mswitch button{border:0;background:transparent;color:var(--text);width:30px;height:30px;border-radius:9px;font-size:18px;cursor:pointer}
+.mswitch button:disabled{opacity:.25}
+.mswitch span{font-weight:700;font-size:14px;min-width:96px;text-align:center}
+.card{background:var(--card);border-radius:18px;padding:14px;margin-bottom:12px;box-shadow:0 1px 0 var(--line)}
+.card h2{font-size:15px;font-weight:800;margin-bottom:10px;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.card h2 small{font-size:12.5px;color:var(--hint);font-weight:600}
+.hero{background:linear-gradient(135deg,var(--hero1),var(--hero2));color:#fff;border-radius:20px;padding:16px;margin-bottom:12px;box-shadow:0 10px 30px rgba(124,92,255,.25)}
+.hero .lbl{font-size:13px;opacity:.85;font-weight:600}
+.hero .big{font-size:34px;font-weight:800;letter-spacing:-.02em;margin:2px 0 4px}
+.hero .cmp{display:inline-block;font-size:12.5px;font-weight:700;background:rgba(255,255,255,.18);padding:3px 9px;border-radius:999px}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
+.kpi{background:rgba(255,255,255,.14);border-radius:12px;padding:8px 9px}
+.kpi b{display:block;font-size:15.5px;font-weight:800}
+.kpi span{font-size:11.5px;opacity:.85;font-weight:600}
+.row{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--line)}
+.row:first-of-type{border-top:0}
+.dot{width:28px;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;flex:none}
+.dot.ok{background:rgba(22,163,74,.12)} .dot.wait{background:rgba(224,102,27,.12)}
+.row .name{flex:1;font-weight:650;font-size:14.5px;line-height:1.3}
+.row .name small{display:block;color:var(--hint);font-weight:500;font-size:12.5px}
+.row .amt{font-weight:800;font-size:14.5px;text-align:right;white-space:nowrap}
+.row .amt.wait{color:var(--wait);font-weight:700;font-size:13px}
+.legend{display:flex;gap:14px;font-size:12.5px;color:var(--hint);font-weight:600;margin:-2px 0 8px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.chart{width:100%;height:170px;display:block}
+.dayinfo{margin-top:8px;font-size:13.5px;color:var(--hint);min-height:38px;line-height:1.4}
+.dayinfo b{color:var(--text)}
+.bar{height:8px;border-radius:99px;background:var(--line);overflow:hidden;margin-top:6px}
+.bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--hero1),var(--hero2))}
+.store{padding:9px 0;border-top:1px solid var(--line)}
+.store:first-of-type{border-top:0}
+.store .h{display:flex;justify-content:space-between;gap:10px;font-weight:650;font-size:14.5px}
+.store .h span:last-child{font-weight:800;white-space:nowrap}
+.store .s{font-size:12.5px;color:var(--hint);margin-top:2px}
+.split{display:flex;height:10px;border-radius:99px;overflow:hidden;margin:4px 0 8px}
+.split .c{background:var(--cash)} .split .t{background:var(--term)}
+.splitlbl{display:flex;justify-content:space-between;font-size:13px;font-weight:650;gap:8px;flex-wrap:wrap}
+.edit{padding:8px 0;border-top:1px solid var(--line);font-size:13.5px;line-height:1.4}
+.edit:first-of-type{border-top:0}
+.edit b{font-weight:700}
+.edit .chg{color:var(--hint)}
+.empty{color:var(--hint);font-size:13.5px}
+.foot{text-align:center;color:var(--hint);font-size:12.5px;margin-top:6px;line-height:1.5}
+.err{background:#fee2e2;color:#991b1b;padding:12px;border-radius:12px;font-size:14px}
+.skeleton{opacity:.5}
+</style>
+</head>
+<body>
+<div class="top">
+  <div><div class="sub">Мережа магазинів</div><h1>Виручка</h1></div>
+  <div class="mswitch"><button id="prev" aria-label="Попередній місяць">‹</button><span id="mtitle">…</span><button id="next" aria-label="Наступний місяць">›</button></div>
+</div>
+<div id="root" class="skeleton"><div class="card">Завантаження…</div></div>
+
+<script>
+/* ===== DEMO MOCK LAYER (fictional data) ===== */
+(function () {
+  var root = document.documentElement;
+  var hash = (location.hash || '').replace('#', '');
+  var scheme = hash.indexOf('dark') >= 0 ? 'dark'
+    : hash.indexOf('light') >= 0 ? 'light'
+    : (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  var listeners = {};
+  function emit(ev) { (listeners[ev] || []).slice().forEach(function (f) { try { f(); } catch (e) {} }); }
+
+  /* in-page dialogs (window.alert/confirm do not work in the target viewer) */
+  function dialog(title, message, buttons, cb) {
+    var ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;inset:0;z-index:100000;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:24px';
+    var box = document.createElement('div');
+    box.style.cssText = 'background:var(--card);color:var(--text);border-radius:18px;padding:18px;max-width:320px;width:100%;box-shadow:0 10px 40px rgba(0,0,0,.35);font:15px/1.4 -apple-system,"Segoe UI",Roboto,sans-serif';
+    var h = document.createElement('div');
+    if (title) { h.style.cssText = 'font-weight:800;margin-bottom:6px'; h.textContent = title; box.appendChild(h); }
+    var p = document.createElement('div'); p.style.cssText = 'color:var(--hint);font-size:14px;margin-bottom:14px'; p.textContent = message || ''; box.appendChild(p);
+    var row = document.createElement('div'); row.style.cssText = 'display:flex;gap:8px;justify-content:flex-end';
+    (buttons && buttons.length ? buttons : [{ id: 'ok', type: 'default', text: 'OK' }]).forEach(function (b) {
+      var btn = document.createElement('button');
+      btn.textContent = b.text || (b.type === 'cancel' ? 'Скасувати' : b.type === 'close' ? 'Закрити' : 'OK');
+      btn.style.cssText = 'border:0;border-radius:10px;padding:8px 14px;font:inherit;font-weight:700;cursor:pointer;background:' + (b.type === 'cancel' || b.type === 'close' ? 'var(--line)' : 'var(--accent)') + ';color:' + (b.type === 'cancel' || b.type === 'close' ? 'var(--text)' : '#fff');
+      btn.onclick = function () { ov.remove(); cb && cb(b.id); };
+      row.appendChild(btn);
+    });
+    box.appendChild(row); ov.appendChild(box); document.body.appendChild(ov);
+  }
+  function btnStub() {
+    var o = { isVisible: false, text: '', show: function () { o.isVisible = true; return o; }, hide: function () { o.isVisible = false; return o; },
+      setText: function (t) { o.text = t; return o; }, onClick: function () { return o; }, offClick: function () { return o; },
+      enable: function () { return o; }, disable: function () { return o; }, showProgress: function () { return o; }, hideProgress: function () { return o; },
+      setParams: function () { return o; } };
+    return o;
+  }
+  function theme() {
+    return scheme === 'dark'
+      ? { bg_color: '#0f1115', text_color: '#eef0f5', hint_color: '#8b91a1', link_color: '#7c5cff', button_color: '#7c5cff', button_text_color: '#ffffff', secondary_bg_color: '#181b22' }
+      : { bg_color: '#f4f5f8', text_color: '#14161c', hint_color: '#7a8090', link_color: '#7c5cff', button_color: '#7c5cff', button_text_color: '#ffffff', secondary_bg_color: '#ffffff' };
+  }
+  var noop = function () {};
+  var WA = {
+    initData: 'demo=1', initDataUnsafe: { user: { id: 1, first_name: 'Демо' } }, version: '7.0', platform: 'web',
+    isExpanded: true, viewportHeight: window.innerHeight, viewportStableHeight: window.innerHeight,
+    get colorScheme() { return scheme; }, get themeParams() { return theme(); },
+    ready: noop, expand: noop, close: noop, enableClosingConfirmation: noop, disableClosingConfirmation: noop,
+    setHeaderColor: noop, setBackgroundColor: noop, setBottomBarColor: noop, isVersionAtLeast: function () { return true; },
+    onEvent: function (ev, f) { (listeners[ev] = listeners[ev] || []).push(f); },
+    offEvent: function (ev, f) { listeners[ev] = (listeners[ev] || []).filter(function (x) { return x !== f; }); },
+    sendData: noop, openLink: function (u) { try { window.open(u, '_blank'); } catch (e) {} }, openTelegramLink: noop,
+    MainButton: btnStub(), SecondaryButton: btnStub(), BackButton: btnStub(), SettingsButton: btnStub(),
+    HapticFeedback: { impactOccurred: noop, notificationOccurred: noop, selectionChanged: noop },
+    showAlert: function (m, cb) { dialog('', m, [{ id: 'ok', type: 'close', text: 'OK' }], function () { cb && cb(); }); },
+    showConfirm: function (m, cb) { dialog('', m, [{ id: 'cancel', type: 'cancel', text: 'Скасувати' }, { id: 'ok', type: 'default', text: 'OK' }], function (id) { cb && cb(id === 'ok'); }); },
+    showPopup: function (p, cb) { p = p || {}; dialog(p.title, p.message, p.buttons, function (id) { cb && cb(id); }); }
+  };
+  window.Telegram = { WebApp: WA };
+
+  /* ---- seeded data ---- */
+  function rng(seed) { var a = seed >>> 0; return function () { a = (a + 0x6D2B79F5) >>> 0; var t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+  var STORES = [
+    { id: 1, name: 'Точка на Подолі · Контрактова', base: 21500 },
+    { id: 2, name: 'Точка на Оболоні · Героїв Дніпра', base: 18200 },
+    { id: 3, name: 'Точка на Лівому березі · Бажана', base: 24800 },
+    { id: 4, name: 'Точка в ТРЦ «Гавань»', base: 29600 },
+    { id: 5, name: 'Точка на Печерську · Арсенальна', base: 16400 },
+    { id: 6, name: 'Точка на Святошині · Перемоги', base: 13900 }
+  ];
+  var WDF = [1.18, 0.86, 0.9, 0.93, 0.98, 1.12, 1.25]; // нд..сб
+  var TODAY = new Date(2026, 10, 12), TODAY_ISO = '2026-11-12';
+  var DONE_TODAY = { 1: '20:41', 2: '21:03', 4: '21:12', 5: '20:55' }; // 3 і 6 ще не здали
+  var MONTHS = ['Січень','Лютий','Березень','Квітень','Травень','Червень','Липень','Серпень','Вересень','Жовтень','Листопад','Грудень'];
+  var MONTHS_GEN = ['січня','лютого','березня','квітня','травня','червня','липня','серпня','вересня','жовтня','листопада','грудня'];
+  var p2 = function (n) { return String(n).padStart(2, '0'); };
+  var cache = {};
+  function gen(y, m) {
+    var key = y + '-' + p2(m); if (cache[key]) return cache[key];
+    var nd = new Date(y, m, 0).getDate(), reps = [], edits = [];
+    for (var d = 1; d <= nd; d++) {
+      var dt = new Date(y, m - 1, d); if (dt > TODAY) break;
+      var iso = key + '-' + p2(d), wd = dt.getDay();
+      STORES.forEach(function (s) {
+        var r = rng(y * 100000 + m * 3000 + d * 37 + s.id * 7919);
+        if (iso === TODAY_ISO && !DONE_TODAY[s.id]) return;
+        if (r() < 0.012 && iso !== TODAY_ISO) return; // зрідка немає звіту
+        var drift = 1 + (m - 9) * 0.025 + Math.sin(d / 4 + s.id) * 0.05;
+        var total = s.base * 0.5 * WDF[wd] * drift * (0.86 + r() * 0.28);
+        var share = 0.56 + r() * 0.16 + (s.id === 4 ? 0.1 : 0);
+        var term = Math.round(total * share * 100) / 100, cash = Math.round((total - term) * 100) / 100;
+        var rep = { day: iso, store: s.id, cash: cash, terminal: term };
+        if (r() < 0.035 && iso !== TODAY_ISO) {
+          var was = r() < 0.5 ? Math.round((cash + term) * 0.1) : Math.round((cash + term) * (0.82 + r() * 0.1));
+          edits.push({ day: iso, store: s.name, was: was, now: Math.round((cash + term) * 100) / 100, at: p2(9 + Math.floor(r() * 3)) + ':' + p2(Math.floor(r() * 60)) });
+        }
+        reps.push(rep);
+      });
+    }
+    return (cache[key] = { reps: reps, edits: edits, nd: nd });
+  }
+  var r2 = function (v) { return Math.round(v * 100) / 100; };
+  function payload(y, m) {
+    var g = gen(y, m), py = m === 1 ? y - 1 : y, pm = m === 1 ? 12 : m - 1, pg = gen(py, pm);
+    var byDay = {}; g.reps.forEach(function (r) { (byDay[r.day] = byDay[r.day] || []).push(r); });
+    var lastDay = 0; Object.keys(byDay).forEach(function (k) { lastDay = Math.max(lastDay, +k.slice(8)); });
+    var prevSame = 0; pg.reps.forEach(function (r) { if (+r.day.slice(8) <= lastDay) prevSame += r.cash + r.terminal; });
+    var days = [];
+    for (var d = 1; d <= g.nd; d++) {
+      var dt = new Date(y, m - 1, d); if (dt > TODAY) break;
+      var iso = y + '-' + p2(m) + '-' + p2(d), rs = byDay[iso] || [], c = 0, t = 0, st = {};
+      rs.forEach(function (r) { c += r.cash; t += r.terminal; st[String(r.store)] = r2(r.cash + r.terminal); });
+      days.push({ day: iso, cash: r2(c), terminal: r2(t), stores: st });
+    }
+    var cash = 0, term = 0, per = {};
+    g.reps.forEach(function (r) { cash += r.cash; term += r.terminal; per[r.store] = (per[r.store] || 0) + r.cash + r.terminal; });
+    var out = {
+      month: y + '-' + p2(m), title: MONTHS[m - 1] + ' ' + y, today: TODAY_ISO,
+      stores: STORES.map(function (s) { return { id: s.id, name: s.name, total: r2(per[s.id] || 0) }; }),
+      total: r2(cash + term), cash: r2(cash), terminal: r2(term),
+      days_with_data: Object.keys(byDay).length, prev_same_period: r2(prevSame), prev_title: MONTHS_GEN[pm - 1],
+      days: days, edits: g.edits.slice().sort(function (a, b) { return a.day < b.day ? 1 : -1; }).slice(0, 10)
+    };
+    if (y === 2026 && m === 11) {
+      out.today_status = STORES.map(function (s) {
+        var rep = g.reps.filter(function (r) { return r.day === TODAY_ISO && r.store === s.id; })[0];
+        return { store: s.name, done: !!rep, total: rep ? r2(rep.cash + rep.terminal) : 0, at: rep ? DONE_TODAY[s.id] : '' };
+      });
+    }
+    return out;
+  }
+  var realFetch = window.fetch;
+  window.fetch = function (url) {
+    var u = String(url && url.url || url), delay = 300 + Math.random() * 200;
+    return new Promise(function (res, rej) {
+      setTimeout(function () {
+        if (u.indexOf('api/month') !== 0 && u.indexOf('/api/month') < 0) { rej(new TypeError('Network disabled in demo')); return; }
+        var mm = /[?&]m=(\d{4})-(\d{2})/.exec(u), y = 2026, m = 11;
+        if (mm) { y = +mm[1]; m = +mm[2]; }
+        var fut = y > 2026 || (y === 2026 && m > 11);
+        var body = fut ? { error: 'future' } : payload(y, m);
+        res(new Response(JSON.stringify(body), { status: fut ? 400 : 200, headers: { 'Content-Type': 'application/json' } }));
+      }, delay);
+    });
+  };
+
+  /* ---- demo pill ---- */
+  function setScheme(s) {
+    scheme = s; root.classList.remove('tg-dark', 'tg-light'); root.classList.add(s === 'dark' ? 'tg-dark' : 'tg-light');
+    var b = document.getElementById('demoTheme'); if (b) b.textContent = s === 'dark' ? '☀' : '☾';
+    emit('themeChanged');
+  }
+  document.addEventListener('DOMContentLoaded', function () {
+    var pill = document.createElement('div');
+    pill.style.cssText = 'position:fixed;left:50%;bottom:6px;transform:translateX(-50%);z-index:99999;display:flex;align-items:center;gap:6px;background:rgba(20,22,28,.78);color:#fff;border-radius:999px;padding:2px 3px 2px 10px;font:600 10.5px/1.4 -apple-system,"Segoe UI",Roboto,sans-serif;letter-spacing:.02em;backdrop-filter:blur(6px);box-shadow:0 2px 8px rgba(0,0,0,.25)';
+    pill.innerHTML = '<span>Демо · вигадані дані</span><button id="demoTheme" aria-label="Світла/темна тема" style="border:0;background:rgba(255,255,255,.18);color:#fff;width:20px;height:20px;border-radius:50%;font-size:11px;cursor:pointer;line-height:1"></button>';
+    document.body.appendChild(pill);
+    document.getElementById('demoTheme').onclick = function () { setScheme(scheme === 'dark' ? 'light' : 'dark'); };
+    setScheme(scheme);
+  });
+})();
+</script>
+<script>
+const tg = window.Telegram && window.Telegram.WebApp;
+function applyTheme() {
+  // тему Telegram беремо лише всередині Telegram; у звичайному браузері — системна
+  if (!tg || !tg.initData) return;
+  const html = document.documentElement;
+  html.classList.remove('tg-dark', 'tg-light');
+  html.classList.add(tg.colorScheme === 'dark' ? 'tg-dark' : 'tg-light');
+}
+if (tg) {
+  tg.ready(); tg.expand(); applyTheme();
+  tg.onEvent && tg.onEvent('themeChanged', applyTheme);
+}
+const nf = new Intl.NumberFormat('uk-UA', {maximumFractionDigits: 0});
+const uah = v => nf.format(Math.round(v)) + ' ₴';
+const short = v => v >= 1e6 ? (v / 1e6).toFixed(1).replace('.', ',') + ' млн' : v >= 1e3 ? Math.round(v / 1e3) + ' тис' : String(Math.round(v));
+const WD = ['нд','пн','вт','ср','чт','пт','сб'];
+const MG = ['січня','лютого','березня','квітня','травня','червня','липня','серпня','вересня','жовтня','листопада','грудня'];
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const dayLbl = iso => { const d = new Date(iso + 'T12:00:00'); return `${d.getDate()} ${MG[d.getMonth()]}, ${WD[d.getDay()]}`; };
+
+let current = null, maxMonth = null, data = null, selected = null;
+
+async function load(m) {
+  const root = document.getElementById('root');
+  root.classList.add('skeleton');
+  try {
+    const r = await fetch('api/month' + (m ? '?m=' + m : ''), {headers: {'X-Init-Data': tg ? tg.initData : ''}});
+    if (!r.ok) throw new Error(r.status === 403 ? 'Панель доступна лише власнику мережі.' : 'Не вдалося завантажити дані (' + r.status + ').');
+    data = await r.json();
+    current = data.month; if (!maxMonth) maxMonth = data.month;
+    selected = data.days.length ? data.days[data.days.length - 1].day : null;
+    render();
+  } catch (e) {
+    root.innerHTML = `<div class="err">${esc(e.message)}</div>`;
+  } finally { root.classList.remove('skeleton'); }
+}
+
+function shiftMonth(ym, k) { let [y, m] = ym.split('-').map(Number); m += k; if (m < 1) { m = 12; y--; } if (m > 12) { m = 1; y++; } return `${y}-${String(m).padStart(2, '0')}`; }
+
+function render() {
+  document.getElementById('mtitle').textContent = data.title;
+  document.getElementById('next').disabled = current >= maxMonth;
+  const days = data.days.filter(d => d.cash + d.terminal > 0);
+  const avg = days.length ? data.total / days.length : 0;
+  const cardPct = data.total ? Math.round(data.terminal / data.total * 100) : 0;
+  let cmp = '';
+  if (data.prev_same_period) {
+    const p = Math.round((data.total - data.prev_same_period) / data.prev_same_period * 100);
+    cmp = `<span class="cmp">${p >= 0 ? '▲ +' : '▼ −'}${Math.abs(p)}% до тих самих днів ${esc(data.prev_title)}</span>`;
+  }
+  let html = `
+  <div class="hero">
+    <div class="lbl">Виручка за ${esc(data.title.toLowerCase())}</div>
+    <div class="big">${uah(data.total)}</div>${cmp}
+    <div class="kpis">
+      <div class="kpi"><b>${uah(avg)}</b><span>середня за день</span></div>
+      <div class="kpi"><b>${cardPct}%</b><span>оплат карткою</span></div>
+      <div class="kpi"><b>${days.length}</b><span>днів зі звітами</span></div>
+    </div>
+  </div>`;
+
+  if (data.today_status) {
+    const done = data.today_status.filter(s => s.done).length;
+    html += `<div class="card"><h2>Сьогодні <small>${done} з ${data.today_status.length} здали</small></h2>` +
+      data.today_status.map(s => `<div class="row"><div class="dot ${s.done ? 'ok' : 'wait'}">${s.done ? '✅' : '⏳'}</div>
+        <div class="name">${esc(s.store)}${s.done ? `<small>здали о ${esc(s.at)}</small>` : ''}</div>
+        <div class="amt ${s.done ? '' : 'wait'}">${s.done ? uah(s.total) : 'ще не здали'}</div></div>`).join('') + `</div>`;
+  }
+
+  html += `<div class="card"><h2>По днях <small>торкніться стовпчика</small></h2>
+    <div class="legend"><span><i style="background:var(--cash)"></i>готівка</span><span><i style="background:var(--term)"></i>термінал</span></div>
+    ${chart()}<div class="dayinfo" id="dayinfo"></div></div>`;
+
+  html += `<div class="card"><h2>Готівка і термінал</h2>
+    <div class="split"><div class="c" style="width:${100 - cardPct}%"></div><div class="t" style="width:${cardPct}%"></div></div>
+    <div class="splitlbl"><span>💵 ${uah(data.cash)}</span><span>💳 ${uah(data.terminal)}</span></div></div>`;
+
+  const max = Math.max(...data.stores.map(s => s.total), 1);
+  html += `<div class="card"><h2>Магазини <small>за місяць</small></h2>` +
+    [...data.stores].sort((a, b) => b.total - a.total).map(s => `<div class="store"><div class="h"><span>${esc(s.name)}</span><span>${uah(s.total)}</span></div>
+      <div class="bar"><i style="width:${(s.total / max * 100).toFixed(1)}%"></i></div>
+      <div class="s">${data.total ? Math.round(s.total / data.total * 100) : 0}% виручки мережі${days.length ? ' · ' + uah(s.total / days.length) + ' в середньому за день' : ''}</div></div>`).join('') + `</div>`;
+
+  html += `<div class="card"><h2>Виправлення звітів <small>${data.edits.length || ''}</small></h2>` +
+    (data.edits.length ? data.edits.map(e => `<div class="edit"><b>${esc(dayLbl(e.day))}</b> · ${esc(e.store)}<br>
+      <span class="chg">${uah(e.was)} → ${uah(e.now)}, виправлено о ${esc(e.at)}</span></div>`).join('')
+      : '<div class="empty">Цього місяця звіти ніхто не виправляв.</div>') + `</div>`;
+
+  html += `<div class="foot">Excel-таблиця за місяць — кнопкою «📅 Місяць» у чаті з ботом.<br>Дані оновлюються, щойно продавець здає зміну.</div>`;
+  document.getElementById('root').innerHTML = html;
+  document.querySelectorAll('.chart rect[data-day]').forEach(r => r.addEventListener('click', () => { selected = r.dataset.day; drawInfo(); highlight(); tg && tg.HapticFeedback && tg.HapticFeedback.selectionChanged(); }));
+  drawInfo(); highlight();
+}
+
+function chart() {
+  const W = 340, H = 170, pad = {l: 34, r: 4, t: 8, b: 20};
+  const n = Math.max(data.days.length, 1);
+  const max = Math.max(...data.days.map(d => d.cash + d.terminal), 1);
+  const step = (W - pad.l - pad.r) / n, bw = Math.max(step * 0.66, 2);
+  const y = v => pad.t + (H - pad.t - pad.b) * (1 - v / max);
+  let s = `<svg class="chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">`;
+  for (const f of [0.5, 1]) {
+    const yy = y(max * f);
+    s += `<line x1="${pad.l}" x2="${W - pad.r}" y1="${yy}" y2="${yy}" stroke="var(--line)" stroke-width="1"/>`;
+    s += `<text x="${pad.l - 4}" y="${yy + 4}" font-size="10" fill="var(--hint)" text-anchor="end">${short(max * f)}</text>`;
+  }
+  data.days.forEach((d, i) => {
+    const x = pad.l + i * step + (step - bw) / 2;
+    const yc = y(d.cash), yt = y(d.cash + d.terminal);
+    s += `<rect x="${x}" y="${yc}" width="${bw}" height="${Math.max(H - pad.b - yc, 0)}" fill="var(--cash)" rx="1.5"/>`;
+    s += `<rect x="${x}" y="${yt}" width="${bw}" height="${Math.max(yc - yt, 0)}" fill="var(--term)" rx="1.5"/>`;
+    s += `<rect data-day="${d.day}" x="${pad.l + i * step}" y="0" width="${step}" height="${H}" fill="transparent" class="hit"/>`;
+    const dd = Number(d.day.slice(8));
+    if (dd === 1 || dd % 5 === 0) s += `<text x="${x + bw / 2}" y="${H - 6}" font-size="10" fill="var(--hint)" text-anchor="middle">${dd}</text>`;
+  });
+  return s + `</svg>`;
+}
+
+function highlight() {
+  document.querySelectorAll('.chart rect.hit').forEach(r => r.setAttribute('fill', r.dataset.day === selected ? 'rgba(124,92,255,.10)' : 'transparent'));
+}
+
+function drawInfo() {
+  const el = document.getElementById('dayinfo'); if (!el) return;
+  const d = data.days.find(x => x.day === selected);
+  if (!d) { el.textContent = ''; return; }
+  const per = data.stores.filter(s => d.stores[s.id] !== undefined).map(s => `${esc(s.name.split(' · ')[0])} ${uah(d.stores[s.id])}`).join(' · ');
+  el.innerHTML = `<b>${esc(dayLbl(d.day))}: ${uah(d.cash + d.terminal)}</b> — готівка ${uah(d.cash)}, термінал ${uah(d.terminal)}<br>${per || 'звітів немає'}`;
+}
+
+document.getElementById('prev').onclick = () => load(shiftMonth(current, -1));
+document.getElementById('next').onclick = () => { if (current < maxMonth) load(shiftMonth(current, 1)); };
+load();
+</script>
+</body>
+</html>

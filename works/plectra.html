@@ -1,0 +1,729 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>NZR Plectra</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="../assets/site.css">
+<style>
+/* NZR Plectra: a built VST3 plugin. The page takes the plugin's own accent (cyan glow on graphite).
+   Chrome tokens come from site.css; --accent / --accent-soft / --accent-ink are overridden here for light and dark. */
+:root {
+  --accent: #00667d; --accent-ink: #ffffff; --accent-soft: #d3f1f8;
+  --glow: #5fe3ff;
+  --stage-1: #1b2a31; --stage-2: #0b0e11;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --accent: #4fd9f6; --accent-ink: #031a20; --accent-soft: #0e2f38; }
+}
+:root[data-theme="dark"] { --accent: #4fd9f6; --accent-ink: #031a20; --accent-soft: #0e2f38; }
+
+.brand i { box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 40%, transparent); }
+
+/* ---------- stage: the plugin always sits on graphite, in both themes ---------- */
+.stage { background: radial-gradient(120% 90% at 50% 0%, var(--stage-1), var(--stage-2) 70%); border: 1px solid color-mix(in srgb, var(--glow) 22%, #000); border-radius: 18px; padding: clamp(12px, 3vw, 32px); box-shadow: var(--shadow), 0 0 60px -24px var(--glow); display: grid; gap: 16px; min-width: 0; color: #dfe4e8; }
+.panel { position: relative; aspect-ratio: 955 / 520; width: 100%; max-width: 1040px; margin-inline: auto; border-radius: 12px; overflow: hidden; background: #0b0e11; }
+.panel > img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; object-fit: fill; }
+.hot { position: absolute; transform: translate(-50%, -50%); min-width: 28px; min-height: 28px; padding: 0; border: 1.5px dashed color-mix(in srgb, var(--glow) 55%, transparent); border-radius: 12px; background: transparent; cursor: pointer; transition: background var(--t, .16s), border-color var(--t, .16s), box-shadow var(--t, .16s); }
+.hot:hover { background: rgba(95, 227, 255, .12); border-color: var(--glow); }
+.hot:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.hot[aria-pressed="true"] { border: 2px solid var(--glow); background: rgba(95, 227, 255, .16); box-shadow: 0 0 18px rgba(95, 227, 255, .45); }
+.hot.round { border-radius: 50%; }
+.info { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 20px; align-items: start; max-width: 1040px; width: 100%; margin-inline: auto; }
+.info-main { display: grid; gap: 6px; min-width: 0; }
+.info-name { font: 600 12px/1.2 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--glow); }
+.info-text { font-size: 15.5px; line-height: 1.5; color: #eef2f4; max-width: 70ch; }
+.info-facts { font: 500 12.5px/1.5 var(--mono); color: #a7b3ba; }
+.info-nav { display: flex; gap: 8px; align-items: center; }
+.sq { width: 40px; height: 40px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, .2); background: rgba(255, 255, 255, .05); color: #eef2f4; display: grid; place-items: center; font: 600 16px/1 var(--text); }
+.sq:hover { border-color: var(--glow); }
+.sq:focus-visible { outline: 2px solid #fff; }
+.meta div { align-content: start; }
+.hint { font: 500 12px/1.4 var(--mono); color: #8d9aa2; letter-spacing: .04em; }
+
+/* ---------- compare slider ---------- */
+.cmp { position: relative; aspect-ratio: 955 / 520; width: 100%; border-radius: 14px; overflow: hidden; background: #0b0e11; touch-action: pan-y; user-select: none; -webkit-user-select: none; cursor: ew-resize; border: 1px solid color-mix(in srgb, var(--glow) 22%, #000); box-shadow: var(--shadow); --pos: 50%; }
+.cmp img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; object-fit: fill; pointer-events: none; -webkit-user-drag: none; }
+.cmp .ref { clip-path: inset(0 calc(100% - var(--pos)) 0 0); }
+.cmp-line { position: absolute; top: 0; bottom: 0; left: var(--pos); width: 2px; margin-left: -1px; background: #fff; box-shadow: 0 0 14px var(--glow); pointer-events: none; }
+.cmp-grip { position: absolute; top: 50%; left: var(--pos); width: 44px; height: 44px; margin: -22px 0 0 -22px; border-radius: 50%; background: #0b0e11; border: 2px solid #fff; box-shadow: 0 0 18px var(--glow); display: grid; place-items: center; color: #fff; cursor: ew-resize; z-index: 3; }
+.cmp-grip:focus-visible { outline: 3px solid var(--glow); outline-offset: 3px; }
+.cmp.anim .ref { transition: clip-path .5s cubic-bezier(.2, .7, .2, 1); }
+.cmp.anim .cmp-line, .cmp.anim .cmp-grip { transition: left .5s cubic-bezier(.2, .7, .2, 1); }
+.tagc { position: absolute; bottom: 10px; z-index: 2; font: 600 11px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; padding: 6px 9px; border-radius: 6px; background: rgba(8, 11, 14, .82); color: #eef2f4; border: 1px solid rgba(255, 255, 255, .18); pointer-events: none; }
+.tagc.l { left: 10px; } .tagc.r { right: 10px; color: var(--glow); }
+.pins { position: absolute; inset: 0; z-index: 2; pointer-events: none; clip-path: inset(0 0 0 var(--pos)); }
+.cmp.anim .pins { transition: clip-path .5s cubic-bezier(.2, .7, .2, 1); }
+.pin { position: absolute; z-index: 2; width: 22px; height: 22px; margin: -11px 0 0 -11px; border-radius: 50%; background: var(--glow); color: #04151a; font: 700 12px/22px var(--mono); text-align: center; box-shadow: 0 0 0 3px rgba(4, 21, 26, .7); pointer-events: none; }
+.seg { display: inline-flex; border: 1px solid var(--rule); border-radius: 10px; background: var(--surface); padding: 3px; gap: 2px; flex-wrap: wrap; }
+.seg button { border: 0; background: transparent; color: var(--ink-2); padding: 9px 14px; border-radius: 7px; font: 500 13.5px/1 var(--text); min-height: 36px; }
+.seg button:hover { color: var(--ink); }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.toolbar { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; justify-content: space-between; }
+.status { font: 500 12.5px/1.4 var(--mono); color: var(--ink-2); }
+
+.changes { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 330px), 1fr)); gap: 16px; list-style: none; margin: 0; padding: 0; }
+.changes li { background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 18px 18px 18px 56px; position: relative; display: grid; gap: 6px; align-content: start; min-width: 0; }
+.changes .n { position: absolute; left: 16px; top: 16px; width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); font: 700 13px/26px var(--mono); text-align: center; }
+.changes .n.k { background: var(--surface-2); color: var(--ink-2); }
+.changes b { font: 700 17px/1.25 var(--display); letter-spacing: -0.01em; }
+.changes p { font-size: 14.5px; color: var(--ink-2); }
+.changes .tagrow { display: flex; gap: 6px; flex-wrap: wrap; }
+.tag { font: 600 10.5px/1 var(--mono); letter-spacing: .07em; text-transform: uppercase; padding: 4px 7px; border-radius: 5px; background: var(--surface-2); color: var(--ink-2); }
+.tag.add { background: var(--accent-soft); color: var(--accent); }
+.tag.fix { background: var(--warn-soft); color: var(--warn); }
+.tag.keep { background: var(--ok-soft); color: var(--ok); }
+code { font: 500 13px var(--mono); background: var(--surface-2); padding: 1px 5px; border-radius: 4px; }
+
+/* ---------- three options ---------- */
+.opts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 330px), 1fr)); gap: 20px; align-items: stretch; }
+.opt { background: var(--surface); border: 1px solid var(--rule); border-radius: 14px; overflow: hidden; display: grid; grid-template-rows: auto 1fr; min-width: 0; }
+.opt.chosen { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.opt .shot { background: #0b0e11; padding: 12px; display: grid; place-items: center; }
+.opt .shot img { display: block; width: 100%; height: auto; border-radius: 6px; }
+.opt .body { padding: 16px 18px 18px; display: grid; gap: 10px; align-content: start; }
+.opt h3 { font-size: 20px; display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: center; }
+.opt p { font-size: 14.5px; color: var(--ink-2); }
+.opt dl { margin: 0; display: grid; gap: 8px; }
+.opt dt { font: 600 11px/1.2 var(--mono); letter-spacing: .07em; text-transform: uppercase; color: var(--ink-2); }
+.opt dd { margin: 0; font-size: 14.5px; }
+.fp { background: var(--surface); border: 1px solid var(--rule); border-radius: 14px; padding: 18px; display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 20px 28px; align-items: center; }
+.fp svg { width: 100%; max-width: 560px; height: auto; display: block; }
+.fp .a { fill: color-mix(in srgb, var(--ink) 5%, transparent); stroke: var(--ink); stroke-width: 2; }
+.fp .b { fill: color-mix(in srgb, var(--accent) 14%, transparent); stroke: var(--accent); stroke-width: 2.5; stroke-dasharray: 10 6; }
+.fp .c { fill: color-mix(in srgb, var(--warn) 12%, transparent); stroke: var(--warn); stroke-width: 2.5; stroke-dasharray: 3 5; }
+.fp text { font: 600 22px var(--mono); fill: var(--ink-2); }
+.fp .legend { display: grid; gap: 10px; font-size: 14.5px; }
+.fp .legend > span { display: grid; grid-template-columns: 14px minmax(0, 1fr); gap: 10px; align-items: baseline; }
+.fp .legend > span > i { display: block; width: 14px; height: 14px; border-radius: 3px; border: 2px solid var(--ink); }
+.fp .legend > span > i.b { border-color: var(--accent); border-style: dashed; }
+.fp .legend > span > i.c { border-color: var(--warn); border-style: dotted; }
+
+/* ---------- build diagram ---------- */
+.lanes { display: grid; grid-template-columns: minmax(0, 1fr) 40px minmax(0, 1fr) 40px minmax(0, 1fr); gap: 0; align-items: stretch; }
+.lane { background: var(--surface); border: 1px solid var(--rule); border-radius: 14px; padding: 18px; display: grid; gap: 10px; align-content: start; min-width: 0; }
+.lane.live { border-color: var(--accent); }
+.lane h3 { font-size: 18px; }
+.lane .label { color: var(--accent); }
+.lane ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; font-size: 14.5px; }
+.lane li { display: grid; grid-template-columns: 8px minmax(0, 1fr); gap: 10px; align-items: baseline; }
+.lane li::before { content: ""; width: 6px; height: 6px; border-radius: 1px; background: var(--ink-2); }
+.lane.live li::before { background: var(--accent); }
+.arrow { display: grid; place-items: center; color: var(--ink-2); }
+.arrow svg { width: 28px; height: 28px; }
+.twoimg { display: grid; grid-template-columns: minmax(0, 1fr) 220px; gap: 24px; align-items: start; }
+.twoimg .stage { padding: clamp(10px, 2vw, 20px); }
+.twoimg img { display: block; width: 100%; height: auto; border-radius: 8px; }
+.listfig { display: grid; gap: 12px; align-content: start; }
+.listfig img { max-width: 220px; margin-inline: auto; }
+
+/* ---------- clank ---------- */
+.verdicts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); border: 1px solid var(--rule); border-radius: 14px; overflow: hidden; background: var(--surface); }
+.verdicts > div { padding: 18px; border-right: 1px solid var(--rule); display: grid; gap: 8px; align-content: start; min-width: 0; }
+.verdicts > div:last-child { border-right: 0; background: var(--accent-soft); }
+.verdicts h3 { font-size: 17px; }
+.verdicts p { font-size: 14.5px; color: var(--ink-2); }
+.verdicts .q { font: 600 17px/1.3 var(--display); color: var(--ink); letter-spacing: -0.01em; }
+.verdicts .q::before { content: "\201C"; } .verdicts .q::after { content: "\201D"; }
+.verdicts > div:last-child p { color: var(--ink); }
+.rng { background: var(--surface); border: 1px solid var(--rule); border-radius: 14px; padding: 18px; display: grid; gap: 14px; min-width: 0; }
+.rng-rows { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.rng-row { display: grid; grid-template-columns: minmax(0, 190px) minmax(0, 1fr) minmax(0, 150px); gap: 4px 16px; align-items: center; padding: 8px 10px; border-radius: 8px; }
+.rng-row.pick { background: var(--accent-soft); }
+.rng-row .nm { font-size: 14px; line-height: 1.3; min-width: 0; }
+.rng-row .nm b { font-weight: 600; display: block; }
+.rng-row .nm small { color: var(--ink-2); font-size: 12.5px; }
+.rng-row .pk { font: 500 12px/1.3 var(--mono); color: var(--ink-2); text-align: right; }
+.track { position: relative; height: 18px; background: var(--surface-2); border-radius: 5px; }
+.track .z { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--ink-2); opacity: .5; }
+.track .bar { position: absolute; top: 3px; bottom: 3px; border-radius: 4px; background: var(--ink-2); min-width: 3px; transition: left .3s ease, width .3s ease; }
+.rng-row.pick .track .bar { background: var(--accent); }
+.rng-row .val { font: 500 11.5px var(--mono); color: var(--ink-2); grid-column: 2; margin-top: -2px; }
+.axis { display: grid; grid-template-columns: minmax(0, 190px) minmax(0, 1fr) minmax(0, 150px); gap: 16px; padding: 0 10px; font: 500 11px var(--mono); color: var(--ink-2); }
+.axis div:nth-child(2) { display: flex; justify-content: space-between; }
+.mnote { font-size: 14px; color: var(--ink-2); max-width: 72ch; }
+.mnote b { color: var(--ink); }
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 24px; align-items: start; }
+
+/* ---------- verified ---------- */
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 16px; }
+.stat { background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 18px; display: grid; gap: 6px; align-content: start; min-width: 0; }
+.stat b { font: 800 clamp(26px, 3.4vw, 36px)/1.05 var(--display); letter-spacing: -0.03em; color: var(--accent); }
+.stat span { font-size: 14.5px; }
+.stat small { font: 500 11.5px/1.5 var(--mono); color: var(--ink-2); }
+.bars { background: var(--surface); border: 1px solid var(--rule); border-radius: 14px; padding: 18px; display: grid; gap: 14px; min-width: 0; }
+.bars ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 2px; }
+.bars li { display: grid; grid-template-columns: minmax(0, 168px) minmax(0, 1fr) 56px; gap: 14px; align-items: center; padding: 5px 8px; border-radius: 6px; }
+.bars li:hover { background: var(--surface-2); }
+.bars .nm { font-size: 14px; min-width: 0; display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.bars .nm em { font: 600 10px/1 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); font-style: normal; }
+.bars .v { font: 600 13px var(--mono); text-align: right; }
+.bars .trk { position: relative; height: 14px; background: var(--surface-2); border-radius: 4px; }
+.bars .trk i { position: absolute; top: 2px; bottom: 2px; border-radius: 3px; background: var(--accent); transition: left .35s ease, width .35s ease; min-width: 2px; }
+.bars .trk i.neg { background: var(--warn); }
+.bars .trk u { position: absolute; top: -2px; bottom: -2px; width: 1px; background: var(--ink-2); opacity: .55; }
+.limits { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 14px; }
+.limits > div { border: 1px dashed var(--warn); background: var(--warn-soft); border-radius: 12px; padding: 16px 18px; display: grid; gap: 6px; align-content: start; min-width: 0; }
+.limits b { font: 700 16px/1.3 var(--display); }
+.limits p { font-size: 14.5px; }
+.hyp { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 16px; }
+.hyp > div { background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 18px; display: grid; gap: 8px; align-content: start; min-width: 0; }
+.hyp .label { color: var(--accent); }
+.hyp b { font: 700 17px/1.3 var(--display); }
+.hyp p { font-size: 14.5px; color: var(--ink-2); }
+.hyp p.how { color: var(--ink); }
+
+@media (max-width: 860px) {
+  .lanes { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .arrow { height: 36px; } .arrow svg { transform: rotate(90deg); }
+  .twoimg { grid-template-columns: minmax(0, 1fr); }
+  .fp { grid-template-columns: minmax(0, 1fr); }
+  .verdicts > div { border-right: 0; border-bottom: 1px solid var(--rule); }
+  .verdicts > div:last-child { border-bottom: 0; }
+}
+@media (max-width: 640px) {
+  .info { grid-template-columns: minmax(0, 1fr); }
+  .rng-row { grid-template-columns: minmax(0, 1fr); }
+  .rng-row .val { grid-column: 1; }
+  .rng-row .pk { text-align: left; }
+  .axis { display: none; }
+  .bars li { grid-template-columns: minmax(0, 1fr) 52px; }
+  .bars li .trk { grid-column: 1 / -1; grid-row: 2; }
+  .tagc { font-size: 9.5px; padding: 5px 6px; }
+  .cmp-grip { width: 40px; height: 40px; margin: -20px 0 0 -20px; }
+}
+</style>
+</head>
+<body>
+<header class="bar">
+  <div class="wrap">
+    <a class="brand" href="../index.html"><i aria-hidden="true"></i><span id="brandName">Your Name</span></a>
+    <nav aria-label="Work">
+      <a href="../index.html#work">All work</a>
+      <a href="telegram-bots.html">Bots</a>
+      <a href="security.html">Security</a>
+      <a href="plectra.html" aria-current="page">Plectra</a>
+      <a href="brightyard-portal.html">Portal</a>
+      <a href="brightyard-mobile.html">Mobile</a>
+      <a href="brightyard-system.html">System</a>
+      <a href="voice-note.html">Voice note</a>
+      <a href="ai-states.html">AI states</a>
+      <a href="space-finder.html">Space finder</a>
+    </nav>
+    <button class="toggle" id="themeBtn" type="button" aria-label="Switch colour theme">Theme: auto</button>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="case-hero">
+    <div class="row"><span class="kind shipped">Built</span><span class="kind">VST3 plugin</span><span class="kind">UI + DSP</span></div>
+    <h1>NZR Plectra</h1>
+    <p class="sub">A DI transient articulator. It finds the pick attack in a guitar or bass DI and shapes it separately from the note body. I designed the panel and the sound; Claude Code built it.</p>
+
+    <div class="stage" id="heroStage">
+      <div class="panel" id="heroPanel">
+        <img src="../shots/plectra/built-closed.png" width="955" height="520" alt="The NZR Plectra panel in its default closed state: a waveform display with INSTRUMENT, MATERIAL and ADVANCED keys, and five knobs below: BITE TONE, TENSION, ATTACK AMOUNT, CLANK and BODY GAIN.">
+      </div>
+      <div class="info" aria-live="polite">
+        <div class="info-main">
+          <span class="info-name" id="infoName">ATTACK AMOUNT</span>
+          <p class="info-text" id="infoText"></p>
+          <span class="info-facts" id="infoFacts"></span>
+        </div>
+        <div class="info-nav">
+          <button class="sq" id="hPrev" type="button" aria-label="Previous control">&#8592;</button>
+          <button class="sq" id="hNext" type="button" aria-label="Next control">&#8594;</button>
+        </div>
+      </div>
+      <p class="hint">Click a control on the panel. The text is the plugin's own tooltip.</p>
+    </div>
+
+    <dl class="meta">
+      <div><dt class="label">Role</dt><dd>Product direction, UI design and sound direction. Code written with Claude Code.</dd></div>
+      <div><dt class="label">Built with</dt><dd>C++, JUCE, Blender for the physical parts, Python for the listening tools</dd></div>
+      <div><dt class="label">Status</dt><dd>Runs as a VST3 and passes pluginval at strictness 10. Not released.</dd></div>
+      <div><dt class="label">Size of the work</dt><dd>64 commits between 28 September and 1 October 2026. 17 factory presets. Window resizes from 40 to 100 %.</dd></div>
+    </dl>
+    <p class="honest"><b>Note</b><span>This is real, built work, not a concept. It was made with Claude Code in September and October 2026. It is not released: no sales, no users, no downloads. Every sound decision on this page was judged by my own ears, backed by measurements that Claude ran.</span></p>
+  </div>
+
+  <!-- 01 -->
+  <section id="reference">
+    <div class="sec-head">
+      <span class="num">01 · FROM A REFERENCE IMAGE TO A WORKING PANEL</span>
+      <h2>The picture looked right. The panel had to work.</h2>
+      <p>I started from a rendered image of the plugin. A picture can show seven knob slots and invented numbers. A plugin needs six real controls with real ranges. Drag the handle to see what changed. The outer backdrop of the reference is cropped so both panels line up.</p>
+    </div>
+
+    <div class="toolbar">
+      <div class="seg" role="group" aria-label="Jump the comparison">
+        <button type="button" data-pos="100" aria-pressed="false">Reference</button>
+        <button type="button" data-pos="50" aria-pressed="true">Split</button>
+        <button type="button" data-pos="0" aria-pressed="false">Built</button>
+      </div>
+      <span class="status" id="cmpStatus" role="status" aria-live="polite">Showing 50 % reference, 50 % built</span>
+    </div>
+
+    <div class="cmp" id="cmp" aria-label="Before and after comparison of the reference image and the built panel">
+      <img src="../shots/plectra/built-closed.png" width="955" height="520" alt="The built panel">
+      <img class="ref" src="../shots/plectra/reference.jpg" width="1200" height="653" alt="The reference image of the panel">
+      <span class="tagc l">Reference image</span><span class="tagc r">Built panel</span>
+      <div class="pins" aria-hidden="true">
+        <span class="pin" style="left:77%;top:67.5%" aria-hidden="true">1</span>
+        <span class="pin" style="left:19.5%;top:67.5%" aria-hidden="true">2</span>
+        <span class="pin" style="left:84.5%;top:7.5%" aria-hidden="true">3</span>
+        <span class="pin" style="left:94%;top:8%" aria-hidden="true">4</span>
+        <span class="pin" style="left:9%;top:55%" aria-hidden="true">5</span>
+        <span class="pin" style="left:88%;top:55%" aria-hidden="true">6</span>
+      </div>
+      <span class="cmp-line" aria-hidden="true"></span>
+      <div class="cmp-grip" id="cmpGrip" role="slider" tabindex="0" aria-label="Comparison position: reference on the left, built panel on the right" aria-orientation="horizontal" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" aria-valuetext="50 percent reference, 50 percent built">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l-6 6 6 6M15 6l6 6-6 6"/></svg>
+      </div>
+    </div>
+
+    <ol class="changes">
+      <li><span class="n">1</span><div class="tagrow"><span class="tag fix">Fixed</span></div><b>Seven slots, six controls</b><p>The reference has two TENSION knobs, and the plugin has one TENSION control. No symmetric six-knob layout fits that grid. First I left the right-hand slot empty. Then CLANK moved into it, so the lower row is full and balanced like the image.</p></li>
+      <li><span class="n">2</span><div class="tagrow"><span class="tag fix">Fixed</span></div><b>Real ranges on every knob</b><p>The reference shows end labels such as -240, -260 and 90 mm, plus a cut-off "ATTACK AMOUN". Those match no parameter. The built panel prints each real range: BITE TONE 500 to 8k, TENSION and CLANK 0 to 100, BODY GAIN -24 to +6, ATTACK 0 % to 200 %. Values and arcs are drawn live.</p></li>
+      <li><span class="n">3</span><div class="tagrow"><span class="tag add">Added</span></div><b>A preset browser</b><p>A small display with arrows in the header. It shows the group, the number (or MODIFIED) and the name. A click opens the grouped list. 17 factory presets, saved with the session.</p></li>
+      <li><span class="n">4</span><div class="tagrow"><span class="tag add">Added</span></div><b>Output meter with a CLIP light</b><p>A 12-segment meter at the header's right end. The CLIP light moved here from the ANTI-SPIKE toggle, so it also shows overs when ANTI-SPIKE is off.</p></li>
+      <li><span class="n">5</span><div class="tagrow"><span class="tag add">Added</span></div><b>INSTRUMENT: GUITAR or BASS</b><p>It sits in the display's key row, left of MATERIAL. It is a basic setting, so it stays visible with the advanced rail closed.</p></li>
+      <li><span class="n">6</span><div class="tagrow"><span class="tag add">Added</span></div><b>ADVANCED, closed by default</b><p>TIGHTNESS left the upper right. It now lives with WET DRIVE, OVERSAMPLING, LATENCY, MIX and OUTPUT in a rail that opens under the panel. The open state is saved with the session. Claude named the key; the name was its call.</p></li>
+      <li><span class="n k">=</span><div class="tagrow"><span class="tag keep">Kept</span></div><b>The reference's numbers and positions</b><p>Defaults copy the numbers on the image: CLANK 35 %, TIGHTNESS 15 ms, BITE TONE 3.2 kHz, TENSION 50 %, BODY 0 dB, Tortex. ATTACK stays in the centre, BITE TONE, TENSION and BODY GAIN keep their places. The version line now reads v2.0.0.</p></li>
+      <li><span class="n k">=</span><div class="tagrow"><span class="tag fix">Changed</span></div><b>The waveform is live</b><p>The image shows one decaying pick. The built display draws the last real pick, after processing, with a cursor where the TIGHTNESS window ends.</p></li>
+    </ol>
+  </section>
+
+  <!-- 02 -->
+  <section id="options">
+    <div class="sec-head">
+      <span class="num">02 · THREE PLACES FOR THE NEW CONTROLS</span>
+      <h2>Six new controls, three mock-ups, one decision</h2>
+      <p>After the first panel, the plugin gained WET DRIVE, MIX, OUTPUT, oversampling, a latency mode and the instrument switch. The panel had no room for them. Before Claude touched Blender, it drew three placements over the existing screenshot. Nothing was rendered until I chose.</p>
+    </div>
+
+    <div class="opts">
+      <article class="opt">
+        <div class="shot"><img src="../shots/plectra/mock-a.png" width="955" height="520" alt="Mock-up A: three small knobs in the header right of the logo, switch keys in two thin strips around the display."></div>
+        <div class="body">
+          <h3>A · Header strip</h3>
+          <p>Three small knobs sit right of the logo. DELTA and ANTI-SPIKE move left. The switches become small keys around the display.</p>
+          <dl>
+            <div><dt>Window</dt><dd>Same size, 955 × 520 in the mock-up.</dd></div>
+            <div><dt>Cost, from the image</dt><dd>The three knobs are the smallest on the panel and have no room for range numbers. The switch captions are the smallest text on it.</dd></div>
+          </dl>
+        </div>
+      </article>
+      <article class="opt chosen">
+        <div class="shot"><img src="../shots/plectra/mock-b.png" width="955" height="615" alt="Mock-up B: a rail under the knob rows holding WET DRIVE, MIX, OUTPUT, INSTRUMENT, OVERSAMPLING and LATENCY."></div>
+        <div class="body">
+          <h3>B · Bottom rail <span class="kind">Chosen, with changes</span></h3>
+          <p>A rail under the knob rows continues the frame. It holds the new knobs and switches at readable size.</p>
+          <dl>
+            <div><dt>Window</dt><dd>About 95 px taller in the mock-up (+18 % area).</dd></div>
+            <div><dt>Cost, from the image</dt><dd>The panel gets taller, and the whole rail is on show all the time.</dd></div>
+          </dl>
+        </div>
+      </article>
+      <article class="opt">
+        <div class="shot"><img src="../shots/plectra/mock-c.png" width="1085" height="520" alt="Mock-up C: a vertical column at the right edge stacking WET DRIVE, the switches, MIX and OUTPUT."></div>
+        <div class="body">
+          <h3>C · Side column</h3>
+          <p>A vertical column on the right edge. WET DRIVE on top, the switches between, MIX and OUTPUT at the bottom.</p>
+          <dl>
+            <div><dt>Window</dt><dd>About 130 px wider in the mock-up (+14 % area).</dd></div>
+            <div><dt>Cost, from the image</dt><dd>The new controls stack in a column about 135 px wide, switches included.</dd></div>
+          </dl>
+        </div>
+      </article>
+    </div>
+
+    <div class="fp">
+      <svg viewBox="0 0 1130 650" role="img" aria-label="Footprints of the three mock-ups drawn on top of each other. A is 955 by 520. B is the same width and 95 taller. C is the same height and 130 wider.">
+        <rect class="c" x="10" y="10" width="1085" height="520"/>
+        <rect class="b" x="10" y="10" width="955" height="615"/>
+        <rect class="a" x="10" y="10" width="955" height="520"/>
+      </svg>
+      <div class="legend">
+        <span><i></i><span><b>A</b>, 955 × 520. Keeps the window the same.</span></span>
+        <span><i class="b"></i><span><b>B</b>, 955 × 615. Adds height.</span></span>
+        <span><i class="c"></i><span><b>C</b>, 1085 × 520. Adds width.</span></span>
+        <p class="note" style="font-size:13.5px;color:var(--ink-2)">Pixel sizes are measured from the mock-up images (half-size screenshots). The log records my choice, 30 September 2026, not the reasons for it.</p>
+      </div>
+    </div>
+
+    <div class="box">
+      <h3>What B became</h3>
+      <ul class="check">
+        <li><span><b>The changes I asked for on the day:</b> DELTA and ANTI-SPIKE move left of the logo. An OUTPUT knob with a 12-segment meter and the CLIP light takes their place. Every control shows a short description after 1.5 s of hovering.</span></li>
+        <li><span><b>Then the rail got hidden.</b> A later round closed it by default behind the ADVANCED key. The window now grows only when it is open.</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 03 -->
+  <section id="built">
+    <div class="sec-head">
+      <span class="num">03 · HOW THE PANEL IS BUILT</span>
+      <h2>Physical parts rendered, everything that moves drawn live</h2>
+      <p>The reference was a 3D render, so the parts that look physical are 3D renders too. Everything that shows a value or a state is drawn in code at the current window size.</p>
+    </div>
+
+    <div class="lanes">
+      <div class="lane">
+        <span class="label">Rendered once in Blender</span>
+        <h3>The hardware</h3>
+        <ul>
+          <li>Frame, bezel, screws and the display glass</li>
+          <li>Knob caps as filmstrips that rotate with the value</li>
+          <li>The big ATTACK cap: 256 opaque JPEG frames, packed in one file and decoded on demand</li>
+          <li>Four backgrounds: closed and ADVANCED open, each in an off and an on state</li>
+        </ul>
+      </div>
+      <div class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+      <div class="lane">
+        <span class="label">Compiled into the plugin</span>
+        <h3>Layout as data</h3>
+        <ul>
+          <li>A script exports every knob and key position into a header file</li>
+          <li>The editor scales the whole panel from 40 to 100 %</li>
+          <li>The ADVANCED state is saved with the session, outside the audio parameters</li>
+        </ul>
+      </div>
+      <div class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+      <div class="lane live">
+        <span class="label">Drawn live in C++ (JUCE)</span>
+        <h3>The state</h3>
+        <ul>
+          <li>Arcs, value markers, range numbers and values</li>
+          <li>Lit keys with a glow, the toggles' LEDs, the CLIP light</li>
+          <li>The waveform of the last pick, the meter, the preset display</li>
+          <li>The logo with its halo, in an embedded font</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <div class="seg" role="group" aria-label="Panel state">
+        <button type="button" data-state="closed" aria-pressed="true">Default: closed</button>
+        <button type="button" data-state="open" aria-pressed="false">ADVANCED open</button>
+      </div>
+      <span class="status" id="stateStatus" role="status" aria-live="polite">The window starts closed.</span>
+    </div>
+    <div class="twoimg">
+      <div class="stage">
+        <div class="panel" id="statePanel" style="max-width:none">
+          <img id="stateImg" src="../shots/plectra/built-closed.png" width="955" height="520" alt="The built panel, closed.">
+        </div>
+      </div>
+      <div class="listfig">
+        <div class="stage"><img src="../shots/plectra/list.png" width="220" height="578" alt="The preset list: groups Default, Guitar, Bass and Utility with 17 presets, Init checked."></div>
+        <p class="note" style="font-size:14px;color:var(--ink-2)"><b style="color:var(--ink)">The preset list was too small.</b> JUCE draws a popup at its target's scale, so at the default half-size window the list was half size. It now opens with no target: 220 × 578 px, 26 px rows, at any window size.</p>
+      </div>
+    </div>
+
+    <div class="box">
+      <h3>The critique loop</h3>
+      <p style="color:var(--ink-2);font-size:15px">I asked Claude to run an evaluator agent over the first full build. It scored the panel 6.5 out of 10 and listed what looked wrong. The fixes, each visible on the final panel:</p>
+      <ul class="check">
+        <li><span>The ATTACK knob's cap frames were transparent. The pivot offset was doubled before a scene update. Fixed, and the cap is now clipped to its circle.</span></li>
+        <li><span>The glows showed banding. They are smooth layered and radial glows now.</span></li>
+        <li><span>The logo font silently fell back to Segoe UI. The plugin embeds Montserrat (OFL) now.</span></li>
+        <li><span>Range numbers hug the ends of the arcs, on the value's baseline. The small hot markers are smaller.</span></li>
+      </ul>
+      <p class="note" style="font-size:13.5px;color:var(--ink-2)">The log does not record a second score after the fixes.</p>
+    </div>
+  </section>
+
+  <!-- 04 -->
+  <section id="clank">
+    <div class="sec-head">
+      <span class="num">04 · DESIGNING A SOUND YOU CANNOT SEE</span>
+      <h2>Three rejected clanks, then a measured one</h2>
+      <p>CLANK adds the metal of a pick hitting a fretted string. It had no picture to copy, so the design process was the product. I judged by ear and said so in plain words. Claude turned each verdict into a prototype, a measurement and a decision.</p>
+    </div>
+
+    <div class="verdicts">
+      <div><span class="label">Version 1</span><h3>Six ringing modes</h3><p>Inharmonic modes from 1.9 to 8.2 kHz, ringing 0.2 to 0.5 s.</p><span class="q">a hammer on an anvil</span></div>
+      <div><span class="label">Version 2</span><h3>Grit above 1.2 kHz</h3><p>A one-sided clipper on the string's upper band. Measured: 77 to 86 % of what it adds is new content, but at about -21 to -24 dB, the level of the input's own highs.</p><span class="q">I only hear the input's highs</span></div>
+      <div><span class="label">Prototype N1</span><h3>Three fixed resonances</h3><p>An impulse into 1.6, 2.5 and 3.8 kHz resonators, built offline first so I could listen before any C++ existed.</p><span class="q">sounds like a metronome</span></div>
+      <div><span class="label">Then</span><h3>I handed over the choice</h3><p>I asked Claude to think it through, research the problem and pick the best one. It built five more variants, A to E, and measured them all.</p></div>
+    </div>
+
+    <div class="rng">
+      <div class="toolbar">
+        <div class="seg" role="group" aria-label="Metric">
+          <button type="button" data-m="met" aria-pressed="true">Metronome</button>
+          <button type="button" data-m="fus" aria-pressed="false">Fusion</button>
+          <button type="button" data-m="ons" aria-pressed="false">Onset</button>
+        </div>
+        <span class="status" id="mDesc" role="status" aria-live="polite"></span>
+      </div>
+      <ul class="rng-rows" id="rngRows"></ul>
+      <div class="axis" aria-hidden="true"><div></div><div id="axisLab"><span>0</span><span>0.5</span><span>1</span></div><div></div></div>
+      <p class="mnote">Each bar is the range over 4 low-tuned takes, level-matched. <b>E won on the mix, not on one metric.</b> It is never a metronome, it keeps the guitar's spectral shape, it still lands as an event, and it never cracks out above the pick. A scores higher on fusion and C lower on metronome. The metal-riff take scores 0.69 on metronome because it is the same palm-muted note again and again, so a real clank is that similar there too.</p>
+    </div>
+
+    <div class="cols">
+      <div class="box">
+        <h3>The chosen design, in plain words</h3>
+        <ul class="check">
+          <li><span>Each pick's own click goes through three broad band-passes and a gentle asymmetric saturation, so no two clanks match.</span></li>
+          <li><span>The string's swing re-strikes the metal once per period of the played note: the rattle of a string slapping the frets.</span></li>
+          <li><span>Strength is measured against the loudest recent pick. Under -24 dB there is no clank, so ghost notes stay quiet.</span></li>
+          <li><span>The burst lasts 12 to 30 ms and ends at exactly zero. With LOOKAHEAD it starts at the pick's front.</span></li>
+        </ul>
+      </div>
+      <div class="box">
+        <h3>Then spec, then C++ with tests first</h3>
+        <p style="color:var(--ink-2);font-size:15px">The design record is a written spec. The code replaced the old block, with 10 new checks:</p>
+        <ul class="check">
+          <li><span>Starts at the pick's front, within 0.25 ms with LOOKAHEAD</span></li>
+          <li><span>Exact silence after the burst ends</span></li>
+          <li><span>Softer picks are 9 to 16 dB quieter and darker</span></li>
+          <li><span>A pick 30 dB under the playing gets no clank</span></li>
+          <li><span>Gain invariance, mono identity, determinism</span></li>
+          <li><span>Not a metronome: different notes correlate under 0.75</span></li>
+          <li><span>Re-strikes follow the note's period</span></li>
+          <li><span>BASS keeps under 5 % of its power above 4 kHz</span></li>
+        </ul>
+      </div>
+    </div>
+    <p class="mnote">Measured on the C++ build against its prototype: consecutive clanks resemble each other 0.29 to 0.66 (N1: 0.75 to 0.83). At 100 % the clank sits 7 to 12 dB under the dry signal on guitar and 18 dB on bass, in the 22 ms after a pick. The old CLANK sat 19 to 21 dB under. <b>Open item:</b> my listening verdict on the final build. The rendered folder is ready; the notes do not record my answer yet.</p>
+  </section>
+
+  <!-- 05 -->
+  <section id="verified">
+    <div class="sec-head">
+      <span class="num">05 · VERIFIED, NOT ASSUMED</span>
+      <h2>What was measured, and what was left open</h2>
+      <p>Facts only. Each number below comes from the project's progress log, or from the test and render tools in the repository.</p>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><b>1,747</b><span>unit checks pass</span><small>Final build, 1 October 2026. It was 1,733 when the new version merged into master.</small></div>
+      <div class="stat"><b>Level 10</b><span>pluginval strictness, SUCCESS</span><small>With the real editor's tests. Latest build: three random seeds (61 to 63).</small></div>
+      <div class="stat"><b>−138.5 dBFS</b><span>neutral null test</span><small>With every control neutral, the output cancels the input down to float rounding.</small></div>
+      <div class="stat"><b>+5.8 dB</b><span>pick level in the attack, defaults of that day</span><small>First offline render of my own doom 8-string DI. Body level 0.0 dB.</small></div>
+      <div class="stat"><b>20,109</b><span>annotated picks tuned the detector</span><small>Recall 0.55 to 0.83, precision 0.62 to 0.89.</small></div>
+      <div class="stat"><b>1.0 to 1.5 %</b><span>of one core, mono at 48 kHz</span><small>Final build. Lookahead adds 1.5 ms, reported to the host.</small></div>
+    </div>
+
+    <div class="bars">
+      <div class="toolbar">
+        <div><b style="font:700 19px var(--display)">Pick brightness each factory preset adds</b><br><span class="status">dB above 2 kHz in the first 15 ms after a pick. Median of 26 DI takes at -10 dBFS peaks.</span></div>
+        <div class="seg" role="group" aria-label="Sort presets">
+          <button type="button" data-s="panel" aria-pressed="true">Panel order</button>
+          <button type="button" data-s="value" aria-pressed="false">Highest first</button>
+        </div>
+      </div>
+      <ul id="barList"></ul>
+      <p class="mnote">Measured on the tuned presets before the CLANK redesign. The final run moved each preset by -0.5 to +1.0 dB. Level change stayed between -5.0 and +2.4 dB for all.</p>
+    </div>
+
+    <div>
+      <p class="label" style="margin-bottom:12px">Written down on purpose</p>
+      <div class="limits">
+        <div><b>Some presets miss the fizz limit</b><p>Thall Snap, Parallel Crush, Tube Pick, Bass Clank and Bass Grind exceed the plan's limit for harmonics above 10 kHz. Meeting it would mean every drive preset below about 15 % DRIVE. I kept them and logged it.</p></div>
+        <div><b>The test DI is already distorted</b><p>The recording I used most is a dense doom riff pinned near 0 dBFS, with only 5 note starts. A clean DI would be a better listening test.</p></div>
+        <div><b>The detector is good, not perfect</b><p>It finds 83 % of annotated picks. Note damping and bass vibrato can re-open the window. Arpeggios over ringing strings are found about 75 % of the time.</p></div>
+        <div><b>Not in the repository</b><p>The listening folders (dry, each preset, old against new, WET DRIVE sweeps) are on my drive. A README in the repo describes them. I did not recheck them for this page.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 06 -->
+  <section id="test">
+    <div class="sec-head">
+      <span class="num">06 · WHAT I WOULD TEST WITH USERS</span>
+      <h2>Hypotheses, not results</h2>
+      <p>No one outside the project has used the panel. These are the questions I would put to real producers first.</p>
+    </div>
+    <div class="hyp">
+      <div><span class="label">H1 · ADVANCED stays closed</span><b>Most sessions never need the rail</b><p>If presets and five knobs reach a good sound, people will not open it.</p><p class="how">Test: five first-time users, one task each. Count who opens ADVANCED and why.</p></div>
+      <div><span class="label">H2 · Hover help is enough</span><b>The 1.5 s tooltips teach WET DRIVE, MIX and ATTACK</b><p>The three overlap in meaning, so they are the likeliest to be confused.</p><p class="how">Test: after five minutes, ask each person to explain the three in their own words.</p></div>
+      <div><span class="label">H3 · The display guides setting</span><b>People set ATTACK by watching the waveform</b><p>If they do, the display is doing real work. If not, it is decoration.</p><p class="how">Test: the same task with the display hidden, then with it shown.</p></div>
+      <div><span class="label">H4 · Names predict sounds</span><b>"CLANK" and "BITE TONE" set the right expectation</b><p>A good name lets the first listen confirm the idea.</p><p class="how">Test: ask what each control will do before any sound plays, then compare with what they hear.</p></div>
+    </div>
+  </section>
+
+  <div class="next-work" style="margin-top:56px">
+      <a href="telegram-bots.html"><span class="label">Shipped work</span><b>Telegram Bots</b><span>Four separate bots, with their Mini Apps.</span></a>
+      <a href="security.html"><span class="label">Method</span><b>Security</b><span>What I check before trusting AI-built code.</span></a>
+      <a href="voice-note.html"><span class="label">Concept</span><b>Voice Note to Flows</b><span>One voice message, three flows to compare.</span></a>
+  </div>
+
+  <footer><span>Real plugin, built and tested locally. Not released.</span><span>Built with Claude Code, September-October 2026</span></footer>
+</main>
+
+<script src="../assets/profile.js"></script>
+<script src="../assets/site.js"></script>
+<script>
+(function () {
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+
+  /* ---- 1. hero hotspots (coordinates in the 955 x 520 panel image) ---- */
+  var W = 955, H = 520;
+  var HOT = [
+    { id: "delta", cx: 125, cy: 62, w: 100, h: 72, name: "DELTA", text: "Listen only to what the attack processing adds or removes.", facts: "Toggle. Off by default." },
+    { id: "spike", cx: 232, cy: 62, w: 100, h: 72, name: "ANTI-SPIKE", text: "A soft clipper on the output that rounds peaks above -1.5 dBFS and never passes -0.1 dBFS.", facts: "Toggle. On by default." },
+    { id: "preset", cx: 722, cy: 66, w: 196, h: 80, name: "PRESET", text: "Factory presets: click the display for the list, the arrows step through them.", facts: "17 presets in four groups: Default, Guitar, Bass, Utility." },
+    { id: "meter", cx: 876, cy: 74, w: 52, h: 64, name: "OUTPUT METER AND CLIP", text: "Output level. CLIP lights when ANTI-SPIKE rounds off a peak or, with ANTI-SPIKE off, when the output goes over 0 dBFS.", facts: "12 segments." },
+    { id: "scope", cx: 478, cy: 205, w: 780, h: 128, name: "DISPLAY", text: "The last pick after processing; the cursor marks where its attack window ends.", facts: "Drawn live from the audio." },
+    { id: "inst", cx: 191, cy: 288, w: 168, h: 40, name: "INSTRUMENT", text: "GUITAR or BASS: moves the low-end corner (180 to 110 Hz), CLANK's range and the pick detector to suit the instrument.", facts: "GUITAR is the default." },
+    { id: "mat", cx: 477, cy: 288, w: 340, h: 40, name: "MATERIAL", text: "The pick's material: the colour of the attack layer and the WET DRIVE curve (Nylon round, Tortex warm, Ultex glassy, Metal hard).", facts: "Tortex is the default." },
+    { id: "adv", cx: 764, cy: 288, w: 116, h: 36, name: "ADVANCED", text: "Opens the rail below with TIGHTNESS, WET DRIVE, OVERSAMPLING, LATENCY, MIX and OUTPUT.", facts: "Closed by default. The state is saved with the session." },
+    { id: "bite", cx: 127, cy: 412, w: 128, h: 150, round: 1, name: "BITE TONE", text: "Where the bite sits. Above it the attack gets the full boost or cut, below it half.", facts: "Range 500 Hz to 8 kHz. Init: 3.2 kHz." },
+    { id: "tens", cx: 280, cy: 412, w: 120, h: 150, round: 1, name: "TENSION", text: "Ducks the low end during the attack so the pick punches through. The note blooms after it.", facts: "Range 0 to 100 %. Init: 50 %." },
+    { id: "atk", cx: 475, cy: 418, w: 186, h: 188, round: 1, name: "ATTACK AMOUNT", text: "How hard each pick hits. Above 100 % the attack is boosted (up to +18 dB), below 100 % it is softened (0 % = -24 dB, a soft pick).", facts: "Range 0 to 200 %. Init: 133 %." },
+    { id: "clank", cx: 672, cy: 412, w: 120, h: 150, round: 1, name: "CLANK", text: "The metal of every pick: its own click through fret metal, plus the string rattling on the frets. Harder picks clank louder and brighter; ghost notes do not.", facts: "Range 0 to 100 %. Init: 35 %." },
+    { id: "body", cx: 826, cy: 412, w: 128, h: 150, round: 1, name: "BODY GAIN", text: "The level of the note between picks, outside the attack window.", facts: "Range -24 to +6 dB. Init: 0.0 dB." }
+  ];
+  var hp = $("#heroPanel"), cur = 10;
+  HOT.forEach(function (h, i) {
+    var b = document.createElement("button");
+    b.type = "button"; b.className = "hot" + (h.round ? " round" : "");
+    b.style.left = (h.cx / W * 100) + "%"; b.style.top = (h.cy / H * 100) + "%";
+    b.style.width = (h.w / W * 100) + "%"; b.style.height = (h.h / H * 100) + "%";
+    b.setAttribute("aria-label", h.name); b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () { pick(i); });
+    hp.appendChild(b);
+  });
+  var hbtns = $$(".hot", hp);
+  function pick(i) {
+    cur = (i + HOT.length) % HOT.length;
+    var h = HOT[cur];
+    $("#infoName").textContent = h.name; $("#infoText").textContent = h.text; $("#infoFacts").textContent = h.facts;
+    hbtns.forEach(function (b, k) { b.setAttribute("aria-pressed", k === cur ? "true" : "false"); });
+  }
+  $("#hPrev").addEventListener("click", function () { pick(cur - 1); });
+  $("#hNext").addEventListener("click", function () { pick(cur + 1); });
+  pick(cur);
+
+  /* ---- 2. before / after slider ---- */
+  var cmp = $("#cmp"), grip = $("#cmpGrip"), pos = 50, cbtn = $$(".toolbar [data-pos]"), cst = $("#cmpStatus");
+  var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function setPos(p, anim) {
+    p = Math.max(0, Math.min(100, p)); pos = p;
+    if (anim && !reduce) cmp.classList.add("anim"); else cmp.classList.remove("anim");
+    cmp.style.setProperty("--pos", p + "%");
+    var r = Math.round(p);
+    grip.setAttribute("aria-valuenow", r);
+    var t = r + " percent reference, " + (100 - r) + " percent built";
+    grip.setAttribute("aria-valuetext", t);
+    cst.textContent = "Showing " + r + " % reference, " + (100 - r) + " % built";
+    cbtn.forEach(function (b) { b.setAttribute("aria-pressed", String(Number(b.getAttribute("data-pos")) === r)); });
+  }
+  function fromEvent(e) { var r = cmp.getBoundingClientRect(); return (e.clientX - r.left) / r.width * 100; }
+  var dragging = false;
+  cmp.addEventListener("pointerdown", function (e) {
+    dragging = true; try { cmp.setPointerCapture(e.pointerId); } catch (x) {}
+    setPos(fromEvent(e), false);
+    if (e.target !== grip) grip.focus({ preventScroll: true });
+  });
+  cmp.addEventListener("pointermove", function (e) { if (dragging) setPos(fromEvent(e), false); });
+  function stop() { dragging = false; }
+  cmp.addEventListener("pointerup", stop); cmp.addEventListener("pointercancel", stop);
+  grip.addEventListener("keydown", function (e) {
+    var step = e.shiftKey ? 10 : 2, k = e.key, used = true;
+    if (k === "ArrowLeft" || k === "ArrowDown") setPos(pos - step, false);
+    else if (k === "ArrowRight" || k === "ArrowUp") setPos(pos + step, false);
+    else if (k === "Home") setPos(0, true);
+    else if (k === "End") setPos(100, true);
+    else if (k === "PageUp") setPos(pos + 10, false);
+    else if (k === "PageDown") setPos(pos - 10, false);
+    else used = false;
+    if (used) e.preventDefault();
+  });
+  cbtn.forEach(function (b) { b.addEventListener("click", function () { setPos(Number(b.getAttribute("data-pos")), true); }); });
+  setPos(50, false);
+
+  /* ---- 3. closed / open panel ---- */
+  var sImg = $("#stateImg"), sPanel = $("#statePanel"), sst = $("#stateStatus");
+  $$("[data-state]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var open = b.getAttribute("data-state") === "open";
+      $$("[data-state]").forEach(function (x) { x.setAttribute("aria-pressed", String(x === b)); });
+      sImg.src = open ? "../shots/plectra/built-open.png" : "../shots/plectra/built-closed.png";
+      sImg.height = open ? 670 : 520;
+      sImg.alt = open ? "The built panel with the ADVANCED rail open: TIGHTNESS, WET DRIVE, OVERSAMPLING, LATENCY, MIX and OUTPUT." : "The built panel, closed.";
+      sPanel.style.aspectRatio = open ? "955 / 670" : "955 / 520";
+      sst.textContent = open ? "The window grows downwards by one rail. The width stays the same." : "The window starts closed.";
+    });
+  });
+
+  /* ---- 4. clank metrics (ranges from the design record) ---- */
+  var V = [
+    { n: "Old CLANK", s: "grit above 1.2 kHz", met: [.23, .47], fus: [.73, .89], ons: [.28, .64], pk: "up to +27 dB (doom DI)" },
+    { n: "N1", s: "3 fixed resonances, rejected", met: [.75, .83], fus: [.51, .73], ons: [.94, .96], pk: "-1.7 dB" },
+    { n: "A", s: "real pick through metal + re-strikes", met: [.36, .73], fus: [.79, .88], ons: [.72, 1], pk: "-2.6 to +2.1 dB" },
+    { n: "B", s: "fret collisions from the string", met: [.33, .51], fus: [.02, .81], ons: [.78, .96], pk: "up to +4.9 dB" },
+    { n: "C", s: "stochastic rattle", met: [.30, .33], fus: [-.14, .78], ons: [.88, .94], pk: "-0.8 dB" },
+    { n: "D", s: "B plus the pick strike", met: [.56, .67], fus: [.26, .86], ons: [.96, .99], pk: "-1.0 dB" },
+    { n: "E", s: "A made causal, fixed gains: chosen", met: [.34, .69], fus: [.68, .84], ons: [.70, 1], pk: "-1.4 dB", pick: 1 }
+  ];
+  var M = {
+    met: { d: "Metronome: how alike consecutive clanks are. 1 means identical ticks. Lower is better.", lo: 0, hi: 1 },
+    fus: { d: "Fusion: how well the clank's 1 to 8 kHz shape follows the guitar's. Higher is better.", lo: -0.2, hi: 1 },
+    ons: { d: "Onset: share of energy in the first 8 ms. Higher reads as an event, lower as a tone.", lo: 0, hi: 1 }
+  };
+  var rows = $("#rngRows");
+  V.forEach(function (v) {
+    var li = document.createElement("li"); li.className = "rng-row" + (v.pick ? " pick" : "");
+    li.innerHTML = '<div class="nm"><b></b><small></small></div><div class="track"><span class="z"></span><span class="bar"></span></div><span class="pk"></span><span class="val"></span>';
+    $("b", li).textContent = v.n; $("small", li).textContent = v.s; $(".pk", li).textContent = "peak " + v.pk;
+    v.el = li; rows.appendChild(li);
+  });
+  function setMetric(k) {
+    var m = M[k], span = m.hi - m.lo;
+    $$("[data-m]").forEach(function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-m") === k)); });
+    $("#mDesc").textContent = m.d;
+    $("#axisLab").innerHTML = "<span>" + m.lo + "</span><span>" + ((m.lo + m.hi) / 2).toFixed(1) + "</span><span>" + m.hi + "</span>";
+    V.forEach(function (v) {
+      var r = v[k], bar = $(".bar", v.el), z = $(".z", v.el);
+      bar.style.left = ((r[0] - m.lo) / span * 100) + "%";
+      bar.style.width = ((r[1] - r[0]) / span * 100) + "%";
+      z.style.left = ((0 - m.lo) / span * 100) + "%";
+      $(".val", v.el).textContent = r[0].toFixed(2) + " to " + r[1].toFixed(2);
+    });
+  }
+  $$("[data-m]").forEach(function (b) { b.addEventListener("click", function () { setMetric(b.getAttribute("data-m")); }); });
+  setMetric("met");
+
+  /* ---- 5. preset bars (sound_v9 table from the progress log) ---- */
+  var P = [
+    ["Init", "Default", 9.9], ["Modern Chug", "Guitar", 11.9], ["Djent Click", "Guitar", 10.8], ["Thall Snap", "Guitar", 13.0],
+    ["Doom Weight", "Guitar", 5.3], ["Tremolo Precision", "Guitar", 7.3], ["Lead Articulation", "Guitar", 5.8], ["Parallel Crush", "Guitar", 14.3],
+    ["Tube Pick", "Guitar", 12.2], ["Bass Clank", "Bass", 11.5], ["Bass Pick Definition", "Bass", 8.0], ["Bass Grind", "Bass", 13.1],
+    ["Clean Pass", "Utility", 0], ["Tame Harsh Pick", "Utility", -5.9], ["Wuf Killer", "Utility", 0], ["Attack Only", "Utility", 9.8], ["Soft Clean", "Utility", -6.1]
+  ];
+  var LO = -8, HI = 16, list = $("#barList"), items = [];
+  P.forEach(function (p, i) {
+    var li = document.createElement("li");
+    li.innerHTML = '<span class="nm"><span></span><em></em></span><span class="trk"><u></u><i></i></span><span class="v"></span>';
+    $(".nm span", li).textContent = p[0]; $("em", li).textContent = p[1];
+    var b = $("i", li), v = p[2];
+    b.style.left = ((Math.min(0, v) - LO) / (HI - LO) * 100) + "%";
+    b.style.width = (Math.abs(v) / (HI - LO) * 100) + "%";
+    if (v < 0) b.className = "neg";
+    $("u", li).style.left = ((0 - LO) / (HI - LO) * 100) + "%";
+    $(".v", li).textContent = (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(1);
+    li.setAttribute("aria-label", p[0] + ": " + (v > 0 ? "+" : "") + v.toFixed(1) + " dB");
+    items.push({ el: li, i: i, v: v }); list.appendChild(li);
+  });
+  $$("[data-s]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var s = b.getAttribute("data-s");
+      $$("[data-s]").forEach(function (x) { x.setAttribute("aria-pressed", String(x === b)); });
+      var order = items.slice().sort(function (a, c) { return s === "value" ? (c.v - a.v) || (a.i - c.i) : a.i - c.i; });
+      order.forEach(function (o) { list.appendChild(o.el); });
+    });
+  });
+})();
+</script>
+</body>
+</html>

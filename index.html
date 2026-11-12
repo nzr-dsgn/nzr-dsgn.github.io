@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+</head>
+<body>
+<title>Vibe Coding Portfolio</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+/* Home, résumé-length: hero with a live three-variant demo, three best works, a compact list of the rest,
+   the role in six lines, how I work in four, contact. Depth lives on the work pages. Tokens from assets/site.css. */
+.hero { display: grid; grid-template-columns: minmax(0, 1.02fr) minmax(0, 1fr); gap: 48px; align-items: center; padding-block: 64px 48px; }
+.hero h1 { font-size: clamp(36px, 5.6vw, 66px); font-weight: 800; letter-spacing: -0.035em; line-height: 1; }
+.hero h1 span { color: var(--accent); }
+.hero .lede { margin-top: 20px; font-size: 18px; color: var(--ink-2); max-width: 50ch; }
+.who { margin-top: 24px; display: flex; flex-wrap: wrap; gap: 10px; }
+.facts { margin-top: 22px; display: flex; flex-wrap: wrap; gap: 8px 18px; font: 500 13px/1.4 var(--mono); color: var(--ink-2); }
+.facts b { color: var(--ink); font-weight: 600; }
+
+.demo { background: var(--surface); border: 1px solid var(--rule); border-radius: 14px; box-shadow: var(--shadow); overflow: hidden; min-width: 0; }
+.demo-head { padding: 14px 16px; border-bottom: 1px solid var(--rule); display: grid; gap: 6px; }
+.prompt { font: 400 13.5px/1.55 var(--mono); }
+.prompt::before { content: "> "; color: var(--accent); }
+.seg { display: flex; gap: 4px; padding: 10px 12px; background: var(--surface-2); }
+.seg button { flex: 1; border: 0; border-radius: 7px; padding: 8px 6px; background: transparent; color: var(--ink-2); font: 500 12.5px/1.2 var(--text); min-width: 0; }
+.seg button[aria-selected="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+.stage { padding: 18px 18px 16px; min-height: 236px; display: grid; gap: 14px; align-content: start; }
+.cal { display: grid; gap: 8px; }
+.cal-top { display: flex; justify-content: space-between; gap: 8px; font: 500 12px var(--mono); color: var(--ink-2); }
+.cal-top b { color: var(--ink); font-weight: 600; }
+.track { position: relative; height: 78px; border-radius: 9px; background: var(--surface-2); overflow: hidden; }
+.track .hr { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--rule); }
+.track .hr span { position: absolute; bottom: 4px; left: 5px; font: 500 10px/1 var(--mono); color: var(--ink-2); }
+.blk { position: absolute; top: 7px; height: 24px; border-radius: 6px; padding: 0 8px; display: block; font: 600 11.5px/24px var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: left .44s cubic-bezier(.2,0,0,1), opacity .28s, background-color .28s, color .28s; }
+.blk.taken { background: var(--ink); color: var(--bg); opacity: .85; }
+.blk.mine { top: 35px; background: var(--accent); color: var(--accent-ink); box-shadow: 0 2px 8px rgba(14,18,32,.18); }
+.blk.mine.clash { background: repeating-linear-gradient(135deg, var(--crit) 0 6px, color-mix(in srgb, var(--crit) 80%, var(--surface)) 6px 12px); color: #fff; }
+.hint { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; font-size: 14px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--warn); flex: none; }
+.dot.ok { background: var(--ok); }
+.btn { border: 1px solid var(--rule); background: var(--surface); color: var(--ink); border-radius: 7px; padding: 7px 13px; font: 500 13.5px/1.2 var(--text); transition: border-color .18s, transform .1s; }
+.btn:hover { border-color: var(--accent); }
+.btn:active { transform: translateY(1px); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+.toast { display: flex; align-items: center; gap: 12px; justify-content: space-between; background: var(--ink); color: var(--bg); border-radius: 10px; padding: 11px 14px; font-size: 14px; animation: rise .28s cubic-bezier(.05,.7,.1,1); }
+.toast button { background: transparent; border: 0; color: inherit; font-weight: 600; text-decoration: underline; padding: 2px 4px; }
+.card-c { border: 1.5px dashed var(--accent); background: var(--accent-soft); border-radius: 12px; padding: 14px; display: grid; gap: 12px; animation: rise .28s cubic-bezier(.05,.7,.1,1); }
+.card-c.solid { border-style: solid; border-color: var(--rule); background: var(--surface); }
+.ba { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.ba div { display: grid; gap: 4px; font: 500 12px var(--mono); color: var(--ink-2); min-width: 0; }
+.ba b { font: 600 14px var(--text); color: var(--ink); }
+.ba .bad { color: var(--crit); } .ba .good { color: var(--ok); }
+.demo-note { padding: 12px 16px 16px; font-size: 13.5px; color: var(--ink-2); border-top: 1px solid var(--rule); }
+.demo-note b { color: var(--ink); }
+@keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+section { padding-block: 64px 0; gap: 26px; }
+.sec-head h2 { font-size: clamp(26px, 3.6vw, 40px); }
+
+/* best work: one wide, two side by side */
+.best { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; }
+.work { display: grid; grid-template-rows: auto 1fr; background: var(--surface); border: 1px solid var(--rule); border-radius: 18px; overflow: hidden; text-decoration: none; color: inherit; transition: transform .22s cubic-bezier(.2,0,0,1), box-shadow .22s, border-color .22s; min-width: 0; }
+.work:hover { border-color: var(--accent); transform: translateY(-4px); box-shadow: var(--shadow); }
+.work .thumb { aspect-ratio: 16 / 10; max-width: 100%; background: var(--surface-2); position: relative; overflow: hidden; border-bottom: 1px solid var(--rule); }
+.work .thumb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center top; border: 0; border-radius: 0; box-shadow: none; }
+.work .body { padding: 20px 22px 22px; display: grid; gap: 10px; align-content: start; }
+.work h3 { font-size: clamp(23px, 2.4vw, 28px); font-weight: 800; letter-spacing: -0.03em; }
+.work p.one { color: var(--ink-2); font-size: 15.5px; }
+.work ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; font-size: 14.5px; color: var(--ink-2); }
+.work li { display: grid; grid-template-columns: 14px minmax(0, 1fr); gap: 8px; }
+.work li::before { content: ""; width: 6px; height: 6px; border-radius: 2px; background: var(--accent); margin-top: 9px; }
+.work .go { display: inline-flex; align-items: center; gap: 8px; font: 600 14px var(--text); color: var(--accent); }
+.work .go::after { content: "\2192"; transition: transform .2s; }
+.work:hover .go::after { transform: translateX(4px); }
+.work.wide { grid-column: 1 / -1; grid-template-rows: none; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); }
+.work.wide .thumb { aspect-ratio: auto; min-height: 100%; border-bottom: 0; border-right: 1px solid var(--rule); }
+.work.wide .body { align-content: center; padding: 26px 28px; }
+
+/* more work: a compact list */
+.more { display: grid; border-top: 1px solid var(--rule); }
+.more a { display: grid; grid-template-columns: minmax(0, 220px) minmax(0, 1fr) auto; gap: 6px 24px; align-items: baseline; padding: 14px 4px; border-bottom: 1px solid var(--rule); text-decoration: none; color: var(--ink); transition: background .18s; }
+.more a:hover { background: var(--surface); }
+.more b { font: 700 17px/1.25 var(--display); letter-spacing: -0.01em; }
+.more span { color: var(--ink-2); font-size: 14.5px; }
+.more i { font: 600 10.5px/1 var(--mono); font-style: normal; letter-spacing: .07em; text-transform: uppercase; color: var(--ink-2); white-space: nowrap; }
+.more i::after { content: "  \2192"; color: var(--accent); }
+
+/* fit: six lines */
+.fit { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 32px; border-top: 1px solid var(--rule); }
+.fit > div { display: grid; gap: 4px; padding: 14px 0; border-bottom: 1px solid var(--rule); min-width: 0; }
+.fit b { font-weight: 600; font-size: 15.5px; }
+.fit a { font-size: 14px; text-decoration: none; font-weight: 500; }
+.fit a::after { content: " \2192"; }
+.fit .nice { font: 600 10.5px var(--mono); letter-spacing: .07em; text-transform: uppercase; color: var(--accent); }
+
+.how { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 16px; }
+.how > div { border-top: 2px solid var(--ink); padding-top: 12px; display: grid; gap: 6px; align-content: start; }
+.how b { font: 700 18px/1.25 var(--display); letter-spacing: -0.01em; }
+.how p { font-size: 14.5px; color: var(--ink-2); }
+.links { display: flex; flex-wrap: wrap; gap: 10px; }
+
+.contact { background: var(--accent); color: var(--accent-ink); border-radius: 20px; padding: clamp(26px, 5vw, 48px); display: grid; gap: 24px; }
+.contact h2 { font: 800 clamp(30px, 5vw, 56px)/1 var(--display); letter-spacing: -0.035em; max-width: 16ch; }
+.slots { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 12px; }
+.slot { border: 1px solid color-mix(in srgb, var(--accent-ink) 55%, transparent); border-radius: 10px; padding: 12px 14px; display: grid; gap: 3px; min-width: 0; text-decoration: none; color: inherit; }
+.slot.empty { border-style: dashed; }
+.slot .label { color: inherit; opacity: .75; }
+.slot b { font: 500 14.5px var(--mono); overflow-wrap: anywhere; }
+.contact .cta { background: var(--accent-ink); color: var(--accent); justify-self: start; }
+
+@media (max-width: 860px) {
+  .hero { grid-template-columns: minmax(0, 1fr); gap: 32px; padding-block: 40px 32px; }
+  .best, .fit { grid-template-columns: minmax(0, 1fr); }
+  .work.wide { grid-template-columns: minmax(0, 1fr); }
+  .work.wide .thumb { aspect-ratio: 16 / 10; border-right: 0; border-bottom: 1px solid var(--rule); }
+  .more a { grid-template-columns: minmax(0, 1fr) auto; }
+  .more span { grid-column: 1 / -1; grid-row: 2; }
+}
+@media (max-width: 420px) {
+  .seg button { font-size: 11.5px; padding: 8px 4px; }
+  .ba { grid-template-columns: minmax(0, 1fr); }
+}
+</style>
+
+<header class="bar" id="top">
+  <div class="wrap">
+    <a class="brand" href="#top"><i aria-hidden="true"></i><span id="brandName">Your Name</span></a>
+    <nav aria-label="Sections">
+      <a href="#work">Work</a>
+      <a href="#fit">The role</a>
+      <a href="#how">How I work</a>
+      <a href="works/cv.html">CV</a>
+      <a href="#contact">Contact</a>
+    </nav>
+    <button class="toggle" id="themeBtn" type="button" aria-label="Switch colour theme">Theme: auto</button>
+  </div>
+</header>
+
+<div class="wrap">
+  <main>
+    <div class="hero">
+      <div>
+        <p class="label">UI/UX designer · Design in code with Claude Code</p>
+        <h1 style="margin-top:14px">I design in code. The agent builds, I <span>decide.</span></h1>
+        <p class="lede">I write the brief, set the rules and check every state. I have shipped four Telegram bots and built a VST3 plugin this way, and I design AI features that say what they did and can be undone.</p>
+        <div class="who">
+          <a class="cta" href="#work">See the work</a>
+          <a class="cta ghost" href="works/cv.html">CV, one page</a>
+        </div>
+        <p class="facts"><span><b>4</b> bots shipped</span><span><b>1</b> VST3 plugin</span><span><b>3</b> Mini Apps</span><span><b>6</b> concept prototypes</span></p>
+      </div>
+
+      <div class="demo" aria-label="Interactive demo: three variants from one brief">
+        <div class="demo-head">
+          <span class="label">Brief to the agent</span>
+          <p class="prompt">A booking clashes with another one. Suggest a fix. Three variants, side by side, same data.</p>
+        </div>
+        <div class="seg" role="tablist" aria-label="Variants">
+          <button role="tab" aria-selected="true" data-v="a" type="button" id="tab-a">A · Inline hint</button>
+          <button role="tab" aria-selected="false" data-v="b" type="button" id="tab-b">B · Toast + undo</button>
+          <button role="tab" aria-selected="false" data-v="c" type="button" id="tab-c">C · Preview</button>
+        </div>
+        <div class="stage">
+          <div class="cal" aria-hidden="true">
+            <div class="cal-top"><span><b>Room B2</b> · Building B, floor 2</span><span>Tue 17 Nov</span></div>
+            <div class="track">
+              <i class="hr" style="left:0"><span>09:00</span></i><i class="hr" style="left:25%"><span>10:00</span></i><i class="hr" style="left:50%"><span>11:00</span></i><i class="hr" style="left:75%"><span>12:00</span></i>
+              <div class="blk taken" style="left:25%;width:25%">Design review</div>
+              <div class="blk mine clash" id="mine" style="left:25%;width:25%">Team sync</div>
+            </div>
+          </div>
+          <div id="vBody" aria-live="polite"></div>
+        </div>
+        <p class="demo-note" id="vNote"></p>
+      </div>
+    </div>
+
+    <section id="work" style="padding-top:16px">
+      <div class="sec-head">
+        <span class="num">BEST WORK</span>
+        <h2>Two real products and one concept</h2>
+      </div>
+      <div class="best">
+        <a class="work wide" href="works/telegram-bots.html">
+          <div class="thumb"><img src="shots/thumb-bots.png" alt="Three Telegram Mini App panels: a beauty salon dashboard, a clothing shop overview and a shop-chain revenue screen in dark mode." width="1200" height="750" loading="lazy"></div>
+          <div class="body">
+            <div class="row"><span class="kind shipped">Shipped</span><span class="kind">Telegram · Mini Apps · AI</span></div>
+            <h3>Four Telegram Bots</h3>
+            <p class="one">Bookings for a salon, a clothing shop on Instagram, fabric stock with AI, and daily revenue for a shop chain. Each has its own page.</p>
+            <ul><li>Three admin panels as Mini Apps, clickable here with invented data</li><li>An AI bot where Claude reads the question and code writes the number, checked on 80 cases</li><li>Audited for security, weak spots listed</li></ul>
+            <span class="go">Open the four bots</span>
+          </div>
+        </a>
+        <a class="work" href="works/plectra.html">
+          <div class="thumb"><img src="shots/thumb-plectra.png" alt="NZR Plectra plugin panel: a dark metal panel with a cyan waveform display and knobs around a large Attack Amount knob." width="1200" height="750" loading="lazy"></div>
+          <div class="body">
+            <div class="row"><span class="kind shipped">Built</span><span class="kind">VST3 · UI + DSP</span></div>
+            <h3>NZR Plectra</h3>
+            <p class="one">An audio plugin whose panel went from a reference image to a working interface.</p>
+            <ul><li>Fake scales and a duplicate knob became real ranges, presets and a meter</li><li>Three layouts compared before one was built</li></ul>
+            <span class="go">Open the case</span>
+          </div>
+        </a>
+        <a class="work" href="works/space-finder.html">
+          <div class="thumb"><img src="shots/thumb-space.png" alt="Space Finder: an isometric map of a business park next to filters and matching office units." width="1200" height="750" loading="lazy"></div>
+          <div class="body">
+            <div class="row"><span class="kind concept">Concept</span><span class="kind">Web · AI</span></div>
+            <h3>Space Finder</h3>
+            <p class="one">Leasing office space in a business park: a campus map, filters and an AI match.</p>
+            <ul><li>The assistant shows its assumptions, and you can change them</li><li>Compare units, then book a viewing</li></ul>
+            <span class="go">Open the prototype</span>
+          </div>
+        </a>
+      </div>
+    </section>
+
+    <section id="more" style="padding-top:44px">
+      <div class="sec-head"><span class="num">MORE WORK</span></div>
+      <div class="more">
+        <a href="works/voice-note.html"><b>Voice Note to Flows</b><span>A product owner's voice note turned into three working flows, then a second round.</span><i>Concept</i></a>
+        <a href="works/ai-states.html"><b>AI Status Kit</b><span>One AI request through every state, with loading that changes by how long it takes.</span><i>Concept</i></a>
+        <a href="works/security.html"><b>Security and Method</b><span>An audit of my bots' code against ten common mistakes in AI-built apps.</span><i>Audit</i></a>
+        <a href="works/brightyard-portal.html"><b>Brightyard Portal</b><span>A tenant portal whose AI assistant proposes and the tenant decides.</span><i>Concept</i></a>
+        <a href="works/brightyard-mobile.html"><b>Brightyard Mobile</b><span>The same product on iOS and Android, light and dark.</span><i>Concept</i></a>
+        <a href="works/brightyard-system.html"><b>Brightyard Design System</b><span>Live OKLCH tokens and components with contrast checked in the browser.</span><i>Concept</i></a>
+      </div>
+    </section>
+
+    <section id="fit">
+      <div class="sec-head">
+        <span class="num">THE ROLE IN SIX LINES</span>
+        <h2>What the job asks for, and where it is</h2>
+      </div>
+      <div class="fit">
+        <div><b>Prototypes built with an AI coding agent</b><a href="works/telegram-bots.html">Three real Mini Apps, all clickable</a></div>
+        <div><b>Work inside a design system, add components</b><a href="works/brightyard-system.html">Brightyard Design System</a></div>
+        <div><b>Voice notes into draft flows, variants side by side</b><a href="works/voice-note.html">Voice Note to Flows</a></div>
+        <div><b>AI features: suggestions, confirmations, loading</b><a href="works/ai-states.html">AI Status Kit</a></div>
+        <div><b>Check states, edge cases and themes by eye</b><a href="works/security.html">The audit, red cells included</a></div>
+        <div><span class="nice">Nice to have</span><b>Motion, web and mobile patterns</b><a href="works/brightyard-mobile.html">iOS and Android, one decision two ways</a></div>
+      </div>
+    </section>
+
+    <section id="how">
+      <div class="sec-head">
+        <span class="num">HOW I WORK</span>
+        <h2>Fast with AI, careful with data</h2>
+      </div>
+      <div class="how">
+        <div><b>A brief, not a wish</b><p>Goal, states and the checks that decide when it is done, written before any code.</p></div>
+        <div><b>Measure, then choose</b><p>An 80-case eval picked a model that was as accurate and about 30 times cheaper.</p></div>
+        <div><b>The model reads, code counts</b><p>Money, stock and dates stay in code with tests. The model never writes a number.</p></div>
+        <div><b>Audit and say what is weak</b><p>Signatures, limits, escaping, no keys in code. Root services and missing tests are on my list.</p></div>
+      </div>
+      <div class="links"><a class="cta ghost" href="works/security.html">Security and method</a><a class="cta ghost" href="works/cv.html">CV, one page</a></div>
+    </section>
+
+    <section id="contact">
+      <div class="contact">
+        <span class="label" style="color:inherit;opacity:.8">Contact</span>
+        <h2>Let's build something clear.</h2>
+        <div class="slots" id="slots"></div>
+        <a class="cta" href="works/cv.html">Open the CV</a>
+      </div>
+    </section>
+
+    <footer>
+      <span>Shipped work and concepts are marked as such. Demos use invented data.</span>
+      <span>Designed and built with Claude Code, November 2026</span>
+    </footer>
+  </main>
+</div>
+
+<script src="assets/profile.js"></script>
+<script src="assets/site.js"></script>
+<script>
+(function () {
+  var $ = function (s) { return document.querySelector(s); };
+  var $$ = function (s) { return Array.prototype.slice.call(document.querySelectorAll(s)); };
+  var P = window.PROFILE || {};
+  if (P.name) document.title = P.name + " Portfolio";
+
+  /* contact slots: links open in a new tab; the email is shown as selectable text */
+  var slots = [["Email", P.email, ""], ["Telegram", P.telegram, P.telegram], ["GitHub", P.github, P.github], ["Figma", P.figma, P.figma], ["LinkedIn", P.linkedin, P.linkedin]];
+  $("#slots").innerHTML = slots.filter(function (s) { return s[1] || s[0] === "Email" || s[0] === "Telegram"; }).map(function (s) {
+    if (!s[1]) return '<div class="slot empty"><span class="label">' + s[0] + '</span><b>add your contact</b></div>';
+    if (!s[2]) return '<div class="slot"><span class="label">' + s[0] + "</span><b>" + s[1] + "</b></div>";
+    return '<a class="slot" href="' + s[2] + '" target="_blank" rel="noopener"><span class="label">' + s[0] + "</span><b>" + s[1].replace(/^https?:\/\//, "") + "</b></a>";
+  }).join("");
+
+  /* hero demo: one clash, three ways to resolve it. Every button does what it says. */
+  var mine = $("#mine"), body = $("#vBody"), note = $("#vNote"), cur = "a";
+  function place(where) {
+    mine.style.left = where === "11" ? "50%" : "25%";
+    mine.style.opacity = where === "b4" ? "0" : "1";
+    mine.classList.toggle("clash", where === "clash");
+    mine.textContent = where === "11" ? "Team sync · 11:00" : "Team sync";
+  }
+  var V = {
+    a: {
+      note: "<b>Use when</b> the person is busy elsewhere on the screen. It sits next to the problem and changes nothing until they choose.",
+      start: function () { place("clash"); body.innerHTML = '<div class="hint"><span class="dot"></span><span>Room B2 is taken 10:00–11:00.</span><button class="btn primary" type="button" data-do="move">Move to 11:00</button><button class="btn" type="button" data-do="room">Use Room B4 at 10:00</button></div>'; },
+      move: function () { place("11"); body.innerHTML = '<div class="hint"><span class="dot ok"></span><span>Booked Room B2 for 11:00–12:00.</span><button class="btn" type="button" data-do="reset">Show it again</button></div>'; },
+      room: function () { place("b4"); body.innerHTML = '<div class="hint"><span class="dot ok"></span><span>Booked Room B4 for 10:00–11:00. It is on the same floor.</span><button class="btn" type="button" data-do="reset">Show it again</button></div>'; }
+    },
+    b: {
+      note: "<b>Use when</b> the fix is safe and easy to reverse. It acts, says what it did, and keeps undo within reach.",
+      start: function () { place("11"); body.innerHTML = '<div class="toast"><span>Booked for 11:00 instead. B2 was taken at 10:00.</span><button type="button" data-do="undo">Undo</button></div>'; },
+      undo: function () { place("clash"); body.innerHTML = '<div class="toast"><span>Back at 10:00. B2 is taken then, so this is not booked.</span><button type="button" data-do="reset">Book 11:00</button></div>'; }
+    },
+    c: {
+      note: "<b>Use when</b> the change touches other people or is hard to undo. It shows before and after, and waits for a yes.",
+      start: function () { place("clash"); body.innerHTML = '<div class="card-c"><span class="label">Suggested change</span><div class="ba"><div>Now<b>10:00–11:00</b><span class="bad">B2 is taken</span></div><div>After<b>11:00–12:00</b><span class="good">B2 is free</span></div></div><div class="row"><button class="btn primary" type="button" data-do="apply">Book 11:00 and tell 6 people</button><button class="btn" type="button" data-do="keep">Not now</button></div></div>'; },
+      apply: function () { place("11"); body.innerHTML = '<div class="card-c solid"><span class="label">Booked</span><b>Team sync is in Room B2, 11:00–12:00. 6 attendees were told.</b><div class="row"><button class="btn" type="button" data-do="reset">Undo</button></div></div>'; },
+      keep: function () { body.innerHTML = '<div class="hint"><span class="dot"></span><span>Nothing changed. Team sync is not booked yet.</span><button class="btn" type="button" data-do="reset">Show the suggestion</button></div>'; }
+    }
+  };
+  function show(k) {
+    cur = k; V[k].start(); note.innerHTML = V[k].note;
+    $$(".seg button").forEach(function (b) { b.setAttribute("aria-selected", b.dataset.v === k ? "true" : "false"); });
+  }
+  body.addEventListener("click", function (e) {
+    var b = e.target.closest("button[data-do]"); if (!b) return;
+    var act = b.dataset.do;
+    if (act === "reset") V[cur].start(); else if (V[cur][act]) V[cur][act]();
+  });
+  $$(".seg button").forEach(function (b) { b.addEventListener("click", function () { show(b.dataset.v); }); });
+  show("a");
+})();
+</script>
+
+</body>
+</html>
