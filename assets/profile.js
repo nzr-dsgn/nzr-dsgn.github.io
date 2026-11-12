@@ -9,5 +9,5 @@ window.PROFILE = {
   figma: "",
   linkedin: "",
   english: "",     /* e.g. "B1" or "B2" */
-  portfolio: ""     /* the public portfolio address, shown on the CV */
+  portfolio: "https://nzr-dsgn.github.io"
 };
